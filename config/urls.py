@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from projects import views  # Faqat bir marta import qildik
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,6 +32,7 @@ urlpatterns = [
     path('liked/', views.liked_videos, name='liked_videos'),
     path('my-videos/', views.my_videos, name='my_videos'),
     path('cpp/', views.cpp_test, name='cpp_test'),
+    path('accounts/', include('allauth.urls')),
 ]
 
 if settings.DEBUG:
