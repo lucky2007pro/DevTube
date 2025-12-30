@@ -247,8 +247,12 @@ def cpp_test(request):
         number = request.GET.get('number')
 
         # main.exe manzili: BASE_DIR/cpp_module/main.exe
-        exe_path = os.path.join(settings.BASE_DIR, 'cpp_module', 'main.exe')
+        if os.name == 'nt':
+            exe_name = 'main.exe'
+        else:
+            exe_name = 'main'
 
+        exe_path = os.path.join(settings.BASE_DIR, 'cpp_module', exe_name)
         try:
             # C++ dasturini (exe) ishga tushiramiz
             process = subprocess.run([exe_path, number], capture_output=True, text=True)
