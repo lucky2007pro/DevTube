@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* ASOSIY LAYOUT */
+    .watch-container {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-top: 20px;
+    }
+
+    @media (max-width: 1000px) {
+        .watch-container { grid-template-columns: 1fr; }
+    }
+
+    /* VIDEO PLAYER */
+    .video-frame {
+        width: 100%; aspect-ratio: 16/9;
+        background: #000; border-radius: 12px;
+        overflow: hidden; margin-bottom: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .video-frame video, .video-frame img { width: 100%; height: 100%; object-fit: contain; }
+
+    .video-title {
+        font-size: 20px; font-weight: 700; color: var(--text-main);
+        margin-bottom: 10px; line-height: 1.4;
+    }
+
+    .action-bar {
+        display: flex; justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 10px; margin-bottom: 15px;
+    }
+
+    .author-section { display: flex; align-items: center; gap: 12px; }
+    .author-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .author-name { font-weight: 600; font-size: 16px; color: var(--text-main); display: block; }
+    .sub-count { font-size: 12px; color: var(--text-sec); display: block; }
+
+    .btn-subscribe {
+        background-color: var(--text-main); color: var(--bg-body);
+        border-radius: 18px; padding: 6px 16px; font-weight: 600; font-size: 14px;
+        border: none; margin-left: 20px; cursor: pointer;
+    }
+
+    .buttons-group { display: flex; gap: 8px; }
+
+    .btn-pill {
+        display: flex; align-items: center; gap: 6px;
+        background: rgba(128,128,128, 0.15);
+        color: var(--text-main);
+        border: none; border-radius: 18px;
+        padding: 6px 16px; font-size: 14px; font-weight: 500;
+        cursor: pointer; text-decoration: none; transition: 0.2s;
+    }
+    .btn-pill:hover { background: rgba(128,128,128, 0.3); }
+
+    .desc-box {
+        background: rgba(128,128,128, 0.1);
+        border-radius: 12px; padding: 12px;
+        font-size: 14px; color: var(--text-main);
+        margin-bottom: 20px;
+    }
+    .desc-stat { font-weight: 600; margin-right: 10px; color: var(--text-main); }
+    .desc-text { margin-top: 10px; white-space: pre-line; color: var(--text-main); }
+
+    .code-container { margin-bottom: 30px; position: relative; }
+    .code-header { font-weight: bold; margin-bottom: 10px; color: var(--text-main); }
+
+    .comment-input {
+        background: transparent; border: none; border-bottom: 1px solid var(--border-color);
+        color: var(--text-main); width: 100%; outline: none; padding: 5px 0;
+    }
+    .comment-input:focus { border-bottom: 2px solid var(--text-main); }
+
+    /* ANIMATSIYA */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="watch-container">
+    <div class="main-content">
+        <div class="video-frame">
+            {% if project.video_file %}
+                <video controls controlsList="nodownload">
+                    <source src="{{ project.video_file.url }}" type="video/mp4">
+                </video>
+            {% else %}
+                <img src="{{ project.image.url }}">
+            {% endif %}
+        </div>
+
+        <div class="video-title">{{ project.title }}</div>
+
+        <div class="action-bar">
+            <div class="author-section">
+                <img src="{{ project.author.profile.avatar.url }}" class="author-avatar">
+                <div>
+                    <span class="author-name">{{ project.author.username }}</span>
+                    <span class="sub-count">1.2K obunachi</span>
+                </div>
+                <button class="btn-subscribe">Obuna bo'lish</button>
+            </div>
+
+            <div class="buttons-group">
+                <button id="like-btn" data-url="{% url 'like_project' project.pk %}" class="btn-pill">
+                    <i id="like-icon" class="{% if request.user in project.likes.all %}fas{% else %}far{% endif %} fa-thumbs-up"></i>
+                    <span id="like-count">{{ project.likes.count }}</span>
+                </button>
+
+                <button class="btn-pill"><i class="fas fa-share"></i> Ulashish</button>
+
+                {% if project.source_code %}
+                    {% if project.price == 0 or request.user == project.author or has_bought %}
+                        <a href="{{ project.source_code.url }}" class="btn-pill" style="background:#3ea6ff; color:white;" download>
+                            <i class="fas fa-download"></i> Yuklab olish
+                        </a>
+                    {% else %}
+                        <a href="{% url 'buy_project' project.pk %}" class="btn-pill" style="background:#2ecc71; color:white;" onclick="return confirm('Sotib olasizmi?')">
+                            <i class="fas fa-shopping-cart"></i> Sotib olish (${{ project.price }})
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="desc-box">
+            <span class="desc-stat">{{ project.views }} ko'rish</span>
+            <span class="desc-stat">{{ project.created_at|date:"d M, Y" }}</span>
+            <div class="desc-text">{{ project.description|linebreaksbr }}</div>
+        </div>
+
+        <div class="mt-4">
+            <h5 style="color: var(--text-main);">
+                <span id="comment-count">{{ project.comments.count }}</span> Izohlar
+            </h5>
+
+            {% if user.is_authenticated %}
+            <div class="d-flex gap-3 my-4">
+                <img src="{{ user.profile.avatar.url }}" class="author-avatar">
+                <form id="comment-form" method="post" class="w-100">
+                    {% csrf_token %}
+                    <input type="text" id="comment-body" name="body" class="comment-input" placeholder="Izoh yozing..." required autocomplete="off">
+                    <div class="text-end mt-2">
+                        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Yuborish</button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+
+            <div id="comment-list">
+                {% for comment in project.comments.all reversed %}
+                <div class="d-flex gap-3 mb-3">
+                    <img src="{{ comment.user.profile.avatar.url }}" class="author-avatar" style="width: 32px; height: 32px;">
+                    <div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <span style="font-weight: 600; font-size: 13px; color: var(--text-main);">{{ comment.user.username }}</span>
+                            <span style="font-size: 12px; color: var(--text-sec);">{{ comment.created_at|timesince }} oldin</span>
+                        </div>
+                        <p class="mb-0 mt-1" style="font-size: 14px; color: var(--text-main);">{{ comment.body }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-content d-none d-lg-block">
+        <div class="rec-card" style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="width:160px; height:90px; background:#333; border-radius:8px;"></div>
+            <div style="font-size:14px; font-weight:bold;">Tavsiya etilgan loyiha</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- LIKE AJAX ---
+    const likeBtn = document.getElementById('like-btn');
+    const likeIcon = document.getElementById('like-icon');
+    const likeCount = document.getElementById('like-count');
+
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                likeCount.innerText = data.total_likes;
+                if (data.is_liked) {
+                    likeIcon.classList.replace('far', 'fas');
+                } else {
+                    likeIcon.classList.replace('fas', 'far');
+                }
+            });
+        });
+    }
+
+    // --- IZOH AJAX ---
+    const commentForm = document.getElementById('comment-form');
+    const commentList = document.getElementById('comment-list');
+    const commentCountElement = document.getElementById('comment-count');
+
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const bodyInput = document.getElementById('comment-body');
+            const formData = new FormData(this);
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const html = `
+                    <div class="d-flex gap-3 mb-3" style="animation: fadeIn 0.5s;">
+                        <img src="${data.avatar_url}" class="author-avatar" style="width: 32px; height: 32px;">
+                        <div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <span style="font-weight: 600; font-size: 13px; color: var(--text-main);">${data.username}</span>
+                                <span style="font-size: 12px; color: var(--text-sec);">${data.created_at}</span>
+                            </div>
+                            <p class="mb-0 mt-1" style="font-size: 14px; color: var(--text-main);">${data.body}</p>
+                        </div>
+                    </div>`;
+                commentList.insertAdjacentHTML('afterbegin', html);
+                bodyInput.value = '';
+                commentCountElement.innerText = parseInt(commentCountElement.innerText) + 1;
+            });
+        });
+    }
+</script>
+{% endblock %}

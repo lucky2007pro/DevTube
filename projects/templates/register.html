@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card p-5 shadow">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold" style="font-family: sans-serif;">
+                    <i class="fas fa-code text-primary me-1"></i><i class="fas fa-play text-danger me-2"></i> DevTube
+                </h2>
+                <h4>Ro'yxatdan o'tish</h4>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="text-muted d-block" style="font-size: 12px;">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary w-100 py-2 mt-2">AKKAUNT YARATISH</button>
+            </form>
+            
+            <p class="text-center mt-3 text-muted">Akkauntingiz bormi? <a href="{% url 'login' %}">Kiring</a></p>
+        </div>
+    </div>
+</div>
+<script>
+    document.querySelectorAll('input').forEach(e => e.classList.add('form-control'));
+</script>
+{% endblock %}

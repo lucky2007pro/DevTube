@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card p-4 mx-auto mt-5 shadow-sm" style="max-width: 500px;">
+    <h3 class="text-danger text-center">Loyihani o'chirish</h3>
+    <p class="text-center">"{{ project.title }}" loyihasini rostdan ham o'chirmoqchimisiz?</p>
+    <form method="post" class="d-flex justify-content-center gap-3">
+        {% csrf_token %}
+        <a href="{% url 'profile' %}" class="btn btn-secondary">Bekor qilish</a>
+        <button type="submit" class="btn btn-danger">Ha, o'chirilsin</button>
+    </form>
+</div>
+{% endblock %}

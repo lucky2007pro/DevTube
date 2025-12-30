@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevTube</title>
+
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1005/1005141.png" type="image/png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- RANGLAR (YOUTUBE DARK) --- */
+        :root {
+            /* DARK MODE (DEFAULT) */
+            --bg-body: #0f0f0f;
+            --bg-nav: #0f0f0f;
+            --bg-sidebar: #0f0f0f;
+            --text-main: #f1f1f1;
+            --text-sec: #aaaaaa;
+            --border-color: #2a2a2a;
+
+            --search-bg: #121212;
+            --search-border: #303030;
+            --search-btn: #222222;
+
+            --hover-bg: #272727;
+            --icon-color: #fff;
+
+            --pill-bg: #272727;
+            --pill-text: #fff;
+            --pill-active-bg: #f1f1f1;
+            --pill-active-text: #0f0f0f;
+        }
+
+        [data-theme="light"] {
+            /* LIGHT MODE */
+            --bg-body: #ffffff;
+            --bg-nav: #ffffff;
+            --bg-sidebar: #ffffff;
+            --text-main: #0f0f0f;
+            --text-sec: #606060;
+            --border-color: #e5e5e5;
+
+            --search-bg: #fff;
+            --search-border: #ccc;
+            --search-btn: #f8f8f8;
+
+            --hover-bg: #f2f2f2;
+            --icon-color: #0f0f0f;
+
+            --pill-bg: #f2f2f2;
+            --pill-text: #0f0f0f;
+            --pill-active-bg: #0f0f0f;
+            --pill-active-text: #fff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Roboto, Arial, sans-serif; }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding-top: 56px;
+            transition: 0.2s;
+        }
+
+        a { text-decoration: none; color: var(--text-main); }
+
+        /* NAVBAR */
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 56px;
+            background-color: var(--bg-nav);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px; z-index: 1000;
+        }
+
+        .start-section { display: flex; align-items: center; gap: 16px; }
+
+        .menu-btn {
+            background: none; border: none; color: var(--icon-color);
+            font-size: 18px; cursor: pointer; padding: 8px; border-radius: 50%;
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+        }
+        .menu-btn:hover { background-color: var(--hover-bg); }
+
+        /* QIDIRUV */
+        .center-section { flex: 1; display: flex; justify-content: center; max-width: 700px; }
+        .search-box { display: flex; width: 100%; margin: 0 40px; }
+        .search-box input {
+            width: 100%; padding: 8px 16px; background: var(--search-bg);
+            border: 1px solid var(--search-border); color: var(--text-main);
+            border-radius: 40px 0 0 40px; outline: none; font-size: 16px;
+        }
+        .search-box button {
+            padding: 8px 20px; background: var(--search-btn);
+            border: 1px solid var(--search-border); border-left: none;
+            color: var(--text-sec); border-radius: 0 40px 40px 0; cursor: pointer;
+        }
+        .search-box button:hover { background-color: var(--hover-bg); color: var(--text-main); }
+
+        /* IKONKALAR */
+        .end-section { display: flex; align-items: center; gap: 10px; }
+        .icon-btn {
+            background: none; border: none; color: var(--icon-color);
+            font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%;
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+        }
+        .icon-btn:hover { background-color: var(--hover-bg); }
+
+        .login-btn {
+            border: 1px solid var(--border-color); color: #3ea6ff; padding: 6px 12px;
+            border-radius: 18px; font-size: 14px; display: flex; align-items: center; gap: 6px;
+            font-weight: 500;
+        }
+        .login-btn:hover { background: rgba(62, 166, 255, 0.1); border-color: transparent; }
+
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed; top: 56px; left: -240px; width: 240px; height: calc(100vh - 56px);
+            background-color: var(--bg-sidebar); overflow-y: auto; transition: 0.2s ease-in-out;
+            z-index: 999; padding-right: 10px;
+        }
+        .sidebar.active { left: 0; }
+
+        .sidebar::-webkit-scrollbar { width: 8px; }
+        .sidebar::-webkit-scrollbar-thumb { background-color: #909090; border-radius: 4px; }
+        .sidebar:hover::-webkit-scrollbar-thumb { background-color: #717171; }
+
+        .sidebar-section { padding: 12px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-link {
+            display: flex; align-items: center; padding: 8px 12px;
+            color: var(--text-main); font-size: 14px; border-radius: 10px; margin-bottom: 2px;
+        }
+        .sidebar-link:hover { background-color: var(--hover-bg); }
+        .sidebar-link i { margin-right: 24px; font-size: 20px; width: 24px; text-align: center; }
+        .sidebar-link.active { background-color: var(--hover-bg); font-weight: 500; }
+
+        .overlay {
+            position: fixed; top: 56px; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 998; display: none;
+        }
+        .overlay.active { display: block; }
+
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+        <div class="start-section">
+            <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+            <a href="/" class="logo" style="display: flex; align-items: center; gap: 5px; text-decoration: none; color: var(--text-main);">
+                <span style="display: flex; align-items: center; background: #222; padding: 5px 8px; border-radius: 8px; border: 1px solid #333;">
+                    <i class="fas fa-code" style="color: #3ea6ff; font-size: 16px; margin-right: 3px;"></i>
+                    <i class="fas fa-play" style="color: #ff0000; font-size: 12px;"></i>
+                </span>
+                <span class="d-none d-sm-block" style="font-weight: bold; font-size: 20px; letter-spacing: -0.5px; margin-left: 5px;">
+                    Dev<span style="color: #ff0000;">Tube</span>
+                </span>
+            </a>
+        </div>
+
+        <div class="center-section d-flex flex-grow-1 justify-content-center" style="max-width: 600px;">
+            <form class="search-box w-100 mx-2 mx-md-4" method="GET" action="{% url 'home' %}">
+                <input type="text" name="q" placeholder="Qidiruv" value="{{ request.GET.q|default:'' }}">
+                <button type="submit"><i class="fas fa-search"></i></button>
+            </form>
+            <button class="icon-btn d-none d-md-flex" style="background: var(--search-bg); margin-left: 10px;" onclick="alert('Ovozli qidiruv funksiyasi tez orada!')"><i class="fas fa-microphone"></i></button>
+        </div>
+
+        <div class="end-section">
+            <button class="icon-btn d-none d-sm-block" onclick="toggleTheme()" title="Rejim"><i id="theme-icon" class="fas fa-moon"></i></button>
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'create_project' %}" class="icon-btn d-none d-sm-block"><i class="fas fa-video"></i></a>
+                <button class="icon-btn d-none d-sm-block"><i class="far fa-bell"></i></button>
+                <a href="{% url 'profile' %}" style="margin-left: 5px;">
+                    <img src="{{ user.profile.avatar.url }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                </a>
+            {% else %}
+                <button class="icon-btn d-none d-sm-block"><i class="fas fa-ellipsis-v"></i></button>
+                <a href="{% url 'login' %}" class="login-btn">
+                    <i class="far fa-user-circle" style="font-size: 20px;"></i>
+                    <span class="d-none d-sm-inline ms-1">Kirish</span>
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-section pt-2 border-0">
+            <a href="{% url 'home' %}" class="sidebar-link {% if request.path == '/' %}active{% endif %}">
+                <i class="fas fa-home"></i> Asosiy
+            </a>
+            <a href="#" class="sidebar-link" onclick="alert('Mini loyihalar (Snippetlar) bo\'limi tez orada!')">
+                <i class="fas fa-code"></i> Mini Loyihalar
+            </a>
+            <a href="{% url 'trending' %}" class="sidebar-link {% if 'trending' in request.path %}active{% endif %}">
+                <i class="fas fa-fire"></i> Trenddagilar
+            </a>
+        </div>
+
+        <div class="sidebar-section">
+            <h6 class="px-3 mt-2 mb-2 fw-bold" style="font-size: 16px;">Sizning Ishlanmalar</h6>
+            {% if user.is_authenticated %}
+                <a href="{% url 'profile' %}" class="sidebar-link"><i class="fas fa-id-card"></i> Mening Profilim</a>
+
+                <a href="{% url 'my_videos' %}" class="sidebar-link {% if 'my-videos' in request.path %}active{% endif %}">
+                    <i class="fas fa-laptop-code"></i> Mening Loyihalarim
+                </a>
+
+                <a href="{% url 'liked_videos' %}" class="sidebar-link {% if 'liked' in request.path %}active{% endif %}">
+                    <i class="fas fa-thumbs-up"></i> Saralangan Loyihalar
+                </a>
+
+                <a href="#" class="sidebar-link" onclick="alert('Tarix saqlash tez orada ishga tushadi!')">
+                    <i class="fas fa-history"></i> Ko'rilganlar Tarixi
+                </a>
+                <a href="#" class="sidebar-link" onclick="alert('Keyinroq ko\'rish funksiyasi ishlab chiqilmoqda.')">
+                    <i class="far fa-clock"></i> Keyinroq o'rganish
+                </a>
+            {% else %}
+                <p class="px-3 small text-muted">Loyihalarni saqlash va baholash uchun tizimga kiring.</p>
+                <a href="{% url 'login' %}" class="login-btn mx-3 w-auto justify-content-center">Kirish</a>
+            {% endif %}
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="sidebar-section">
+            <h6 class="px-3 mt-2 mb-2 fw-bold">Kuzatilayotganlar</h6>
+            <a href="#" class="sidebar-link"><i class="fas fa-user-friends"></i> Dasturchilar Hamjamiyati</a>
+            <a href="#" class="sidebar-link"><i class="fab fa-python"></i> Python Darslari</a>
+        </div>
+        {% endif %}
+
+        <div class="sidebar-section border-0">
+             <a href="#" class="sidebar-link" onclick="alert('Sozlamalar bo\'limi hozircha mavjud emas.')"><i class="fas fa-cog"></i> Sozlamalar</a>
+             <a href="#" class="sidebar-link"><i class="fas fa-flag"></i> Shikoyatlar</a>
+             <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Yordam</a>
+             {% if user.is_authenticated %}
+                 <form action="{% url 'logout' %}" method="post">{% csrf_token %}
+                    <button class="sidebar-link w-100 border-0 bg-transparent text-start" style="color: var(--text-main);">
+                        <i class="fas fa-sign-out-alt"></i> Chiqish
+                    </button>
+                 </form>
+             {% endif %}
+        </div>
+
+        <div class="px-3 py-3 small text-muted">
+            &copy; 2025 DevTube Inc.<br>
+            <small>Toshkent, O'zbekiston</small>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container-fluid">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        const themeIcon = document.getElementById('theme-icon');
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeIcon.className = 'fas fa-moon';
+        } else {
+            themeIcon.className = 'fas fa-sun';
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.getAttribute('data-theme') === 'light') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'dark');
+                themeIcon.className = 'fas fa-sun';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                themeIcon.className = 'fas fa-moon';
+            }
+        }
+    </script>
+</body>
+</html>

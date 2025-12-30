@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card p-4 shadow-sm">
+            <h3 class="mb-4">Loyihani Tahrirlash</h3>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary w-100">O'zgarishlarni saqlash</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.querySelectorAll('input, textarea, select').forEach(e => e.classList.add('form-control'));
+</script>
+{% endblock %}

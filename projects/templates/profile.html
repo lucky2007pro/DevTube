@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* KANAL SHAPKASI (HEADER) */
+    .channel-header {
+        display: flex; align-items: flex-start; gap: 24px;
+        padding: 30px 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    @media (max-width: 768px) {
+        .channel-header { flex-direction: column; align-items: center; text-align: center; }
+    }
+
+    /* KATTA AVATAR */
+    .channel-avatar-lg {
+        width: 128px; height: 128px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    /* KANAL MA'LUMOTLARI */
+    .channel-info h1 {
+        font-size: 24px; font-weight: bold; margin-bottom: 5px; color: var(--text-main);
+    }
+    .channel-meta { color: var(--text-sec); font-size: 14px; margin-bottom: 15px; }
+    .channel-meta span { margin-right: 10px; }
+
+    /* SOZLASH TUGMASI */
+    .btn-customize {
+        background-color: var(--pill-bg); color: var(--text-main);
+        border: none; padding: 8px 16px; border-radius: 18px;
+        font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .btn-customize:hover { background-color: var(--hover-bg); }
+
+    /* TABLAR */
+    .channel-tabs {
+        display: flex; gap: 30px; padding: 0 20px;
+        border-bottom: 1px solid var(--border-color);
+        margin-top: 10px;
+    }
+    .tab-link {
+        padding: 15px 0;
+        color: var(--text-sec); font-weight: 600; text-transform: uppercase;
+        font-size: 14px; text-decoration: none; cursor: pointer;
+        border-bottom: 3px solid transparent;
+    }
+    .tab-link.active {
+        color: var(--text-main); border-bottom-color: var(--text-main);
+    }
+
+    /* LOYIHALAR GRIDI */
+    .my-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px; padding: 24px;
+    }
+
+    .video-card { text-decoration: none; color: inherit; display: block; }
+
+    .thumbnail {
+        width: 100%; aspect-ratio: 16/9; background: #202020;
+        border-radius: 12px; overflow: hidden; position: relative;
+    }
+    .thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+
+    .video-title {
+        font-size: 16px; font-weight: 600; margin-top: 8px; color: var(--text-main);
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* TAHRIRLASH TUGMALARI */
+    .video-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .btn-action {
+        flex: 1; text-align: center; padding: 6px; border-radius: 18px;
+        font-size: 13px; font-weight: 500; text-decoration: none;
+    }
+    .btn-edit { background: var(--pill-bg); color: var(--text-main); }
+    .btn-delete { background: rgba(255, 0, 0, 0.1); color: #ff4444; }
+    .btn-edit:hover { background: var(--hover-bg); }
+    .btn-delete:hover { background: rgba(255, 0, 0, 0.2); }
+</style>
+
+<div class="channel-header">
+    <img src="{{ user.profile.avatar.url }}" class="channel-avatar-lg">
+
+    <div class="channel-info">
+        <h1>{{ user.username }}</h1>
+        <div class="channel-meta">
+            <span>@{{ user.username }}</span> •
+            <span>{{ projects.count }} loyiha</span> •
+            <span>{{ user.email }}</span>
+        </div>
+
+        <p style="color: var(--text-sec); font-size: 14px; max-width: 600px;">
+            {{ user.profile.bio|default:"Kanal tavsifi yo'q." }}
+        </p>
+
+        <button class="btn-customize" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+            Kanalni sozlash
+        </button>
+    </div>
+</div>
+
+<div class="channel-tabs">
+    <div class="tab-link active">Loyihalar</div>
+    <div class="tab-link">Haqida</div>
+</div>
+
+<div class="my-grid">
+    {% for project in projects %}
+        <div class="video-card">
+            <a href="{% url 'project_detail' project.pk %}" class="thumbnail d-block">
+                {% if project.image %}
+                    <img src="{{ project.image.url }}">
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100 bg-dark text-white">
+                        <i class="fas fa-play"></i>
+                    </div>
+                {% endif %}
+            </a>
+
+            <div class="video-title">{{ project.title }}</div>
+            <div class="text-muted small">{{ project.views }} ko'rish • {{ project.created_at|date:"d M, Y" }}</div>
+
+            <div class="video-actions">
+                <a href="{% url 'update_project' project.pk %}" class="btn-action btn-edit">
+                    <i class="fas fa-pen"></i> Tahrirlash
+                </a>
+                <a href="{% url 'delete_project' project.pk %}" class="btn-action btn-delete">
+                    <i class="fas fa-trash"></i>
+                </a>
+            </div>
+        </div>
+    {% empty %}
+        <p class="text-muted">Sizda hali loyihalar yo'q.</p>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color: var(--bg-nav); color: var(--text-main);">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold">Kanalni sozlash</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        style="filter: invert(1) grayscale(100%) brightness(200%);"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Username</label>
+                        {{ u_form.username }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Email</label>
+                        {{ u_form.email }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Bio (Tavsif)</label>
+                        {{ p_form.bio }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Avatar (Rasm)</label>
+                        {{ p_form.avatar }}
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Saqlash</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Inputlarni Bootstrap stiliga moslash
+    const inputs = document.querySelectorAll('#editProfileModal input, #editProfileModal textarea');
+    inputs.forEach(input => {
+        if(input.type !== 'checkbox' && input.type !== 'file') {
+            input.classList.add('form-control');
+        } else if (input.type === 'file') {
+            input.classList.add('form-control');
+        }
+        input.style.backgroundColor = 'var(--search-bg)';
+        input.style.color = 'var(--text-main)';
+        input.style.border = '1px solid var(--border-color)';
+    });
+</script>
+{% endblock %}

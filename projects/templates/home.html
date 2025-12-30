@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* KATEGORIYA TABLETKALARI */
+    .categories-wrapper {
+        position: sticky; top: 56px; z-index: 99;
+        background-color: var(--bg-body);
+        padding: 12px 24px;
+        display: flex; gap: 12px;
+        overflow-x: auto;
+        -ms-overflow-style: none; scrollbar-width: none;
+    }
+    .categories-wrapper::-webkit-scrollbar { display: none; }
+
+    .cat-pill {
+        background-color: var(--pill-bg);
+        color: var(--pill-text);
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 14px; font-weight: 500;
+        white-space: nowrap; text-decoration: none;
+        transition: 0.2s; border: none;
+    }
+    .cat-pill:hover { background-color: #3f3f3f; }
+    [data-theme="light"] .cat-pill:hover { background-color: #e5e5e5; }
+
+    .cat-pill.active {
+        background-color: var(--pill-active-bg);
+        color: var(--pill-active-text);
+    }
+
+    /* VIDEO GRID */
+    .video-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 40px 16px; /* Qator orasi kattaroq */
+        padding: 24px;
+    }
+
+    .video-card {
+        display: flex; flex-direction: column;
+        text-decoration: none; color: inherit;
+        cursor: pointer;
+    }
+
+    /* THUMBNAIL */
+    .thumbnail {
+        width: 100%; aspect-ratio: 16/9;
+        background-color: #202020;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 12px;
+        transition: 0.2s;
+    }
+    .video-card:hover .thumbnail { border-radius: 0; }
+
+    .thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* VAQT (RASM USTIDA) */
+    .duration-badge {
+        position: absolute; bottom: 6px; right: 6px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 1px 4px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        font-family: Roboto, Arial, sans-serif;
+    }
+
+    /* INFO */
+    .video-info { display: flex; gap: 12px; align-items: flex-start; }
+
+    .avatar {
+        width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+        margin-top: 2px;
+    }
+
+    .details { display: flex; flex-direction: column; width: 100%; }
+
+    .video-title {
+        font-size: 16px; font-weight: 600; line-height: 1.4;
+        color: var(--text-main);
+        margin-bottom: 4px;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    .meta-info {
+        font-size: 14px; color: var(--text-sec);
+        line-height: 1.3;
+    }
+    .meta-info:hover { color: var(--text-main); }
+
+    /* NARX (PASTDA) */
+    .price-tag {
+        background-color: rgba(46, 204, 113, 0.15);
+        color: #2ecc71;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        display: inline-block;
+        margin-top: 4px;
+    }
+    .price-tag.free {
+        background-color: var(--hover-bg);
+        color: var(--text-sec);
+    }
+</style>
+
+<div class="categories-wrapper">
+    <a href="/" class="cat-pill {% if not request.GET.category %}active{% endif %}">Hammasi</a>
+    {% for code, name in categories %}
+        <a href="?category={{ code }}" class="cat-pill {% if request.GET.category == code %}active{% endif %}">{{ name }}</a>
+    {% endfor %}
+</div>
+
+<div class="video-grid">
+    {% for project in projects %}
+        <a href="{% url 'project_detail' project.pk %}" class="video-card">
+            <div class="thumbnail">
+                {% if project.image %}
+                    <img src="{{ project.image.url }}">
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100 text-white bg-dark">
+                        <i class="fas fa-play fa-2x"></i>
+                    </div>
+                {% endif %}
+
+                <div class="duration-badge">12:45</div>
+            </div>
+
+            <div class="video-info">
+                <img src="{{ project.author.profile.avatar.url }}" class="avatar">
+
+                <div class="details">
+                    <div class="video-title">{{ project.title }}</div>
+
+                    <div class="meta-info">
+                        <div>{{ project.author.username }}</div>
+                        <div>
+                            {{ project.views }} ko'rish • {{ project.created_at|timesince }} oldin
+                        </div>
+
+                        {% if project.price > 0 %}
+                            <div class="price-tag">${{ project.price }}</div>
+                        {% else %}
+                            <div class="price-tag free">Bepul</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+    {% empty %}
+        <div class="text-center w-100 py-5 text-muted col-12">
+            <h5>Videolar topilmadi 😔</h5>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
