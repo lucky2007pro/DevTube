@@ -112,6 +112,8 @@
             border: 1px solid var(--border-color); color: #3ea6ff; padding: 6px 12px;
             border-radius: 18px; font-size: 14px; display: flex; align-items: center; gap: 6px;
             font-weight: 500;
+            background: transparent;
+            cursor: pointer;
         }
         .login-btn:hover { background: rgba(62, 166, 255, 0.1); border-color: transparent; }
 
@@ -131,6 +133,11 @@
         .sidebar-link {
             display: flex; align-items: center; padding: 8px 12px;
             color: var(--text-main); font-size: 14px; border-radius: 10px; margin-bottom: 2px;
+            text-decoration: none;
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
         }
         .sidebar-link:hover { background-color: var(--hover-bg); }
         .sidebar-link i { margin-right: 24px; font-size: 20px; width: 24px; text-align: center; }
@@ -142,15 +149,18 @@
         }
         .overlay.active { display: block; }
 
+        /* Login sahifasi uchun maxsus CSS (Oq fon muammosini oldini olish uchun) */
+        .socialaccount_provider { color: black; }
+
     </style>
 </head>
 <body>
 
-<nav class="navbar">
+    <nav class="navbar">
         <div class="start-section">
             <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
 
-            <a href="/" class="logo" style="display: flex; align-items: center; gap: 5px; text-decoration: none; color: var(--text-main);">
+            <a href="{% url 'home' %}" class="logo" style="display: flex; align-items: center; gap: 5px; text-decoration: none; color: var(--text-main);">
                 <span style="display: flex; align-items: center; background: #222; padding: 5px 8px; border-radius: 8px; border: 1px solid #333;">
                     <i class="fas fa-code" style="color: #3ea6ff; font-size: 16px; margin-right: 3px;"></i>
                     <i class="fas fa-play" style="color: #ff0000; font-size: 12px;"></i>
@@ -176,11 +186,16 @@
                 <a href="{% url 'create_project' %}" class="icon-btn d-none d-sm-block"><i class="fas fa-video"></i></a>
                 <button class="icon-btn d-none d-sm-block"><i class="far fa-bell"></i></button>
                 <a href="{% url 'profile' %}" style="margin-left: 5px;">
-                    <img src="{{ user.profile.avatar.url }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                    {% else %}
+                        <i class="fas fa-user-circle" style="font-size: 32px;"></i>
+                    {% endif %}
                 </a>
             {% else %}
                 <button class="icon-btn d-none d-sm-block"><i class="fas fa-ellipsis-v"></i></button>
-                <a href="{% url 'login' %}" class="login-btn">
+
+                <a href="{% url 'account_login' %}" class="login-btn">
                     <i class="far fa-user-circle" style="font-size: 20px;"></i>
                     <span class="d-none d-sm-inline ms-1">Kirish</span>
                 </a>
@@ -217,12 +232,9 @@
                 <a href="#" class="sidebar-link" onclick="alert('Tarix saqlash tez orada ishga tushadi!')">
                     <i class="fas fa-history"></i> Ko'rilganlar Tarixi
                 </a>
-                <a href="#" class="sidebar-link" onclick="alert('Keyinroq ko\'rish funksiyasi ishlab chiqilmoqda.')">
-                    <i class="far fa-clock"></i> Keyinroq o'rganish
-                </a>
             {% else %}
                 <p class="px-3 small text-muted">Loyihalarni saqlash va baholash uchun tizimga kiring.</p>
-                <a href="{% url 'login' %}" class="login-btn mx-3 w-auto justify-content-center">Kirish</a>
+                <a href="{% url 'account_login' %}" class="login-btn mx-3 w-auto justify-content-center">Kirish</a>
             {% endif %}
         </div>
 
@@ -239,8 +251,8 @@
              <a href="#" class="sidebar-link"><i class="fas fa-flag"></i> Shikoyatlar</a>
              <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Yordam</a>
              {% if user.is_authenticated %}
-                 <form action="{% url 'logout' %}" method="post">{% csrf_token %}
-                    <button class="sidebar-link w-100 border-0 bg-transparent text-start" style="color: var(--text-main);">
+                 <form action="{% url 'account_logout' %}" method="post">{% csrf_token %}
+                    <button type="submit" class="sidebar-link w-100 border-0 bg-transparent text-start" style="color: var(--text-main); cursor: pointer;">
                         <i class="fas fa-sign-out-alt"></i> Chiqish
                     </button>
                  </form>
