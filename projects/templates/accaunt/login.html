@@ -1,69 +1,128 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
 {% load i18n %}
 {% load account socialaccount %}
+<html lang="uz">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DevTube Kirish</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-{% block content %}
-<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card border-0" style="background-color: #1e1e1e; width: 100%; max-width: 450px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
-        <div class="card-body p-5 text-center">
-            
-            <h2 class="fw-bold mb-4" style="color: #fff;">Kirish</h2>
-            <p class="text-secondary mb-4">DevTube hisobingizga kiring</p>
+    <style>
+        body {
+            background-color: #0f0f0f;
+            color: #ffffff;
+            font-family: Roboto, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background-color: #1f1f1f;
+            border: 1px solid #303030;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .form-control {
+            background-color: #121212 !important;
+            border: 1px solid #303030 !important;
+            color: white !important;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .form-control:focus {
+            border-color: #3ea6ff !important;
+            box-shadow: none !important;
+        }
+        .btn-primary {
+            background-color: #3ea6ff;
+            border: none;
+            color: #0f0f0f;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 20px;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background-color: #62b4ff;
+        }
+        .google-btn {
+            background-color: #ffffff;
+            color: #1f1f1f;
+            font-weight: bold;
+            border-radius: 20px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .google-btn:hover {
+            background-color: #f1f1f1;
+        }
+        a { color: #3ea6ff; text-decoration: none; }
+        label { display: none; }
+    </style>
+</head>
+<body>
 
-            {% get_providers as socialaccount_providers %}
-            {% for provider in socialaccount_providers %}
-                <a title="{{ provider.name }}" class="btn btn-light w-100 d-flex align-items-center justify-content-center gap-2 py-2 mb-3 fw-bold" 
-                   href="{% provider_login_url provider.id process="login" scope=scope auth_params=auth_params %}"
-                   style="border-radius: 20px; font-size: 16px;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" width="20">
-                    Google orqali kirish
-                </a>
-            {% endfor %}
+    <div class="login-card">
+        <div class="mb-4 d-flex justify-content-center align-items-center gap-2">
+            <span style="background: #222; padding: 5px 10px; border-radius: 8px; border: 1px solid #333;">
+                <i class="fas fa-play" style="color: #ff0000;"></i>
+            </span>
+            <h3 class="fw-bold m-0">Dev<span style="color: #ff0000;">Tube</span></h3>
+        </div>
 
-            <div class="d-flex align-items-center my-3">
-                <hr class="flex-grow-1" style="border-color: #555;">
-                <span class="mx-2 text-secondary">yoki</span>
-                <hr class="flex-grow-1" style="border-color: #555;">
-            </div>
+        <h5 class="mb-4 text-secondary">Hisobga kirish</h5>
 
-            <form class="login" method="POST" action="{% url 'account_login' %}">
-                {% csrf_token %}
-                
-                {% if form.errors %}
-                    <div class="alert alert-danger py-2" style="font-size: 14px;">
-                        Login yoki parol noto'g'ri!
-                    </div>
-                {% endif %}
+        {% get_providers as socialaccount_providers %}
+        {% for provider in socialaccount_providers %}
+            <a href="{% provider_login_url provider.id process='login' %}" class="google-btn mb-3">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20" alt="G" />
+                Google orqali kirish
+            </a>
+        {% endfor %}
 
-                <div class="mb-3 text-start">
-                    <label class="text-secondary small ms-1">Login yoki Email</label>
-                    <input type="text" name="login" placeholder="Kiriting..." class="form-control" 
-                           style="background: #121212; border: 1px solid #333; color: white; border-radius: 8px; padding: 10px;">
-                </div>
+        <div class="d-flex align-items-center my-3">
+            <hr class="flex-grow-1 border-secondary" />
+            <span class="mx-2 text-secondary small">yoki login orqali</span>
+            <hr class="flex-grow-1 border-secondary" />
+        </div>
 
-                <div class="mb-3 text-start">
-                    <label class="text-secondary small ms-1">Parol</label>
-                    <input type="password" name="password" placeholder="Parolni kiriting..." class="form-control" 
-                           style="background: #121212; border: 1px solid #333; color: white; border-radius: 8px; padding: 10px;">
-                </div>
+        <form method="POST" action="{% url 'account_login' %}">
+            {% csrf_token %}
 
-                <button class="primaryAction btn w-100 py-2 mt-3 fw-bold" type="submit" 
-                        style="background-color: #3ea6ff; color: black; border-radius: 20px;">
-                    {% trans "Sign In" %}
-                </button>
-                
-                <div class="mt-4">
-                    <a class="button secondaryAction text-decoration-none text-secondary small" href="{% url 'account_reset_password' %}">
-                        {% trans "Forgot Password?" %}
-                    </a>
-                </div>
+            {% if form.errors %}
+                <div class="alert alert-danger py-2 small">Login yoki parol xato!</div>
+            {% endif %}
 
-                <div class="mt-3 text-secondary small">
-                    Hali hisobingiz yo'qmi? 
-                    <a href="{{ signup_url }}" style="color: #3ea6ff;">Ro'yxatdan o'ting</a>
-                </div>
-            </form>
+            <input type="text" name="login" placeholder="Email yoki Login" class="form-control" required />
+            <input type="password" name="password" placeholder="Parol" class="form-control" required />
+
+            <button type="submit" class="btn btn-primary mt-2">Kirish</button>
+        </form>
+
+        <div class="mt-4 text-secondary small">
+            <a href="{% url 'account_reset_password' %}" class="text-secondary">Parolni unutdingizmi?</a>
+            <br /><br />
+            Hali hisobingiz yo'qmi? <a href="{% url 'account_signup' %}">Ro'yxatdan o'ting</a>
+        </div>
+
+        <div class="mt-3">
+            <a href="/" class="small text-secondary"><i class="fas fa-arrow-left"></i> Asosiy sahifaga qaytish</a>
         </div>
     </div>
-</div>
-{% endblock %}
+
+</body>
+</html>
