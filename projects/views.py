@@ -1,33 +1,29 @@
 import subprocess
 import os
 from django.conf import settings
-from django.http import JsonResponse  # <--- YANGI QO'SHILDI (AJAX UCHUN)
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
-from .models import Project, Comment, Profile
+from .models import Project, Comment
 from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 
-
-# 1. BOSH SAHIFA (Qidiruv va Kategoriyalar bilan)
+# 1. BOSH SAHIFA
 def home_page(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
     category = request.GET.get('category')
 
-    # Qidiruv logikasi
     projects = Project.objects.filter(
         Q(category__icontains=q) |
         Q(title__icontains=q) |
         Q(description__icontains=q)
     )
 
-    # Kategoriya bo'yicha filter
     if category:
         projects = projects.filter(category=category)
 
     categories = Project.CATEGORY_CHOICES
-
     context = {'projects': projects, 'categories': categories}
     return render(request, 'home.html', context)
 
@@ -47,7 +43,7 @@ def create_project(request):
     return render(request, 'create_project.html', {'form': form})
 
 
-# 3. LOYIHA TAFSILOTLARI (Ko'rish, Izoh, Sotib olish tekshiruvi)
+# 3. LOYIHA TAFSILOTLARI (TUZATILDI)
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
 
@@ -55,7 +51,7 @@ def project_detail(request, pk):
     project.views += 1
     project.save()
 
-    # Izoh yozish
+    # Izoh yozish qismi
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
@@ -63,45 +59,39 @@ def project_detail(request, pk):
             comment.user = request.user
             comment.project = project
             comment.save()
-            if comment_form.is_valid():
-                comment = comment_form.save(commit=False)
-                comment.user = request.user
-                comment.project = project
-                comment.save()
 
-                # --- SHU YERDAN BOSHLAB QO'SHASIZ ---
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'username': comment.user.username,
-                        'avatar_url': comment.user.profile.avatar.url,
-                        'body': comment.body,
-                        'created_at': "hozirgina"
-                    })
-                # --- SHU YERGACHA ---
+            # AJAX so'rov bo'lsa, JSON qaytaramiz
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'username': comment.user.username,
+                    'avatar_url': comment.user.profile.avatar.url,
+                    'body': comment.body,
+                    'created_at': "hozirgina"
+                })
 
-                return redirect('project_detail', pk=pk)
             return redirect('project_detail', pk=pk)
     else:
         comment_form = CommentForm()
 
-    # Kodni ko'rsatish (Tekin yoki sotib olingan yoki muallif o'zi bo'lsa)
+    # Kodni ko'rsatish logikasi
     has_bought = False
     code_content = None
     is_preview = True
 
-    if project.price == 0 or (request.user.is_authenticated and (request.user == project.author)):
+    # Agar tekin bo'lsa yoki muallif o'zi bo'lsa -> sotib olgan hisoblanadi
+    if project.price == 0 or (request.user.is_authenticated and request.user == project.author):
         has_bought = True
 
     if has_bought and project.source_code:
         try:
+            # Encoding qo'shildi (utf-8) harflar buzilmasligi uchun
             with project.source_code.open('r') as f:
                 code_content = f.read()
             is_preview = False
-        except:
-            code_content = "Kod faylini o'qib bo'lmadi."
+        except Exception as e:
+            code_content = f"Kodni o'qishda xatolik: {e}"
     elif project.source_code:
-        # Agar sotib olmagan bo'lsa, kodni yashiramiz yoki qismini ko'rsatamiz
-        code_content = "# Kodni ko'rish uchun loyihani sotib oling."
+        code_content = "# Kodni to'liq ko'rish uchun loyihani sotib oling."
 
     context = {
         'project': project,
@@ -126,11 +116,10 @@ def register(request):
     return render(request, 'register.html', {'form': form})
 
 
-# 5. PROFIL VA SOZLAMALAR (RASM YANGILASH SHU YERDA)
+# 5. PROFIL
 @login_required
 def profile(request):
     if request.method == 'POST':
-        # MUHIM: request.FILES rasmni yuklash uchun shart!
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
 
@@ -143,7 +132,6 @@ def profile(request):
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=request.user.profile)
 
-    # Foydalanuvchining o'z loyihalari
     projects = Project.objects.filter(author=request.user).order_by('-created_at')
 
     context = {
@@ -154,7 +142,7 @@ def profile(request):
     return render(request, 'profile.html', context)
 
 
-# 6. LOYIHANI O'CHIRISH
+# 6. O'CHIRISH
 @login_required
 def delete_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
@@ -166,7 +154,7 @@ def delete_project(request, pk):
     return redirect('home')
 
 
-# 7. LOYIHANI TAHRIRLASH
+# 7. TAHRIRLASH
 @login_required
 def update_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
@@ -184,13 +172,11 @@ def update_project(request, pk):
     return render(request, 'update_project.html', {'form': form})
 
 
-# 8. LIKE BOSISH (AJAX VERSION - YANGILANDI)
+# 8. LIKE (AJAX)
 @login_required
 def like_project(request, pk):
     if request.method == 'POST':
         project = get_object_or_404(Project, pk=pk)
-
-        # Like bor-yo'qligini tekshirish
         if request.user in project.likes.all():
             project.likes.remove(request.user)
             is_liked = False
@@ -198,14 +184,11 @@ def like_project(request, pk):
             project.likes.add(request.user)
             is_liked = True
 
-        # Sahifani yangilash o'rniga JSON javob qaytaramiz
         return JsonResponse({
             'total_likes': project.likes.count(),
             'is_liked': is_liked
         })
-
-    # Agar kimdir to'g'ridan-to'g'ri URL ga kirmoqchi bo'lsa
-    return JsonResponse({'error': 'Faqat POST so\'rov qabul qilinadi'}, status=400)
+    return JsonResponse({'error': 'POST required'}, status=400)
 
 
 # 9. SOTIB OLISH (MOCK)
@@ -216,7 +199,7 @@ def buy_project(request, pk):
     return redirect('project_detail', pk=pk)
 
 
-# 10. TRENDLAR
+# 10. TRENDING
 def trending(request):
     projects = Project.objects.all().order_by('-views')
     categories = Project.CATEGORY_CHOICES
@@ -239,31 +222,41 @@ def my_videos(request):
     return render(request, 'home.html', {'projects': projects, 'categories': categories})
 
 
-# 13. C++ INTEGRATSIYASI (main.exe ni ishlatish)
+# 13. C++ INTEGRATSIYASI (TUZATILDI: Render uchun moslandi)
 def cpp_test(request):
-    result = "Hali hisoblanmadi..."
+    result = "Natija kutilmoqda..."
 
     if request.GET.get('number'):
         number = request.GET.get('number')
 
-        # main.exe manzili: BASE_DIR/cpp_module/main.exe
-        if os.name == 'nt':
+        # 1. Operatsion tizimni aniqlash
+        if os.name == 'nt': # Windows
             exe_name = 'main.exe'
-        else:
+        else: # Linux (Render)
             exe_name = 'main'
 
-        exe_path = os.path.join(settings.BASE_DIR, 'cpp_module', exe_name)
+        # 2. Fayl yo'lini aniqlash (projects papkasi ichida deb hisoblaymiz)
+        # Agar main.cpp ni projects papkasida kompilyatsiya qilgan bo'lsak:
+        exe_path = os.path.join(settings.BASE_DIR, 'projects', exe_name)
+
         try:
-            # C++ dasturini (exe) ishga tushiramiz
+            # 3. MUHIM: Linux uchun ruxsat berish (chmod +x)
+            if os.name != 'nt':
+                subprocess.run(['chmod', '+x', exe_path])
+
+            # 4. Ishga tushirish
             process = subprocess.run([exe_path, number], capture_output=True, text=True)
 
             if process.stdout:
                 result = process.stdout
+            elif process.stderr:
+                result = f"Xatolik (stderr): {process.stderr}"
             else:
-                result = f"Xatolik yoki bo'sh javob: {process.stderr}"
+                result = "Dastur ishga tushdi lekin hech narsa qaytarmadi."
+
         except FileNotFoundError:
-            result = "Xatolik: main.exe topilmadi!"
+            result = f"Xatolik: '{exe_name}' fayli topilmadi! (Manzil: {exe_path})"
         except Exception as e:
-            result = f"Dasturni ishga tushirib bo'lmadi: {e}"
+            result = f"Dastur ishlashida xatolik: {e}"
 
     return render(request, 'cpp_test.html', {'result': result})
