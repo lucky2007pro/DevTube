@@ -9,15 +9,11 @@
                     <h4 class="mb-0">Yangi loyiha yuklash</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
+
+                    <div id="error-alert" class="alert alert-danger d-none"></div>
+
+                    <form id="upload-form" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
-
-                        {% if form.errors %}
-                            <div class="alert alert-danger">
-                                {{ form.errors }}
-                            </div>
-                        {% endif %}
-
                         <div class="mb-3">
                             <label class="form-label">Loyiha nomi</label>
                             {{ form.title }}
@@ -34,66 +30,121 @@
                                 {{ form.category }}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Narxi ($) (0 = Tekin)</label>
+                                <label class="form-label">Narxi ($)</label>
                                 {{ form.price }}
                             </div>
                         </div>
 
                         <div class="mb-3 p-3 border border-secondary rounded" style="background: rgba(255,0,0,0.05);">
-                            <label class="form-label text-danger fw-bold"><i class="fab fa-youtube"></i> YouTube Link (Ixtiyoriy)</label>
+                            <label class="form-label text-danger fw-bold"><i class="fab fa-youtube"></i> YouTube Link</label>
                             {{ form.youtube_link }}
-                            <div class="form-text text-muted">Agar video fayl yuklashni xohlamasangiz, YouTube videosining linkini qo'ying.</div>
+                            <div class="form-text text-muted">YouTube videosining ssilkasini qo'ysangiz ham bo'ladi.</div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Rasm yuklash (Muqova)</label>
-                            {{ form.image }} </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Video fayl yuklash (Ixtiyoriy)</label>
+                            <label class="form-label">Rasm (Muqova)</label>
+                            {{ form.image }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Video fayl (Agar YouTube bo'lmasa)</label>
                             {{ form.video_file }}
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Source Code (Zip fayl)</label>
+                            <label class="form-label">Source Code (Zip)</label>
                             {{ form.source_code }}
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 py-2">Yuklash</button>
+                        <button type="submit" id="submit-btn" class="btn btn-primary w-100 py-2">Yuklash</button>
                     </form>
+
+                    <div id="progress-container" class="d-none mt-4">
+                        <p class="text-center mb-2">Video serverga yuklanmoqda... <span id="progress-text">0%</span></p>
+                        <div class="progress" style="height: 25px; background-color: #2c3e50;">
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                 role="progressbar" style="width: 0%;">0%</div>
+                        </div>
+                        <p class="text-muted text-center small mt-2">Iltimos, sahifani yopmang! Katta videolar biroz vaqt olishi mumkin.</p>
+                    </div>
+
                 </div>
             </div>
         </div>
     </div>
 </div>
-<div id="loading-overlay" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-     style="background: rgba(0,0,0,0.85); z-index: 9999; backdrop-filter: blur(5px);">
-
-    <div class="text-center text-white">
-        <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
-            <span class="visually-hidden">Yuklanmoqda...</span>
-        </div>
-
-        <h4 class="mt-4 font-weight-bold">Video yuklanmoqda...</h4>
-        <p class="text-muted">Iltimos, sahifani yopmang. Bu biroz vaqt olishi mumkin.</p>
-
-        <div class="progress mt-3" style="width: 300px; height: 10px;">
-            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 100%"></div>
-        </div>
-    </div>
-</div>
 
 <script>
-    // Formani topamiz
-    const form = document.querySelector('form');
-    const overlay = document.getElementById('loading-overlay');
+    const form = document.getElementById('upload-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const errorAlert = document.getElementById('error-alert');
 
-    // Forma yuborilayotganda (Submit bosilganda)
-    form.addEventListener('submit', function() {
-        // Agar forma to'ldirilgan bo'lsa (HTML validation o'tsa)
-        if (form.checkValidity()) {
-            // Ekranni qoraytirib, yozuvni chiqaramiz
-            overlay.classList.remove('d-none');
-        }
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Sahifa yangilanib ketishini to'xtatamiz
+
+        // 1. Formadagi ma'lumotlarni yig'ish
+        const formData = new FormData(form);
+
+        // 2. AJAX so'rovini yaratish
+        const xhr = new XMLHttpRequest();
+
+        // 3. Yuklanish jarayonini (Progress) kuzatish
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                const percentString = Math.round(percentComplete) + '%';
+
+                progressBar.style.width = percentString;
+                progressBar.innerText = percentString;
+                progressText.innerText = percentString;
+            }
+        });
+
+        // 4. So'rovni ochish (POST)
+        xhr.open('POST', window.location.href, true);
+
+        // --- MUHIM TUZATISH: CSRF Token qo'shish ---
+        // Djangoda bu bo'lmasa, fayl qabul qilinmaydi
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        // --------------------------------------------
+
+        // Dizaynni o'zgartirish (Tugma yo'qoladi, chiziq chiqadi)
+        submitBtn.classList.add('d-none');
+        progressContainer.classList.remove('d-none');
+        errorAlert.classList.add('d-none');
+
+        // 5. Yuklash tugagandan so'ng
+        xhr.onload = function() {
+            if (xhr.status === 200 || xhr.status === 302) {
+                // Muvaffaqiyatli bo'lsa, Bosh sahifaga yo'naltiramiz
+                window.location.href = "/";
+            } else {
+                // Xatolik bo'lsa
+                showError("Xatolik! Internetni tekshiring yoki barcha maydonlarni to'ldirganingizga ishonch hosil qiling.");
+            }
+        };
+
+        xhr.onerror = function() {
+            showError("Server bilan aloqa uzildi. Internetni tekshiring.");
+        };
+
+        // Yuborish
+        xhr.send(formData);
     });
+
+    function showError(message) {
+        errorAlert.innerText = message;
+        errorAlert.classList.remove('d-none');
+        // Tugmani qaytarish
+        submitBtn.classList.remove('d-none');
+        progressContainer.classList.add('d-none');
+        // Progressni 0 qilish
+        progressBar.style.width = "0%";
+        progressBar.innerText = "0%";
+    }
 </script>
 {% endblock %}
