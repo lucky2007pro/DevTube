@@ -92,10 +92,11 @@
 <div class="watch-container">
     <div class="main-content">
         <div class="video-frame">
-            {% if project.youtube_link %}
+            {% if project.get_youtube_id %}
                 <iframe
-                    src="https://www.youtube.com/embed/{{ project.youtube_link|cut:'https://youtu.be/'|cut:'https://www.youtube.com/watch?v='|cut:'&feature=youtu.be' }}"
+                    src="https://www.youtube.com/embed/{{ project.get_youtube_id }}"
                     title="YouTube video player"
+                    frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowfullscreen>
                 </iframe>

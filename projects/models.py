@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import re  # <--- BU JUDA MUHIM (YouTube linkni tozalash uchun)
 
 
 # 1. PROFILE (Foydalanuvchi ma'lumotlari + HAMYON)
@@ -24,6 +25,8 @@ class Project(models.Model):
     image = models.ImageField(upload_to='project_images', blank=True, null=True)
     video_file = models.FileField(upload_to='project_videos', blank=True, null=True)
     source_code = models.FileField(upload_to='project_code', blank=True, null=True)
+
+    # YouTube link
     youtube_link = models.URLField(max_length=200, blank=True, null=True, help_text="YouTube video ssilkasini qo'ying")
 
     CATEGORY_CHOICES = [
@@ -42,6 +45,22 @@ class Project(models.Model):
 
     # Kimlar sotib olgan?
     buyers = models.ManyToManyField(User, related_name='bought_projects', blank=True)
+
+    # --- YANGI QO'SHILGAN "AQLLI" FUNKSIYA ---
+    @property
+    def get_youtube_id(self):
+        if not self.youtube_link:
+            return None
+
+        # Har xil turdagi linklardan (Shorts, Mobile, Watch) ID ni ajratib olish
+        regex = r'(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})'
+        match = re.search(regex, self.youtube_link)
+
+        if match:
+            return match.group(1)  # Faqat ID ni qaytaradi (masalan: dQw4w9WgXcQ)
+        return None
+
+    # -----------------------------------------
 
     def __str__(self):
         return self.title
