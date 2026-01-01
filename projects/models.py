@@ -24,6 +24,7 @@ class Project(models.Model):
     image = models.ImageField(upload_to='project_images', blank=True, null=True)
     video_file = models.FileField(upload_to='project_videos', blank=True, null=True)
     source_code = models.FileField(upload_to='project_code', blank=True, null=True)
+    youtube_link = models.URLField(max_length=200, blank=True, null=True, help_text="YouTube video ssilkasini qo'ying")
 
     CATEGORY_CHOICES = [
         ('web', 'Web Dasturlash'),

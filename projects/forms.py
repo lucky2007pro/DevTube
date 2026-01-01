@@ -7,8 +7,7 @@ from .models import Project, Profile, Comment
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['title', 'description', 'image', 'video_file', 'source_code', 'category', 'price']
-
+        fields = ['title', 'description', 'image', 'source_code', 'price', 'category', 'youtube_link']
 
 # 2. IZOH YOZISH FORMASI
 class CommentForm(forms.ModelForm):

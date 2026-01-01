@@ -22,8 +22,14 @@
         background: #000; border-radius: 12px;
         overflow: hidden; margin-bottom: 12px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        position: relative;
     }
-    .video-frame video, .video-frame img { width: 100%; height: 100%; object-fit: contain; }
+    .video-frame iframe,
+    .video-frame video,
+    .video-frame img {
+        width: 100%; height: 100%; object-fit: contain;
+        border: none;
+    }
 
     .video-title {
         font-size: 20px; font-weight: 700; color: var(--text-main);
@@ -86,7 +92,14 @@
 <div class="watch-container">
     <div class="main-content">
         <div class="video-frame">
-            {% if project.video_file %}
+            {% if project.youtube_link %}
+                <iframe
+                    src="https://www.youtube.com/embed/{{ project.youtube_link|cut:'https://youtu.be/'|cut:'https://www.youtube.com/watch?v='|cut:'&feature=youtu.be' }}"
+                    title="YouTube video player"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen>
+                </iframe>
+            {% elif project.video_file %}
                 <video controls controlsList="nodownload">
                     <source src="{{ project.video_file.url }}" type="video/mp4">
                 </video>
@@ -171,11 +184,7 @@
     </div>
 
     <div class="sidebar-content d-none d-lg-block">
-        <div class="rec-card" style="display:flex; gap:10px; margin-bottom:15px;">
-            <div style="width:160px; height:90px; background:#333; border-radius:8px;"></div>
-            <div style="font-size:14px; font-weight:bold;">Tavsiya etilgan loyiha</div>
         </div>
-    </div>
 </div>
 
 <script>
