@@ -32,8 +32,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary_storage',
     'django.contrib.staticfiles',
-
+    'cloudinary',
     # O'zingizning ilovalar
     'projects',
 
@@ -147,3 +148,14 @@ LOGOUT_REDIRECT_URL = 'home'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# --- CLOUDINARY SOZLAMALARI ---
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'duy6grluh',
+    'API_KEY': '929832358921299',
+    'API_SECRET': 'u377zJ4qzYPM9uqKIM37bwspwv0'
+}
+
+# Media fayllar endi kompyuterga emas, Cloudinaryga tushadi
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
