@@ -109,6 +109,13 @@
             {% endif %}
         </div>
 
+        {% if project.get_youtube_id %}
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ project.youtube_link }}" target="_blank" class="text-decoration-none small text-muted">
+                <i class="fas fa-external-link-alt me-1"></i> Agar video ochmasa, YouTube orqali ko'ring
+            </a>
+        </div>
+        {% endif %}
         <div class="video-title">{{ project.title }}</div>
 
         <div class="action-bar">
