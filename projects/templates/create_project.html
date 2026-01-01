@@ -14,6 +14,7 @@
 
                     <form id="upload-form" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
+
                         <div class="mb-3">
                             <label class="form-label">Loyiha nomi</label>
                             {{ form.title }}
@@ -60,12 +61,12 @@
                     </form>
 
                     <div id="progress-container" class="d-none mt-4">
-                        <p class="text-center mb-2">Video serverga yuklanmoqda... <span id="progress-text">0%</span></p>
+                        <p class="text-center mb-2">Jarayon: <span id="progress-text">0%</span></p>
                         <div class="progress" style="height: 25px; background-color: #2c3e50;">
                             <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
                                  role="progressbar" style="width: 0%;">0%</div>
                         </div>
-                        <p class="text-muted text-center small mt-2">Iltimos, sahifani yopmang! Katta videolar biroz vaqt olishi mumkin.</p>
+                        <p class="text-muted text-center small mt-2">Iltimos, sahifani yopmang! Katta fayllar biroz vaqt olishi mumkin.</p>
                     </div>
 
                 </div>
@@ -85,51 +86,74 @@
     form.addEventListener('submit', function(e) {
         e.preventDefault(); // Sahifa yangilanib ketishini to'xtatamiz
 
-        // 1. Formadagi ma'lumotlarni yig'ish
         const formData = new FormData(form);
-
-        // 2. AJAX so'rovini yaratish
         const xhr = new XMLHttpRequest();
 
-        // 3. Yuklanish jarayonini (Progress) kuzatish
+        // 1. PROGRESSNI KUZATISH
         xhr.upload.addEventListener('progress', function(e) {
             if (e.lengthComputable) {
                 const percentComplete = (e.loaded / e.total) * 100;
-                const percentString = Math.round(percentComplete) + '%';
 
-                progressBar.style.width = percentString;
-                progressBar.innerText = percentString;
-                progressText.innerText = percentString;
+                // Agar 99% dan oshsa, lekin hali javob kelmasa
+                if (percentComplete >= 99) {
+                    progressBar.style.width = "100%";
+                    progressBar.innerText = "99%";
+
+                    // Rangni sariqqa o'zgartiramiz (Kutish rejimi)
+                    progressBar.classList.remove('bg-success');
+                    progressBar.classList.add('bg-warning');
+                    progressBar.classList.add('text-dark'); // Yozuv qora bo'lishi uchun
+
+                    progressText.innerText = "Video Renderga yuklandi. Endi Cloudinaryga o'tmoqda... (Kuting)";
+                    progressText.style.color = "#ffc107"; // Sariq rang
+                    progressText.style.fontWeight = "bold";
+                } else {
+                    // Normal holat (1% dan 98% gacha)
+                    const percentString = Math.round(percentComplete) + '%';
+                    progressBar.style.width = percentString;
+                    progressBar.innerText = percentString;
+                    progressText.innerText = percentString;
+                }
             }
         });
 
-        // 4. So'rovni ochish (POST)
+        // 2. SO'ROVNI OCHISH
         xhr.open('POST', window.location.href, true);
 
-        // --- MUHIM TUZATISH: CSRF Token qo'shish ---
-        // Djangoda bu bo'lmasa, fayl qabul qilinmaydi
+        // CSRF Token qo'shish (Xavfsizlik uchun)
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         xhr.setRequestHeader('X-CSRFToken', csrfToken);
-        // --------------------------------------------
 
-        // Dizaynni o'zgartirish (Tugma yo'qoladi, chiziq chiqadi)
+        // Dizaynni o'zgartirish
         submitBtn.classList.add('d-none');
         progressContainer.classList.remove('d-none');
         errorAlert.classList.add('d-none');
 
-        // 5. Yuklash tugagandan so'ng
+        // 3. JAVOB KELGANDA
         xhr.onload = function() {
-            if (xhr.status === 200 || xhr.status === 302) {
-                // Muvaffaqiyatli bo'lsa, Bosh sahifaga yo'naltiramiz
-                window.location.href = "/";
+            if (xhr.status === 200) {
+                // Agar server "OK" desa, lekin biz hali ham "create" sahifasida bo'lsak
+                // Demak, formada xatolik bor (masalan, fayl formati noto'g'ri)
+                if (xhr.responseURL.includes("create")) {
+                     showError("Formada xatolik bor! Fayl turini yoki majburiy maydonlarni tekshiring. Sahifani yangilab qayta urining.");
+                } else {
+                    // Muvaffaqiyatli! Bosh sahifaga ketamiz
+                    window.location.href = "/";
+                }
             } else {
-                // Xatolik bo'lsa
-                showError("Xatolik! Internetni tekshiring yoki barcha maydonlarni to'ldirganingizga ishonch hosil qiling.");
+                // Aniq Xatolik Kodini chiqaramiz
+                if (xhr.status === 413) {
+                    showError("Fayl hajmi juda katta! (Xato 413). Kichikroq fayl yuklang.");
+                } else if (xhr.status === 502) {
+                    showError("Server band yoki Cloudinary javob bermayapti (Xato 502). Qayta urinib ko'ring.");
+                } else {
+                    showError(`Xatolik yuz berdi! Kod: ${xhr.status} (${xhr.statusText}).`);
+                }
             }
         };
 
         xhr.onerror = function() {
-            showError("Server bilan aloqa uzildi. Internetni tekshiring.");
+            showError("Internet uzildi yoki Server butunlay javob bermayapti.");
         };
 
         // Yuborish
@@ -139,12 +163,18 @@
     function showError(message) {
         errorAlert.innerText = message;
         errorAlert.classList.remove('d-none');
+
         // Tugmani qaytarish
         submitBtn.classList.remove('d-none');
         progressContainer.classList.add('d-none');
-        // Progressni 0 qilish
+
+        // Progressni reset qilish
         progressBar.style.width = "0%";
-        progressBar.innerText = "0%";
+        progressBar.classList.remove('bg-warning');
+        progressBar.classList.remove('text-dark');
+        progressBar.classList.add('bg-success');
+        progressText.style.color = "white";
+        progressText.innerText = "0%";
     }
 </script>
 {% endblock %}
