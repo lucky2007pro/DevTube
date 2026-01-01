@@ -237,7 +237,7 @@ def cpp_test(request):
 
         # 2. Fayl yo'lini aniqlash (projects papkasi ichida deb hisoblaymiz)
         # Agar main.cpp ni projects papkasida kompilyatsiya qilgan bo'lsak:
-        exe_path = os.path.join(settings.BASE_DIR, 'projects', exe_name)
+        exe_path = os.path.join(settings.BASE_DIR, 'cpp_module', exe_name)
 
         try:
             # 3. MUHIM: Linux uchun ruxsat berish (chmod +x)
