@@ -1,5 +1,5 @@
-{% load static %}
 <!DOCTYPE html>
+{% load static %}
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -30,17 +30,17 @@
             overflow-x: hidden;
         }
 
-        /* --- NAVBAR (TEPA) --- */
+        /* --- NAVBAR (SIZNING ORIGINAL KODINGIZ) --- */
         .navbar {
             background-color: var(--bg-body);
             height: 56px;
             padding: 0 16px;
             position: fixed; top: 0; left: 0; right: 0;
-            z-index: 1030; /* Sidebar ustida turishi uchun */
+            z-index: 100;
             display: flex; align-items: center; justify-content: space-between;
         }
 
-        .logo-area { display: flex; align-items: center; gap: 16px; min-width: 150px; }
+        .logo-area { display: flex; align-items: center; gap: 16px; }
         .logo-text { font-weight: bold; font-size: 20px; letter-spacing: -1px; text-decoration: none; color: white; }
 
         /* QIDIRUV QISMI (TUZATILDI) */
@@ -50,15 +50,14 @@
             border: 1px solid var(--border-color);
             border-radius: 40px;
             padding: 0 10px;
-            /* Fixed width o'rniga max-width ishlatamiz */
+            /* Ekranning yarmida ham ko'rinishi uchun */
+            flex-grow: 1;
             max-width: 500px;
-            width: 100%;
-            margin: 0 20px; /* Ikki tomondan joy tashlash */
+            margin: 0 20px;
         }
 
-        /* Juda kichik telefonda (iPhone SE kabi) qidiruvni yashirish mumkin,
-           lekin yarim ekranda ko'rinadi */
-        @media (max-width: 576px) {
+        /* Faqat juda kichkina telefonda yashirish */
+        @media (max-width: 600px) {
             .search-box { display: none; }
         }
 
@@ -72,8 +71,8 @@
             border-top-right-radius: 40px; border-bottom-right-radius: 40px;
         }
 
-        .user-actions { display: flex; align-items: center; gap: 15px; min-width: max-content; }
-        .icon-btn { color: white; font-size: 1.2rem; cursor: pointer; background: none; border: none; }
+        .user-actions { display: flex; align-items: center; gap: 15px; }
+        .icon-btn { color: white; font-size: 1.2rem; cursor: pointer; background: none; border: none;}
 
         /* --- SIDEBAR (CHAP MENU) --- */
         .sidebar {
@@ -82,29 +81,17 @@
             background-color: var(--bg-sidebar);
             overflow-y: auto;
             padding: 12px;
-            transition: transform 0.3s ease; /* Silliq ochilish uchun */
-            z-index: 1020;
+            -ms-overflow-style: none; scrollbar-width: none;
+            transition: transform 0.3s ease;
+            z-index: 99;
         }
+        .sidebar::-webkit-scrollbar { display: none; }
 
-        /* Mobil telefonda sidebar yashirinadi */
+        /* Mobil menyu logikasi */
         @media (max-width: 1000px) {
-            .sidebar {
-                transform: translateX(-100%); /* Chapga kirib ketadi */
-                box-shadow: 2px 0 10px rgba(0,0,0,0.5);
-            }
-            .sidebar.active {
-                transform: translateX(0); /* Tugma bosilganda chiqadi */
-            }
+            .sidebar { transform: translateX(-100%); } /* Yashirish */
+            .sidebar.active { transform: translateX(0); } /* Ko'rsatish */
             .main-content { margin-left: 0 !important; }
-
-            /* Sidebar ochilganda orqa fonni qoraytirish (Overlay) */
-            .sidebar-overlay {
-                display: none;
-                position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
-                background: rgba(0,0,0,0.5);
-                z-index: 1010;
-            }
-            .sidebar-overlay.active { display: block; }
         }
 
         .nav-item {
@@ -125,15 +112,12 @@
             margin-top: 56px;
             margin-left: 240px;
             min-height: 100vh;
-            transition: margin 0.3s ease;
         }
 
         hr { border-color: var(--border-color); margin: 12px 0; }
     </style>
 </head>
 <body>
-
-    <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     <nav class="navbar">
         <div class="logo-area">
@@ -142,7 +126,7 @@
             </button>
 
             <a href="/" class="logo-text">
-                <i class="fas fa-code text-primary"></i> DevTube
+                DevTube
             </a>
         </div>
 
@@ -194,8 +178,8 @@
         <a href="{% url 'liked_videos' %}" class="nav-item">
             <i class="fas fa-thumbs-up"></i> Yoqqan loyihalar
         </a>
-
         <hr>
+
         <div class="text-muted small px-3 mb-2" style="font-size: 11px; font-weight: bold; text-transform: uppercase;">
             Tools
         </div>
@@ -227,23 +211,12 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        const sidebarToggle = document.getElementById('sidebarToggle');
+        const toggleBtn = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
 
-        // Tugma bosilganda menuni ochish/yopish
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', () => {
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
                 sidebar.classList.toggle('active');
-                overlay.classList.toggle('active');
-            });
-        }
-
-        // Fon bosilganda menuni yopish
-        if (overlay) {
-            overlay.addEventListener('click', () => {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
             });
         }
     </script>
