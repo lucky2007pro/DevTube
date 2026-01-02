@@ -20,6 +20,20 @@
             --pill-active-bg: #f1f1f1;
             --pill-active-text: #0f0f0f;
             --border-color: #303030;
+            --bg-search: #121212; /* Qidiruv foni uchun o'zgaruvchi */
+        }
+
+        /* --- 1. QO'SHILDI: YORUG' REJIM (LIGHT MODE) --- */
+        body.light-mode {
+            --bg-body: #f9f9f9;
+            --bg-sidebar: #ffffff;
+            --text-main: #0f0f0f;
+            --text-sec: #606060;
+            --hover-bg: #e5e5e5;
+            --pill-bg: #e0e0e0;
+            --pill-text: #000;
+            --border-color: #cccccc;
+            --bg-search: #f0f0f0;
         }
 
         body {
@@ -28,6 +42,7 @@
             font-family: Roboto, Arial, sans-serif;
             margin: 0;
             overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s; /* Silliq o'tish */
         }
 
         /* --- NAVBAR --- */
@@ -39,11 +54,12 @@
             z-index: 100;
             display: flex; align-items: center; justify-content: space-between;
             border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background-color 0.3s;
         }
 
         .logo-area { display: flex; align-items: center; gap: 16px; }
 
-        /* LOGO DIZAYNI (Siz xohlagan) */
+        /* LOGO DIZAYNI (O'ZGARISHSIZ) */
         .logo-box {
             position: relative;
             width: 32px; height: 32px;
@@ -60,7 +76,7 @@
         /* QIDIRUV */
         .search-box {
             display: flex; align-items: center;
-            background: #121212;
+            background: var(--bg-search); /* O'zgaruvchiga o'tkazildi */
             border: 1px solid var(--border-color);
             border-radius: 40px;
             padding: 0 10px;
@@ -69,14 +85,14 @@
         @media (max-width: 600px) { .search-box { display: none; } }
 
         .search-input {
-            background: transparent; border: none; color: white; padding: 8px 10px; flex-grow: 1; outline: none; width: 100%;
+            background: transparent; border: none; color: var(--text-main); padding: 8px 10px; flex-grow: 1; outline: none; width: 100%;
         }
         .search-btn {
-            background: #222; border: none; border-left: 1px solid var(--border-color); color: var(--text-sec); padding: 8px 20px; border-top-right-radius: 40px; border-bottom-right-radius: 40px;
+            background: transparent; border: none; border-left: 1px solid var(--border-color); color: var(--text-sec); padding: 8px 20px; border-top-right-radius: 40px; border-bottom-right-radius: 40px;
         }
 
         .user-actions { display: flex; align-items: center; gap: 15px; }
-        .icon-btn { color: white; font-size: 1.2rem; cursor: pointer; background: none; border: none; }
+        .icon-btn { color: var(--text-main); font-size: 1.2rem; cursor: pointer; background: none; border: none; }
 
         /* --- SIDEBAR --- */
         .sidebar {
@@ -86,7 +102,7 @@
             overflow-y: auto;
             padding: 12px;
             -ms-overflow-style: none; scrollbar-width: none;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, background-color 0.3s;
             z-index: 99;
         }
         .sidebar::-webkit-scrollbar { display: none; }
@@ -116,7 +132,7 @@
             color: var(--text-sec); margin: 15px 0 5px 12px;
         }
 
-        .main-content { margin-top: 56px; margin-left: 240px; min-height: 100vh; }
+        .main-content { margin-top: 56px; margin-left: 240px; min-height: 100vh; transition: background-color 0.3s; }
         hr { border-color: var(--border-color); margin: 12px 0; }
     </style>
 </head>
@@ -143,6 +159,11 @@
         </form>
 
         <div class="user-actions">
+
+            <button id="themeToggle" class="icon-btn" title="Rejimni o'zgartirish">
+                <i class="fas fa-moon"></i>
+            </button>
+
             {% if user.is_authenticated %}
                 <a href="{% url 'create_project' %}" class="icon-btn" title="Yuklash"><i class="fas fa-plus-circle text-danger"></i></a>
                 <div class="dropdown">
@@ -240,13 +261,35 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const toggleBtn = document.getElementById('sidebarToggle');
+        const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
                 sidebar.classList.toggle('active');
             });
         }
+
+        // 3. QO'SHILDI: JAVASCRIPT LOGIKA
+        const themeBtn = document.getElementById('themeToggle');
+        const body = document.body;
+        const icon = themeBtn.querySelector('i');
+
+        // Oldingi holatni tiklash
+        if (localStorage.getItem('theme') === 'light') {
+            body.classList.add('light-mode');
+            icon.classList.replace('fa-moon', 'fa-sun');
+        }
+
+        themeBtn.addEventListener('click', () => {
+            body.classList.toggle('light-mode');
+            if (body.classList.contains('light-mode')) {
+                icon.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('theme', 'light');
+            } else {
+                icon.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
     </script>
 </body>
 </html>
