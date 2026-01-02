@@ -1,5 +1,5 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -30,7 +30,7 @@
             overflow-x: hidden;
         }
 
-        /* --- NAVBAR (SIZNING ORIGINAL KODINGIZ) --- */
+        /* --- NAVBAR (YANGILANGAN DIZAYN) --- */
         .navbar {
             background-color: var(--bg-body);
             height: 56px;
@@ -38,19 +38,36 @@
             position: fixed; top: 0; left: 0; right: 0;
             z-index: 100;
             display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05); /* Ozgina chegara qo'shildi */
         }
 
         .logo-area { display: flex; align-items: center; gap: 16px; }
-        .logo-text { font-weight: bold; font-size: 20px; letter-spacing: -1px; text-decoration: none; color: white; }
 
-        /* QIDIRUV QISMI (TUZATILDI) */
+        /* LOGO UCHUN MAXSUS STIL */
+        .logo-box {
+            position: relative;
+            width: 34px; height: 34px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-text-styled {
+            font-weight: 800;
+            font-size: 22px;
+            letter-spacing: -1px;
+            font-family: sans-serif;
+            margin-left: 8px;
+            line-height: 1;
+        }
+
+        /* QIDIRUV QISMI */
         .search-box {
             display: flex; align-items: center;
             background: #121212;
             border: 1px solid var(--border-color);
             border-radius: 40px;
             padding: 0 10px;
-            /* Ekranning yarmida ham ko'rinishi uchun */
             flex-grow: 1;
             max-width: 500px;
             margin: 0 20px;
@@ -74,7 +91,7 @@
         .user-actions { display: flex; align-items: center; gap: 15px; }
         .icon-btn { color: white; font-size: 1.2rem; cursor: pointer; background: none; border: none;}
 
-        /* --- SIDEBAR (CHAP MENU) --- */
+        /* --- SIDEBAR (O'ZGARISHSIZ QOLDI) --- */
         .sidebar {
             position: fixed; top: 56px; left: 0; bottom: 0;
             width: 240px;
@@ -87,10 +104,9 @@
         }
         .sidebar::-webkit-scrollbar { display: none; }
 
-        /* Mobil menyu logikasi */
         @media (max-width: 1000px) {
-            .sidebar { transform: translateX(-100%); } /* Yashirish */
-            .sidebar.active { transform: translateX(0); } /* Ko'rsatish */
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
             .main-content { margin-left: 0 !important; }
         }
 
@@ -107,7 +123,7 @@
         .nav-item.active { background-color: var(--hover-bg); font-weight: bold; }
         .nav-item i { width: 24px; font-size: 18px; text-align: center; }
 
-        /* --- MAIN CONTENT (O'NG TOMON) --- */
+        /* --- MAIN CONTENT --- */
         .main-content {
             margin-top: 56px;
             margin-left: 240px;
@@ -125,8 +141,15 @@
                 <i class="fas fa-bars"></i>
             </button>
 
-            <a href="/" class="logo-text">
-                DevTube
+            <a href="/" class="d-flex align-items-center text-decoration-none">
+                <div class="logo-box">
+                    <i class="fas fa-terminal" style="color: #ccc; font-size: 16px;"></i>
+                    <i class="fas fa-play" style="color: #2ecc71; font-size: 9px; position: absolute; bottom: 5px; right: 5px;"></i>
+                </div>
+
+                <div class="logo-text-styled">
+                    <span class="text-danger">Dev</span><span class="text-primary">Tube</span>
+                </div>
             </a>
         </div>
 
