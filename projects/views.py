@@ -30,20 +30,17 @@ def home_page(request):
     return render(request, 'home.html', context)
 
 
-# 2. LOYIHA YUKLASH (YANGILANDI: Gallery qo'shildi)
+# 2. LOYIHA YUKLASH
 @login_required
 def create_project(request):
     form = ProjectForm()
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
-            # 1. Asosiy loyihani saqlash
             project = form.save(commit=False)
             project.author = request.user
             project.save()
 
-            # 2. Qo'shimcha rasmlarni (Gallery) saqlash
-            # 'more_images' formadagi nom bilan bir xil bo'lishi kerak
             images = request.FILES.getlist('more_images')
             for img in images:
                 ProjectImage.objects.create(project=project, image=img)
@@ -57,12 +54,9 @@ def create_project(request):
 # 3. LOYIHA TAFSILOTLARI
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
-
-    # Ko'rishlar sonini oshirish
     project.views += 1
     project.save()
 
-    # Izoh yozish qismi
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
@@ -83,25 +77,18 @@ def project_detail(request, pk):
     else:
         comment_form = CommentForm()
 
-    # Kodni ko'rsatish logikasi
     has_bought = False
     code_content = None
 
-    # Agar tekin bo'lsa yoki muallif o'zi bo'lsa -> sotib olgan hisoblanadi
     if project.price == 0 or (request.user.is_authenticated and request.user == project.author):
         has_bought = True
 
-    # Kod fayli bormi?
     if project.source_code and has_bought:
         file_ext = os.path.splitext(project.source_code.name)[1].lower()
-        # Agar ZIP yoki RAR bo'lsa, uni o'qimaymiz, faqat yuklashga ruxsat beramiz
         if file_ext in ['.zip', '.rar', '.7z', '.tar', '.gz']:
             code_content = "Bu arxiv fayl. Uni pastdagi tugma orqali yuklab olishingiz mumkin."
         else:
-            # Matnli fayl bo'lsa (py, js, html) o'qishga harakat qilamiz
             try:
-                # Cloudinary fayllarni to'g'ridan-to'g'ri o'qish qiyin bo'lishi mumkin
-                # Shuning uchun oddiy xabar chiqaramiz yoki fayl urlini beramiz
                 code_content = "Faylni yuklab olib ko'rishingiz mumkin."
             except Exception:
                 code_content = "Faylni o'qish imkonsiz."
@@ -168,7 +155,7 @@ def delete_project(request, pk):
     return redirect('home')
 
 
-# 7. TAHRIRLASH (YANGILANDI: Yangi rasmlar qo'shish)
+# 7. TAHRIRLASH
 @login_required
 def update_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
@@ -179,8 +166,6 @@ def update_project(request, pk):
         form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
             project = form.save()
-
-            # Tahrirlashda yangi rasm qo'shilsa, eskilariga qo'shib qo'yamiz
             images = request.FILES.getlist('more_images')
             for img in images:
                 ProjectImage.objects.create(project=project, image=img)
@@ -216,11 +201,7 @@ def like_project(request, pk):
 @login_required
 def buy_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
-    # Kelajakda bu yerda to'lov tizimi bo'ladi (Stripe/Payme)
-    # Hozircha shunchaki sotib olindi deb belgilaymiz
-    # Eslatma: ManyToManyField'ga add() qilish kerak
     project.buyers.add(request.user)
-
     messages.success(request, f"{project.title} loyihasi sotib olindi!")
     return redirect('project_detail', pk=pk)
 
@@ -248,36 +229,61 @@ def my_videos(request):
     return render(request, 'home.html', {'projects': projects, 'categories': categories})
 
 
-# 13. C++ INTEGRATSIYASI
+# 13. C++ INTEGRATSIYASI (YANGILANDI: AJAX va Dinamik Kompilyatsiya)
 def cpp_test(request):
-    result = "Natija kutilmoqda..."
+    result = ""
+    code = ""
+    input_data = ""
 
-    if request.GET.get('number'):
-        number = request.GET.get('number')
+    if request.method == 'POST':
+        code = request.POST.get('code', '')
+        input_data = request.POST.get('input', '')
 
+        # Fayl yo'lini aniqlash (Project root papkasida main.cpp va main.exe yaratiladi)
+        file_path = os.path.join(settings.BASE_DIR, 'main.cpp')
+
+        # Windows yoki Linux uchun output fayl nomi
         if os.name == 'nt':
-            exe_name = 'main.exe'
+            output_exe = os.path.join(settings.BASE_DIR, 'main.exe')
+            run_cmd = [output_exe]
         else:
-            exe_name = 'main'
+            output_exe = os.path.join(settings.BASE_DIR, 'main')
+            run_cmd = [output_exe]
 
-        exe_path = os.path.join(settings.BASE_DIR, 'cpp_module', exe_name)
+        # 1. C++ faylni yozish
+        with open(file_path, 'w') as f:
+            f.write(code)
 
-        try:
-            if os.name != 'nt':
-                subprocess.run(['chmod', '+x', exe_path])
+        # 2. Kompilyatsiya qilish (g++)
+        # Diqqat: Serverda (Render/Heroku/Local) g++ o'rnatilgan bo'lishi shart!
+        compile_process = subprocess.run(['g++', file_path, '-o', output_exe], capture_output=True, text=True)
 
-            process = subprocess.run([exe_path, number], capture_output=True, text=True)
+        if compile_process.returncode == 0:
+            # 3. Ishga tushirish (Input berish bilan)
+            try:
+                # Linuxda ruxsat berish (agar kerak bo'lsa)
+                if os.name != 'nt':
+                    subprocess.run(['chmod', '+x', output_exe])
 
-            if process.stdout:
-                result = process.stdout
-            elif process.stderr:
-                result = f"Xatolik (stderr): {process.stderr}"
-            else:
-                result = "Dastur ishga tushdi lekin hech narsa qaytarmadi."
+                run_process = subprocess.run(
+                    run_cmd,
+                    input=input_data,
+                    capture_output=True,
+                    text=True,
+                    timeout=5  # 5 soniyadan oshsa to'xtatadi (Infinite loop himoyasi)
+                )
+                result = run_process.stdout
+                if run_process.stderr:
+                    result += "\nXatoliklar:\n" + run_process.stderr
+            except subprocess.TimeoutExpired:
+                result = "Xatolik: Dastur ishlash vaqti tugadi (Cheksiz tsikl?)"
+            except Exception as e:
+                result = f"Xatolik: {e}"
+        else:
+            result = "Kompilyatsiya xatosi:\n" + compile_process.stderr
 
-        except FileNotFoundError:
-            result = f"Xatolik: '{exe_name}' fayli topilmadi! (Manzil: {exe_path})"
-        except Exception as e:
-            result = f"Dastur ishlashida xatolik: {e}"
+        # AJAX so'rovlar uchun JSON qaytaramiz (Sahifa yangilanmasligi uchun)
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'result': result})
 
-    return render(request, 'cpp_test.html', {'result': result})
+    return render(request, 'cpp_test.html', {'code': code, 'input': input_data, 'result': result})

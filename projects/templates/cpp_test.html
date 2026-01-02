@@ -1,26 +1,79 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6 text-center">
-        <div class="card p-5 shadow" style="background-color: var(--bg-nav); border: 1px solid var(--border-color);">
-            <h2 class="mb-4" style="color: var(--text-main);">
-                <i class="fas fa-microchip text-primary"></i> C++ Integratsiyasi
-            </h2>
-            <p class="text-muted">Bu sahifadagi hisob-kitobni Python emas, <b>C++ (main.exe)</b> bajaradi.</p>
-            
-            <form method="GET" class="d-flex gap-2 mb-4">
-                <input type="number" name="number" class="form-control" placeholder="Biror son kiriting..." required 
-                       style="background: var(--search-bg); color: var(--text-main); border: 1px solid var(--border-color);">
-                <button type="submit" class="btn btn-primary">Hisoblash</button>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h3 class="mb-3 text-white"><i class="fas fa-code"></i> C++ Kompilyator</h3>
+
+            <form id="cppForm" method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="text-white">Kod:</label>
+                    <textarea name="code" class="form-control bg-dark text-white font-monospace" rows="10" spellcheck="false">{% if code %}{{ code }}{% else %}#include <iostream>
+using namespace std;
+
+int main() {
+    int a;
+    cin >> a;
+    cout << "Kiritilgan son: " << a << endl;
+    return 0;
+}{% endif %}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="text-white">Input (Kiritish):</label>
+                    <textarea name="input" class="form-control bg-dark text-white font-monospace" rows="3" placeholder="Masalan: 10">{{ input }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success" id="runBtn">
+                    <i class="fas fa-play"></i> Run Code
+                </button>
             </form>
 
-            <div class="alert alert-success fw-bold">
-                {{ result }}
+            <div class="mt-4">
+                <label class="text-white">Natija:</label>
+                <pre id="outputArea" class="bg-black text-white p-3 rounded border border-secondary" style="min-height: 100px;">{{ result }}</pre>
             </div>
-            
-            <a href="{% url 'home' %}" class="btn btn-outline-secondary mt-3">Bosh sahifaga qaytish</a>
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('cppForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // 1. Sahifa qayta yuklanishini to'xtatamiz
+
+        const btn = document.getElementById('runBtn');
+        const output = document.getElementById('outputArea');
+        const formData = new FormData(this); // Formadagi ma'lumotlarni olamiz
+
+        // Tugmani bosilmas holga keltiramiz va Loading yozamiz
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ishlanmoqda...';
+        output.innerText = "Kuting...";
+
+        // 2. So'rovni orqa fonda yuboramiz
+        fetch("{% url 'cpp_test' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Django buni AJAX ekanini bilishi uchun
+            }
+        })
+        .then(response => response.json()) // Javobni JSON formatida olamiz
+        .then(data => {
+            // 3. Natijani sahifaga yozamiz
+            output.innerText = data.result;
+        })
+        .catch(error => {
+            output.innerText = "Xatolik yuz berdi: " + error;
+        })
+        .finally(() => {
+            // Tugmani joyiga qaytaramiz
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+        });
+    });
+</script>
 {% endblock %}

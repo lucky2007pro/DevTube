@@ -120,3 +120,6 @@ LOGIN_URL = 'login'
 
 SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# Google login tugmasi bosilganda oraliq sahifani (Continue) ko'rsatmaslik uchun:
+SOCIALACCOUNT_LOGIN_ON_GET = True
