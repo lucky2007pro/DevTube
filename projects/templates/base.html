@@ -20,10 +20,11 @@
             --pill-active-bg: #f1f1f1;
             --pill-active-text: #0f0f0f;
             --border-color: #303030;
-            --bg-search: #121212; /* Qidiruv foni uchun o'zgaruvchi */
+            --bg-search: #121212;
+            --icon-color: #ffffff; /* Ikonkalar rangi */
         }
 
-        /* --- 1. QO'SHILDI: YORUG' REJIM (LIGHT MODE) --- */
+        /* --- 1. QO'SHILDI: YORUG' REJIM (LIGHT MODE) SOZLAMALARI --- */
         body.light-mode {
             --bg-body: #f9f9f9;
             --bg-sidebar: #ffffff;
@@ -32,8 +33,11 @@
             --hover-bg: #e5e5e5;
             --pill-bg: #e0e0e0;
             --pill-text: #000;
+            --pill-active-bg: #0f0f0f;
+            --pill-active-text: #fff;
             --border-color: #cccccc;
             --bg-search: #f0f0f0;
+            --icon-color: #0f0f0f;
         }
 
         body {
@@ -42,7 +46,7 @@
             font-family: Roboto, Arial, sans-serif;
             margin: 0;
             overflow-x: hidden;
-            transition: background-color 0.3s, color 0.3s; /* Silliq o'tish */
+            transition: background-color 0.3s, color 0.3s;
         }
 
         /* --- NAVBAR --- */
@@ -53,7 +57,7 @@
             position: fixed; top: 0; left: 0; right: 0;
             z-index: 100;
             display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid var(--border-color); /* Chegara rangi o'zgaruvchan */
             transition: background-color 0.3s;
         }
 
@@ -76,7 +80,7 @@
         /* QIDIRUV */
         .search-box {
             display: flex; align-items: center;
-            background: var(--bg-search); /* O'zgaruvchiga o'tkazildi */
+            background: var(--bg-search);
             border: 1px solid var(--border-color);
             border-radius: 40px;
             padding: 0 10px;
@@ -92,7 +96,7 @@
         }
 
         .user-actions { display: flex; align-items: center; gap: 15px; }
-        .icon-btn { color: var(--text-main); font-size: 1.2rem; cursor: pointer; background: none; border: none; }
+        .icon-btn { color: var(--icon-color); font-size: 1.2rem; cursor: pointer; background: none; border: none; }
 
         /* --- SIDEBAR --- */
         .sidebar {
@@ -104,6 +108,7 @@
             -ms-overflow-style: none; scrollbar-width: none;
             transition: transform 0.3s ease, background-color 0.3s;
             z-index: 99;
+            border-right: 1px solid var(--border-color); /* Light modeda ajralib turishi uchun */
         }
         .sidebar::-webkit-scrollbar { display: none; }
 
@@ -170,10 +175,10 @@
                     <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                         <img src="{{ user.profile.avatar.url }}" alt="mdo" width="32" height="32" class="rounded-circle">
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="right: 0; left: auto;">
-                        <li><a class="dropdown-item" href="{% url 'profile' %}">Mening Profilim</a></li>
-                        <li><a class="dropdown-item" href="{% url 'my_videos' %}">Mening Loyihalarim</a></li>
-                        <li><hr class="dropdown-divider"></li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownUser1" style="background-color: var(--bg-sidebar); border-color: var(--border-color);">
+                        <li><a class="dropdown-item" href="{% url 'profile' %}" style="color: var(--text-main);">Mening Profilim</a></li>
+                        <li><a class="dropdown-item" href="{% url 'my_videos' %}" style="color: var(--text-main);">Mening Loyihalarim</a></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--border-color);"></li>
                         <li>
                             <form action="{% url 'logout' %}" method="post">
                                 {% csrf_token %}
@@ -202,18 +207,10 @@
         <hr>
 
         <div class="sidebar-header">Kutubxona</div>
-        <a href="#" class="nav-item">
-            <i class="fas fa-history"></i> Tarix
-        </a>
-        <a href="{% url 'my_videos' %}" class="nav-item">
-            <i class="fas fa-folder"></i> Mening Loyihalarim
-        </a>
-        <a href="{% url 'liked_videos' %}" class="nav-item">
-            <i class="fas fa-thumbs-up"></i> Yoqqan loyihalar
-        </a>
-        <a href="#" class="nav-item">
-            <i class="fas fa-clock"></i> Keyinroq ko'rish
-        </a>
+        <a href="#" class="nav-item"><i class="fas fa-history"></i> Tarix</a>
+        <a href="{% url 'my_videos' %}" class="nav-item"><i class="fas fa-folder"></i> Mening Loyihalarim</a>
+        <a href="{% url 'liked_videos' %}" class="nav-item"><i class="fas fa-thumbs-up"></i> Yoqqan loyihalar</a>
+        <a href="#" class="nav-item"><i class="fas fa-clock"></i> Keyinroq ko'rish</a>
         <hr>
 
         <div class="sidebar-header">Tools</div>
@@ -223,21 +220,11 @@
         <hr>
 
         <div class="sidebar-header">Platforma</div>
-        <a href="#" class="nav-item">
-            <i class="fas fa-users-cog"></i> Hamjamiyat
-        </a>
-        <a href="#" class="nav-item">
-            <i class="fas fa-cog"></i> Sozlamalar
-        </a>
-        <a href="#" class="nav-item">
-            <i class="fas fa-flag"></i> Shikoyatlar
-        </a>
-        <a href="#" class="nav-item">
-            <i class="fas fa-question-circle"></i> Yordam
-        </a>
-        <a href="#" class="nav-item">
-            <i class="fas fa-comment-alt"></i> Fikr-mulohaza
-        </a>
+        <a href="#" class="nav-item"><i class="fas fa-users-cog"></i> Hamjamiyat</a>
+        <a href="#" class="nav-item"><i class="fas fa-cog"></i> Sozlamalar</a>
+        <a href="#" class="nav-item"><i class="fas fa-flag"></i> Shikoyatlar</a>
+        <a href="#" class="nav-item"><i class="fas fa-question-circle"></i> Yordam</a>
+        <a href="#" class="nav-item"><i class="fas fa-comment-alt"></i> Fikr-mulohaza</a>
 
         <hr>
         <div class="text-muted small px-3">
@@ -260,34 +247,48 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
-            });
-        }
+        // DOM to'liq yuklangandan keyin ishlash
+        document.addEventListener('DOMContentLoaded', function() {
 
-        // 3. QO'SHILDI: JAVASCRIPT LOGIKA
-        const themeBtn = document.getElementById('themeToggle');
-        const body = document.body;
-        const icon = themeBtn.querySelector('i');
+            // Sidebar Toggle
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
 
-        // Oldingi holatni tiklash
-        if (localStorage.getItem('theme') === 'light') {
-            body.classList.add('light-mode');
-            icon.classList.replace('fa-moon', 'fa-sun');
-        }
+            // XATOLIK TUZATILDI: 'toggleBtn' -> 'sidebarToggle' ga o'zgartirildi
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('active');
+                });
+            }
 
-        themeBtn.addEventListener('click', () => {
-            body.classList.toggle('light-mode');
-            if (body.classList.contains('light-mode')) {
-                icon.classList.replace('fa-moon', 'fa-sun');
-                localStorage.setItem('theme', 'light');
-            } else {
-                icon.classList.replace('fa-sun', 'fa-moon');
-                localStorage.setItem('theme', 'dark');
+            // Theme (Rejim) Toggle
+            const themeBtn = document.getElementById('themeToggle');
+            const body = document.body;
+
+            if (themeBtn) {
+                const icon = themeBtn.querySelector('i');
+
+                // 1. Oldingi tanlovni tekshirish
+                const currentTheme = localStorage.getItem('theme');
+                if (currentTheme === 'light') {
+                    body.classList.add('light-mode');
+                    if(icon) icon.classList.replace('fa-moon', 'fa-sun');
+                }
+
+                // 2. Tugma bosilganda
+                themeBtn.addEventListener('click', () => {
+                    body.classList.toggle('light-mode');
+
+                    if (body.classList.contains('light-mode')) {
+                        if(icon) icon.classList.replace('fa-moon', 'fa-sun');
+                        localStorage.setItem('theme', 'light'); // Eslab qolish
+                    } else {
+                        if(icon) icon.classList.replace('fa-sun', 'fa-moon');
+                        localStorage.setItem('theme', 'dark'); // Eslab qolish
+                    }
+                });
             }
         });
     </script>
