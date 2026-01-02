@@ -5,10 +5,9 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # XAVFSIZLIK: Kalitlarni Render Environment-dan olamiz.
-# Agar Renderda SECRET_KEY kiritilmagan bo'lsa, default qiymat ishlatiladi.
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-changeme')
 
-# Renderda DEBUG=False bo'lishi kerak, lekin hozircha xatolarni ko'rish uchun True
+# Renderda DEBUG=False bo'lishi kerak, lekin hozircha True
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
@@ -20,7 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # DIQQAT: Cloudinary staticdan oldin turishi SHART
+    # Cloudinary staticdan oldin turishi SHART
     'cloudinary_storage',
     'django.contrib.staticfiles',
     'cloudinary',
@@ -37,7 +36,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise - Static fayllar uchun (SecurityMiddleware dan keyin turishi shart)
+    # WhiteNoise - Static fayllar uchun
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -86,26 +85,20 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# --- STATIC FILES (MUHIM TUZATISHLAR) ---
+# --- STATIC FILES (CSS, JavaScript, Images) ---
 STATIC_URL = '/static/'
-
-# 1. ImproperlyConfigured xatosini yo'qotadi
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Agar 'static' papkasi loyihada bo'lmasa, xato bermasligi uchun tekshirib olamiz
 if os.path.exists(os.path.join(BASE_DIR, 'static')):
     STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 else:
     STATICFILES_DIRS = []
 
-# 2. WhiteNoise sozlamalari
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# ENG MUHIMI: .map fayllar yo'qligi sababli "Build Failed" bo'lishini to'xtatadi
-WHITENOISE_MANIFEST_STRICT = False
+# --- MUHIM O'ZGARISH ---
+# "Manifest" so'zi olib tashlandi. Bu .map fayl xatolarini butunlay to'xtatadi.
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- CLOUDINARY ---
-# Bu kalitlarni Render Dashboard -> Environment Variables ga kiritishingiz SHART!
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
