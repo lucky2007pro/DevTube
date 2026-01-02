@@ -6,8 +6,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
-from .models import Project, Comment
+# ProjectImage ni import qilish esdan chiqmasin!
+from .models import Project, Comment, ProjectImage
 from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
+
 
 # 1. BOSH SAHIFA
 def home_page(request):
@@ -28,22 +30,31 @@ def home_page(request):
     return render(request, 'home.html', context)
 
 
-# 2. LOYIHA YUKLASH
+# 2. LOYIHA YUKLASH (YANGILANDI: Gallery qo'shildi)
 @login_required
 def create_project(request):
     form = ProjectForm()
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
+            # 1. Asosiy loyihani saqlash
             project = form.save(commit=False)
             project.author = request.user
             project.save()
+
+            # 2. Qo'shimcha rasmlarni (Gallery) saqlash
+            # 'more_images' formadagi nom bilan bir xil bo'lishi kerak
+            images = request.FILES.getlist('more_images')
+            for img in images:
+                ProjectImage.objects.create(project=project, image=img)
+
+            messages.success(request, "Loyiha muvaffaqiyatli yuklandi!")
             return redirect('home')
 
     return render(request, 'create_project.html', {'form': form})
 
 
-# 3. LOYIHA TAFSILOTLARI (TUZATILDI)
+# 3. LOYIHA TAFSILOTLARI
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
 
@@ -60,7 +71,6 @@ def project_detail(request, pk):
             comment.project = project
             comment.save()
 
-            # AJAX so'rov bo'lsa, JSON qaytaramiz
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({
                     'username': comment.user.username,
@@ -76,29 +86,33 @@ def project_detail(request, pk):
     # Kodni ko'rsatish logikasi
     has_bought = False
     code_content = None
-    is_preview = True
 
     # Agar tekin bo'lsa yoki muallif o'zi bo'lsa -> sotib olgan hisoblanadi
     if project.price == 0 or (request.user.is_authenticated and request.user == project.author):
         has_bought = True
 
-    if has_bought and project.source_code:
-        try:
-            # Encoding qo'shildi (utf-8) harflar buzilmasligi uchun
-            with project.source_code.open('r') as f:
-                code_content = f.read()
-            is_preview = False
-        except Exception as e:
-            code_content = f"Kodni o'qishda xatolik: {e}"
+    # Kod fayli bormi?
+    if project.source_code and has_bought:
+        file_ext = os.path.splitext(project.source_code.name)[1].lower()
+        # Agar ZIP yoki RAR bo'lsa, uni o'qimaymiz, faqat yuklashga ruxsat beramiz
+        if file_ext in ['.zip', '.rar', '.7z', '.tar', '.gz']:
+            code_content = "Bu arxiv fayl. Uni pastdagi tugma orqali yuklab olishingiz mumkin."
+        else:
+            # Matnli fayl bo'lsa (py, js, html) o'qishga harakat qilamiz
+            try:
+                # Cloudinary fayllarni to'g'ridan-to'g'ri o'qish qiyin bo'lishi mumkin
+                # Shuning uchun oddiy xabar chiqaramiz yoki fayl urlini beramiz
+                code_content = "Faylni yuklab olib ko'rishingiz mumkin."
+            except Exception:
+                code_content = "Faylni o'qish imkonsiz."
     elif project.source_code:
-        code_content = "# Kodni to'liq ko'rish uchun loyihani sotib oling."
+        code_content = "# Kodni yuklab olish uchun loyihani sotib oling."
 
     context = {
         'project': project,
         'form': comment_form,
         'code_content': code_content,
         'has_bought': has_bought,
-        'is_preview': is_preview
     }
     return render(request, 'project_detail.html', context)
 
@@ -154,7 +168,7 @@ def delete_project(request, pk):
     return redirect('home')
 
 
-# 7. TAHRIRLASH
+# 7. TAHRIRLASH (YANGILANDI: Yangi rasmlar qo'shish)
 @login_required
 def update_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
@@ -164,7 +178,14 @@ def update_project(request, pk):
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
-            form.save()
+            project = form.save()
+
+            # Tahrirlashda yangi rasm qo'shilsa, eskilariga qo'shib qo'yamiz
+            images = request.FILES.getlist('more_images')
+            for img in images:
+                ProjectImage.objects.create(project=project, image=img)
+
+            messages.success(request, "Loyiha yangilandi!")
             return redirect('project_detail', pk=pk)
     else:
         form = ProjectForm(instance=project)
@@ -195,7 +216,12 @@ def like_project(request, pk):
 @login_required
 def buy_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
-    messages.success(request, f"{project.title} loyihasi sotib olindi (demo)!")
+    # Kelajakda bu yerda to'lov tizimi bo'ladi (Stripe/Payme)
+    # Hozircha shunchaki sotib olindi deb belgilaymiz
+    # Eslatma: ManyToManyField'ga add() qilish kerak
+    project.buyers.add(request.user)
+
+    messages.success(request, f"{project.title} loyihasi sotib olindi!")
     return redirect('project_detail', pk=pk)
 
 
@@ -222,29 +248,24 @@ def my_videos(request):
     return render(request, 'home.html', {'projects': projects, 'categories': categories})
 
 
-# 13. C++ INTEGRATSIYASI (TUZATILDI: Render uchun moslandi)
+# 13. C++ INTEGRATSIYASI
 def cpp_test(request):
     result = "Natija kutilmoqda..."
 
     if request.GET.get('number'):
         number = request.GET.get('number')
 
-        # 1. Operatsion tizimni aniqlash
-        if os.name == 'nt': # Windows
+        if os.name == 'nt':
             exe_name = 'main.exe'
-        else: # Linux (Render)
+        else:
             exe_name = 'main'
 
-        # 2. Fayl yo'lini aniqlash (projects papkasi ichida deb hisoblaymiz)
-        # Agar main.cpp ni projects papkasida kompilyatsiya qilgan bo'lsak:
         exe_path = os.path.join(settings.BASE_DIR, 'cpp_module', exe_name)
 
         try:
-            # 3. MUHIM: Linux uchun ruxsat berish (chmod +x)
             if os.name != 'nt':
                 subprocess.run(['chmod', '+x', exe_path])
 
-            # 4. Ishga tushirish
             process = subprocess.run([exe_path, number], capture_output=True, text=True)
 
             if process.stdout:

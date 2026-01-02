@@ -3,23 +3,53 @@ from django.contrib.auth.models import User
 from .models import Project, Profile, Comment
 
 
+# --- YANGI: BIR NECHTA RASM YUKLASH UCHUN YORDAMCHI KLASSLAR ---
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = single_file_clean(data, initial)
+        return result
+
+
+# ----------------------------------------------------------------
+
+
 # 1. LOYIHA YUKLASH FORMASI
 class ProjectForm(forms.ModelForm):
+    # Qo'shimcha rasmlar maydoni (Gallery)
+    more_images = MultipleFileField(
+        label="Qo'shimcha Skrinshotlar",
+        required=False,
+        widget=MultipleFileInput(attrs={'class': 'form-control', 'multiple': True})
+    )
+
     class Meta:
         model = Project
-        # Hamma kerakli maydonlarni kiritamiz
-        fields = ['title', 'description', 'image', 'video_file', 'source_code', 'price', 'category', 'youtube_link']
+        # 'video_file' olib tashlandi
+        fields = ['title', 'description', 'image', 'source_code', 'price', 'category', 'youtube_link']
 
-        # HTML dagi inputlarga chiroyli dizayn (Bootstrap) berish
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Loyiha nomi'}),
             'description': forms.Textarea(
                 attrs={'class': 'form-control', 'placeholder': 'Loyiha haqida batafsil...', 'rows': 4}),
             'category': forms.Select(attrs={'class': 'form-select'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Narxi (0 = Tekin)'}),
+
+            # YouTube Link endi majburiyroq ko'rinishda
             'youtube_link': forms.URLInput(
-                attrs={'class': 'form-control', 'placeholder': 'https://youtube.com/watch?v=...'}),
-            'video_file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+                attrs={'class': 'form-control', 'placeholder': 'https://youtube.com/watch?v=... (Majburiy)'}),
+
             'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'source_code': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }

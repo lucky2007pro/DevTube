@@ -25,10 +25,14 @@
         position: relative;
     }
     .video-frame iframe,
-    .video-frame video,
     .video-frame img {
-        width: 100%; height: 100%; object-fit: contain;
+        width: 100%; height: 100%; object-fit: contain; /* Rasmni to'liq ko'rsatish */
         border: none;
+    }
+
+    /* Agar rasm bo'lsa, uni chiroyli qilib kesib ko'rsatish (Cover) */
+    .video-frame img.cover-img {
+        object-fit: cover;
     }
 
     .video-title {
@@ -73,8 +77,30 @@
     .desc-stat { font-weight: 600; margin-right: 10px; color: var(--text-main); }
     .desc-text { margin-top: 10px; white-space: pre-line; color: var(--text-main); }
 
-    .code-container { margin-bottom: 30px; position: relative; }
-    .code-header { font-weight: bold; margin-bottom: 10px; color: var(--text-main); }
+    /* GALLERY STYLES */
+    .gallery-img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+    .gallery-img:hover {
+        transform: scale(1.03);
+    }
+
+    /* CODE BOX */
+    .code-box {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: monospace;
+        overflow-x: auto;
+        margin-bottom: 20px;
+        border: 1px solid #333;
+    }
 
     .comment-input {
         background: transparent; border: none; border-bottom: 1px solid var(--border-color);
@@ -82,7 +108,6 @@
     }
     .comment-input:focus { border-bottom: 2px solid var(--text-main); }
 
-    /* ANIMATSIYA */
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
@@ -91,6 +116,7 @@
 
 <div class="watch-container">
     <div class="main-content">
+
         <div class="video-frame">
             {% if project.get_youtube_id %}
                 <iframe
@@ -100,12 +126,8 @@
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowfullscreen>
                 </iframe>
-            {% elif project.video_file %}
-                <video controls controlsList="nodownload">
-                    <source src="{{ project.video_file.url }}" type="video/mp4">
-                </video>
             {% else %}
-                <img src="{{ project.image.url }}">
+                <img src="{{ project.image.url }}" class="cover-img" alt="{{ project.title }}">
             {% endif %}
         </div>
 
@@ -116,6 +138,7 @@
             </a>
         </div>
         {% endif %}
+
         <div class="video-title">{{ project.title }}</div>
 
         <div class="action-bar">
@@ -123,7 +146,7 @@
                 <img src="{{ project.author.profile.avatar.url }}" class="author-avatar">
                 <div>
                     <span class="author-name">{{ project.author.username }}</span>
-                    <span class="sub-count">1.2K obunachi</span>
+                    <span class="sub-count">Muallif</span>
                 </div>
                 <button class="btn-subscribe">Obuna bo'lish</button>
             </div>
@@ -137,7 +160,7 @@
                 <button class="btn-pill"><i class="fas fa-share"></i> Ulashish</button>
 
                 {% if project.source_code %}
-                    {% if project.price == 0 or request.user == project.author or has_bought %}
+                    {% if has_bought %}
                         <a href="{{ project.source_code.url }}" class="btn-pill" style="background:#3ea6ff; color:white;" download>
                             <i class="fas fa-download"></i> Yuklab olish
                         </a>
@@ -156,6 +179,30 @@
             <div class="desc-text">{{ project.description|linebreaksbr }}</div>
         </div>
 
+        {% if project.images.all %}
+        <div class="mb-4">
+            <h5 style="color: var(--text-main); margin-bottom: 15px;">Loyihadan Skrinshotlar</h5>
+            <div class="row g-3">
+                {% for screen in project.images.all %}
+                <div class="col-6 col-md-4">
+                    <a href="{{ screen.image.url }}" target="_blank">
+                        <img src="{{ screen.image.url }}" class="gallery-img" alt="Screenshot">
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if code_content %}
+        <div class="mb-4">
+            <h5 style="color: var(--text-main);">Manba Kodi (Preview)</h5>
+            <div class="code-box">
+                <pre><code>{{ code_content }}</code></pre>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="mt-4">
             <h5 style="color: var(--text-main);">
                 <span id="comment-count">{{ project.comments.count }}</span> Izohlar
@@ -172,6 +219,8 @@
                     </div>
                 </form>
             </div>
+            {% else %}
+                <p class="text-muted small">Izoh yozish uchun <a href="{% url 'login' %}">kiring</a>.</p>
             {% endif %}
 
             <div id="comment-list">
@@ -202,7 +251,8 @@
     const likeCount = document.getElementById('like-count');
 
     if (likeBtn) {
-        likeBtn.addEventListener('click', function() {
+        likeBtn.addEventListener('click', function(e) {
+            e.preventDefault(); // Sahifa sakrashini oldini olish
             const url = this.getAttribute('data-url');
             fetch(url, {
                 method: 'POST',
@@ -219,7 +269,8 @@
                 } else {
                     likeIcon.classList.replace('fas', 'far');
                 }
-            });
+            })
+            .catch(err => console.error("Xatolik:", err));
         });
     }
 
@@ -254,8 +305,11 @@
                     </div>`;
                 commentList.insertAdjacentHTML('afterbegin', html);
                 bodyInput.value = '';
-                commentCountElement.innerText = parseInt(commentCountElement.innerText) + 1;
-            });
+                // Sonini oshirish
+                let count = parseInt(commentCountElement.innerText);
+                commentCountElement.innerText = count + 1;
+            })
+            .catch(err => console.error("Xatolik:", err));
         });
     }
 </script>
