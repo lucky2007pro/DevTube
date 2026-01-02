@@ -4,21 +4,26 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# XAVFSIZLIK: Kalitlarni Render Environment-dan olamiz.
+# --- XAVFSIZLIK SOZLAMALARI ---
+# GitHubda "Secret Key exposed" demasligi uchun kalitni Environmentdan olamiz.
+# Agar topilmasa (Localda), default kalit ishlatadi.
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-changeme')
 
-# Renderda DEBUG=False bo'lishi kerak, lekin hozircha True
-DEBUG = True
+# Renderda DEBUG=False bo'lishi kerak.
+# "True" qilib qo'ysangiz xatolarni ko'rasiz, lekin Production uchun "False" xavfsizroq.
+# Quyidagi qator: Agar Renderda bo'lsak False, kompyuterda bo'lsak True bo'ladi.
+DEBUG = 'RENDER' not in os.environ
 
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
-    'jazzmin',
+    'jazzmin',  # Admin panel dizayni
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+
     # DIQQAT: Cloudinary staticdan oldin turishi SHART
     'cloudinary_storage',
     'django.contrib.staticfiles',
@@ -27,7 +32,7 @@ INSTALLED_APPS = [
     # Loyiha ilovalari
     'projects',
 
-    # Allauth
+    # Allauth (Login/Register uchun)
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -36,7 +41,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise - Static fayllar uchun
+    # WhiteNoise - Static fayllar (CSS/JS) uchun
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -44,6 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Allauth middleware
     'allauth.account.middleware.AccountMiddleware',
 ]
 
@@ -66,6 +72,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# --- MA'LUMOTLAR BAZASI ---
+# Renderda avtomatik PostgreSQL, kompyuterda SQLite ishlatadi
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
@@ -80,8 +88,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'uz-uz'  # Tilni o'zbekcha qildim
+TIME_ZONE = 'Asia/Tashkent'  # Vaqt mintaqasi
 USE_I18N = True
 USE_TZ = True
 
@@ -94,12 +102,16 @@ if os.path.exists(os.path.join(BASE_DIR, 'static')):
 else:
     STATICFILES_DIRS = []
 
-# --- HAL QILUVCHI O'ZGARISH ---
-# WhiteNoise storage o'rniga oddiy Django storage ishlatamiz.
-# Bu "adminlte.min.css.map not found" xatosini yo'qotadi, chunki u fayllarni titkilamaydi.
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+# WhiteNoise orqali fayllarni siqish va keshlash
+# Agar "map not found" xatosi chiqsa, 'whitenoise.storage.CompressedStaticFilesStorage' ishlating
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# --- CLOUDINARY ---
+# --- CLOUDINARY SOZLAMALARI (GitHub Xavfsizligi) ---
+# Bu yerda hech qanday raqam yozilmagan. Hammasi Render Environmentdan olinadi.
+# Render Environment Variable nomlari aynan shunday bo'lishi kerak:
+# 1. CLOUDINARY_CLOUD_NAME
+# 2. CLOUDINARY_API_KEY
+# 3. CLOUDINARY_API_SECRET
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
@@ -108,18 +120,18 @@ CLOUDINARY_STORAGE = {
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# Xotira xatolarini oldini olish
+# Katta fayllarni yuklashda xatolik oldini olish
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Login sozlamalari
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
 
+# Allauth sozlamalari
 SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-
-# Google login tugmasi bosilganda oraliq sahifani (Continue) ko'rsatmaslik uchun:
 SOCIALACCOUNT_LOGIN_ON_GET = True
