@@ -1,78 +1,90 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <h3 class="mb-3 text-white"><i class="fas fa-code"></i> C++ Kompilyator</h3>
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <div class="card p-5 shadow" style="background-color: #1e1e1e; border: 1px solid var(--border-color);">
+            <h2 class="mb-4" style="color: white;">
+                <i class="fas fa-microchip text-primary"></i> C++ Integratsiyasi
+            </h2>
+            <p class="text-muted">Biror son kiriting, biz uni C++ orqali hisoblaymiz.</p>
 
-            <form id="cppForm" method="post">
+            <form id="calcForm" class="d-flex gap-2 mb-4">
                 {% csrf_token %}
+                <input type="number" id="numberInput" name="input" class="form-control" placeholder="Son kiriting..." required
+                       style="background: #121212; color: white; border: 1px solid var(--border-color);">
 
-                <div class="mb-3">
-                    <label class="text-white">Kod:</label>
-                    <textarea name="code" class="form-control bg-dark text-white font-monospace" rows="10" spellcheck="false">{% if code %}{{ code }}{% else %}#include <iostream>
-using namespace std;
-
-int main() {
-    int a;
-    cin >> a;
-    cout << "Kiritilgan son: " << a << endl;
-    return 0;
-}{% endif %}</textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label class="text-white">Input (Kiritish):</label>
-                    <textarea name="input" class="form-control bg-dark text-white font-monospace" rows="3" placeholder="Masalan: 10">{{ input }}</textarea>
-                </div>
-
-                <button type="submit" class="btn btn-success" id="runBtn">
-                    <i class="fas fa-play"></i> Run Code
+                <button type="submit" id="submitBtn" class="btn btn-primary">
+                    Hisoblash
                 </button>
             </form>
 
-            <div class="mt-4">
-                <label class="text-white">Natija:</label>
-                <pre id="outputArea" class="bg-black text-white p-3 rounded border border-secondary" style="min-height: 100px;">{{ result }}</pre>
-            </div>
+            <div id="resultBox" class="alert alert-success fw-bold" style="display: none; white-space: pre-wrap;"></div>
+
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary mt-3">Bosh sahifaga qaytish</a>
         </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('cppForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // 1. Sahifa qayta yuklanishini to'xtatamiz
+    document.getElementById('calcForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Sahifa qayta yuklanishini to'xtatadi
 
-        const btn = document.getElementById('runBtn');
-        const output = document.getElementById('outputArea');
-        const formData = new FormData(this); // Formadagi ma'lumotlarni olamiz
+        const btn = document.getElementById('submitBtn');
+        const inputVal = document.getElementById('numberInput').value;
+        const resultBox = document.getElementById('resultBox');
 
-        // Tugmani bosilmas holga keltiramiz va Loading yozamiz
+        // Tugmani bloklaymiz
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ishlanmoqda...';
-        output.innerText = "Kuting...";
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-        // 2. So'rovni orqa fonda yuboramiz
+        // Bizning views.py 'code' va 'input' kutadi.
+        // Foydalanuvchi faqat 'input' kiritdi.
+        // Shuning uchun orqa fonda C++ kodini o'zimiz yuboramiz:
+        const cppCode = `#include <iostream>
+using namespace std;
+
+int main() {
+    int n;
+    if (cin >> n) {
+        cout << "Kiritilgan sonning kvadrati: " << n * n << endl;
+        cout << "Bu hisob C++ orqali bajarildi.";
+    } else {
+        cout << "Xatolik: Son kiritilmadi.";
+    }
+    return 0;
+}`;
+
+        const formData = new FormData();
+        formData.append('code', cppCode);   // Kod
+        formData.append('input', inputVal); // Foydalanuvchi kiritgan son
+
+        // CSRF tokenni olish
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
         fetch("{% url 'cpp_test' %}", {
             method: 'POST',
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest' // Django buni AJAX ekanini bilishi uchun
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
             }
         })
-        .then(response => response.json()) // Javobni JSON formatida olamiz
+        .then(response => response.json())
         .then(data => {
-            // 3. Natijani sahifaga yozamiz
-            output.innerText = data.result;
+            // Natijani ko'rsatish
+            resultBox.style.display = 'block';
+            resultBox.innerText = data.result;
         })
         .catch(error => {
-            output.innerText = "Xatolik yuz berdi: " + error;
+            resultBox.style.display = 'block';
+            resultBox.className = 'alert alert-danger fw-bold';
+            resultBox.innerText = "Xatolik yuz berdi.";
         })
         .finally(() => {
-            // Tugmani joyiga qaytaramiz
+            // Tugmani joyiga qaytarish
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+            btn.innerHTML = 'Hisoblash';
         });
     });
 </script>
