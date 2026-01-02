@@ -72,23 +72,26 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # --- SUPABASE (S3 INTERFACE) MEDIA STORAGE ---
 # Render Environment Variables bo'limidan olinadi
+# --- SUPABASE (S3 INTERFACE) MEDIA STORAGE ---
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
-# Supabase S3 bilan ishlashi uchun juda muhim sozlamalar
+
+# Supabase bilan ishlashda eng muhim qatorlar:
 AWS_S3_ADDRESSING_STYLE = "path"
-AWS_S3_REGION_NAME = 'eu-central-1' # Yoki loyihangiz regioni
+AWS_S3_REGION_NAME = 'eu-central-1'  # Supabase loyihangiz regionini tekshiring
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_FILE_OVERWRITE = False
+AWS_QUERYSTRING_AUTH = False
 AWS_S3_CUSTOM_DOMAIN = None
+
+# Storage klassi
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
-# Agar rasmlar ko'rinmasa, bu qatorni qo'shing:
-AWS_QUERYSTRING_AUTH = False
-
-# Local media fallback (agar S3 sozlanmagan bo'lsa ishlatish uchun)
-MEDIA_URL = '/media/'
+# Media URL sozlamasi (Supabase orqali ko'rinishi uchun)
+# Agar rasmlar ko'rinmasa, bu qismni quyidagicha qoldiring
+MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # --- QOLGAN SOZLAMALAR ---
