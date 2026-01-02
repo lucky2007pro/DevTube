@@ -19,7 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # Cloudinary staticdan oldin turishi SHART
+    # DIQQAT: Cloudinary staticdan oldin turishi SHART
     'cloudinary_storage',
     'django.contrib.staticfiles',
     'cloudinary',
@@ -94,9 +94,10 @@ if os.path.exists(os.path.join(BASE_DIR, 'static')):
 else:
     STATICFILES_DIRS = []
 
-# --- MUHIM O'ZGARISH ---
-# "Manifest" so'zi olib tashlandi. Bu .map fayl xatolarini butunlay to'xtatadi.
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# --- HAL QILUVCHI O'ZGARISH ---
+# WhiteNoise storage o'rniga oddiy Django storage ishlatamiz.
+# Bu "adminlte.min.css.map not found" xatosini yo'qotadi, chunki u fayllarni titkilamaydi.
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # --- CLOUDINARY ---
 CLOUDINARY_STORAGE = {
