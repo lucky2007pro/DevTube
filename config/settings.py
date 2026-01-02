@@ -1,16 +1,12 @@
 import os
 from pathlib import Path
-import dj_database_url  # Render bazasi uchun shart
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- XAVFSIZLIK SOZLAMALARI ---
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-changeme')
-
-# Render-da DEBUG-ni False qilish tavsiya etiladi, lekin xatoni ko'rish uchun True qoldirsangiz ham bo'ladi
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
-
-# Render-da beriladigan manzilni qabul qilish uchun '*' qoldiramiz
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -21,18 +17,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'projects',
-
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'storages', # S3/Supabase uchun shart
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Static fayllar uchun Render-da shart
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -61,9 +56,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# --- MA'LUMOTLAR BAZASI ---
-# Render-da PostgreSQL ishlatish uchun 'DATABASE_URL' dan foydalanamiz
-# Agar u yo'q bo'lsa (mahalliy kompyuterda), SQLite-ga qaytadi
+# --- MA'LUMOTLAR BAZASI (Render PostgreSQL) ---
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{os.path.join(BASE_DIR, "db.sqlite3")}',
@@ -71,41 +64,41 @@ DATABASES = {
     )
 }
 
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
-
-LANGUAGE_CODE = 'uz-uz'
-TIME_ZONE = 'Asia/Tashkent'
-USE_I18N = True
-USE_TZ = True
-
 # --- STATIC FILES (CSS, JS) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-# WhiteNoise Render-da static fayllarni xatosiz ko'rsatishi uchun
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# --- MEDIA FILES (Rasm, Video) ---
+# --- SUPABASE (S3 INTERFACE) MEDIA STORAGE ---
+# Render Environment Variables bo'limidan olinadi
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
+
+AWS_S3_FILE_OVERWRITE = False
+AWS_S3_CUSTOM_DOMAIN = None
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# Agar rasmlar ko'rinmasa, bu qatorni qo'shing:
+AWS_QUERYSTRING_AUTH = False
+
+# Local media fallback (agar S3 sozlanmagan bo'lsa ishlatish uchun)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Render-da CSRF xatosi chiqmasligi uchun:
+# --- QOLGAN SOZLAMALAR ---
+LANGUAGE_CODE = 'uz-uz'
+TIME_ZONE = 'Asia/Tashkent'
+USE_I18N = True
+USE_TZ = True
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Login sozlamalari
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
-
-# Allauth sozlamalari
 SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_LOGIN_ON_GET = True
