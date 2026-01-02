@@ -104,8 +104,7 @@ else:
 
 # WhiteNoise orqali fayllarni siqish va keshlash
 # Agar "map not found" xatosi chiqsa, 'whitenoise.storage.CompressedStaticFilesStorage' ishlating
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 # --- CLOUDINARY SOZLAMALARI (GitHub Xavfsizligi) ---
 # Bu yerda hech qanday raqam yozilmagan. Hammasi Render Environmentdan olinadi.
 # Render Environment Variable nomlari aynan shunday bo'lishi kerak:
