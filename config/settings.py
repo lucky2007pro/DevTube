@@ -5,29 +5,22 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- XAVFSIZLIK SOZLAMALARI ---
-# GitHubda "Secret Key exposed" demasligi uchun kalitni Environmentdan olamiz.
-# Agar topilmasa (Localda), default kalit ishlatadi.
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-changeme')
 
-# Renderda DEBUG=False bo'lishi kerak.
-# "True" qilib qo'ysangiz xatolarni ko'rasiz, lekin Production uchun "False" xavfsizroq.
-# Quyidagi qator: Agar Renderda bo'lsak False, kompyuterda bo'lsak True bo'ladi.
-DEBUG = 'RENDER' not in os.environ
+# PythonAnywhere-da DEBUG odatda True bo'lishi mumkin (xatolarni ko'rish uchun),
+# lekin sayt tayyor bo'lgach False qilinadi.
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
-    'jazzmin',  # Admin panel dizayni
+    'jazzmin',  # Admin panel dizayni (Har doim django.contrib.admin-dan tepada tursin)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-
-    # DIQQAT: Cloudinary staticdan oldin turishi SHART
-    'cloudinary_storage',
     'django.contrib.staticfiles',
-    'cloudinary',
 
     # Loyiha ilovalari
     'projects',
@@ -41,15 +34,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise - Static fayllar (CSS/JS) uchun
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Static fayllar uchun
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Allauth middleware
     'allauth.account.middleware.AccountMiddleware',
 ]
 
@@ -73,12 +64,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # --- MA'LUMOTLAR BAZASI ---
-# Renderda avtomatik PostgreSQL, kompyuterda SQLite ishlatadi
+# PythonAnywhere-da SQLite ishlatamiz (Render PostgreSQL-ga muhtoj emas)
 DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -88,39 +79,27 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-LANGUAGE_CODE = 'uz-uz'  # Tilni o'zbekcha qildim
-TIME_ZONE = 'Asia/Tashkent'  # Vaqt mintaqasi
+LANGUAGE_CODE = 'uz-uz'
+TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
 USE_TZ = True
 
-# --- STATIC FILES (CSS, JavaScript, Images) ---
+# --- STATIC FILES (CSS, JS) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-if os.path.exists(os.path.join(BASE_DIR, 'static')):
-    STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-else:
-    STATICFILES_DIRS = []
+# WhiteNoise storage (Cloudinary-ga bog'liq qismlar o'chirildi)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# WhiteNoise orqali fayllarni siqish va keshlash
-# Agar "map not found" xatosi chiqsa, 'whitenoise.storage.CompressedStaticFilesStorage' ishlating
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'# --- CLOUDINARY SOZLAMALARI (GitHub Xavfsizligi) ---
-# Bu yerda hech qanday raqam yozilmagan. Hammasi Render Environmentdan olinadi.
-# Render Environment Variable nomlari aynan shunday bo'lishi kerak:
-# 1. CLOUDINARY_CLOUD_NAME
-# 2. CLOUDINARY_API_KEY
-# 3. CLOUDINARY_API_SECRET
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
-}
+# --- MEDIA FILES (Rasm, Video, Fayl yuklash) ---
+# ENDI FAYLLAR SERVERNING O'ZIGA TUSHADI (Cloudinary-siz)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
-# Katta fayllarni yuklashda xatolik oldini olish
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+# --- MAXFIYLIK VA CHEKLOVLAR ---
+FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024 # 100MB gacha fayl yuklashga ruxsat
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
