@@ -1,5 +1,5 @@
-{% load static %}
 <!DOCTYPE html>
+{% load static %}
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -30,7 +30,7 @@
             overflow-x: hidden;
         }
 
-        /* --- NAVBAR (YANGILANGAN DIZAYN) --- */
+        /* --- NAVBAR --- */
         .navbar {
             background-color: var(--bg-body);
             height: 56px;
@@ -38,60 +38,47 @@
             position: fixed; top: 0; left: 0; right: 0;
             z-index: 100;
             display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.05); /* Ozgina chegara qo'shildi */
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
         .logo-area { display: flex; align-items: center; gap: 16px; }
 
-        /* LOGO UCHUN MAXSUS STIL */
+        /* LOGO DIZAYNI (Siz xohlagan) */
         .logo-box {
             position: relative;
-            width: 34px; height: 34px;
+            width: 32px; height: 32px;
             background: #1e1e1e;
-            border: 1px solid #333;
             border-radius: 6px;
             display: flex; align-items: center; justify-content: center;
+            border: 1px solid #333;
         }
         .logo-text-styled {
-            font-weight: 800;
-            font-size: 22px;
-            letter-spacing: -1px;
-            font-family: sans-serif;
-            margin-left: 8px;
-            line-height: 1;
+            font-weight: 800; font-size: 22px; letter-spacing: -1px;
+            font-family: sans-serif; margin-left: 8px; line-height: 1;
         }
 
-        /* QIDIRUV QISMI */
+        /* QIDIRUV */
         .search-box {
             display: flex; align-items: center;
             background: #121212;
             border: 1px solid var(--border-color);
             border-radius: 40px;
             padding: 0 10px;
-            flex-grow: 1;
-            max-width: 500px;
-            margin: 0 20px;
+            flex-grow: 1; max-width: 500px; margin: 0 20px;
         }
-
-        /* Faqat juda kichkina telefonda yashirish */
-        @media (max-width: 600px) {
-            .search-box { display: none; }
-        }
+        @media (max-width: 600px) { .search-box { display: none; } }
 
         .search-input {
-            background: transparent; border: none; color: white;
-            padding: 8px 10px; flex-grow: 1; outline: none; width: 100%;
+            background: transparent; border: none; color: white; padding: 8px 10px; flex-grow: 1; outline: none; width: 100%;
         }
         .search-btn {
-            background: #222; border: none; border-left: 1px solid var(--border-color);
-            color: var(--text-sec); padding: 8px 20px;
-            border-top-right-radius: 40px; border-bottom-right-radius: 40px;
+            background: #222; border: none; border-left: 1px solid var(--border-color); color: var(--text-sec); padding: 8px 20px; border-top-right-radius: 40px; border-bottom-right-radius: 40px;
         }
 
         .user-actions { display: flex; align-items: center; gap: 15px; }
-        .icon-btn { color: white; font-size: 1.2rem; cursor: pointer; background: none; border: none;}
+        .icon-btn { color: white; font-size: 1.2rem; cursor: pointer; background: none; border: none; }
 
-        /* --- SIDEBAR (O'ZGARISHSIZ QOLDI) --- */
+        /* --- SIDEBAR --- */
         .sidebar {
             position: fixed; top: 56px; left: 0; bottom: 0;
             width: 240px;
@@ -123,13 +110,13 @@
         .nav-item.active { background-color: var(--hover-bg); font-weight: bold; }
         .nav-item i { width: 24px; font-size: 18px; text-align: center; }
 
-        /* --- MAIN CONTENT --- */
-        .main-content {
-            margin-top: 56px;
-            margin-left: 240px;
-            min-height: 100vh;
+        /* Sidebar bo'lim sarlavhasi */
+        .sidebar-header {
+            font-size: 11px; font-weight: bold; text-transform: uppercase;
+            color: var(--text-sec); margin: 15px 0 5px 12px;
         }
 
+        .main-content { margin-top: 56px; margin-left: 240px; min-height: 100vh; }
         hr { border-color: var(--border-color); margin: 12px 0; }
     </style>
 </head>
@@ -137,16 +124,13 @@
 
     <nav class="navbar">
         <div class="logo-area">
-            <button id="sidebarToggle" class="icon-btn me-2">
-                <i class="fas fa-bars"></i>
-            </button>
+            <button id="sidebarToggle" class="icon-btn me-2"><i class="fas fa-bars"></i></button>
 
             <a href="/" class="d-flex align-items-center text-decoration-none">
                 <div class="logo-box">
-                    <i class="fas fa-terminal" style="color: #ccc; font-size: 16px;"></i>
-                    <i class="fas fa-play" style="color: #2ecc71; font-size: 9px; position: absolute; bottom: 5px; right: 5px;"></i>
+                    <i class="fas fa-terminal" style="color: #ccc; font-size: 14px;"></i>
+                    <i class="fas fa-play" style="color: #2ecc71; font-size: 8px; position: absolute; bottom: 5px; right: 5px;"></i>
                 </div>
-
                 <div class="logo-text-styled">
                     <span class="text-danger">Dev</span><span class="text-primary">Tube</span>
                 </div>
@@ -195,25 +179,48 @@
             <i class="fas fa-layer-group"></i> Obunalar
         </a>
         <hr>
+
+        <div class="sidebar-header">Kutubxona</div>
+        <a href="#" class="nav-item">
+            <i class="fas fa-history"></i> Tarix
+        </a>
         <a href="{% url 'my_videos' %}" class="nav-item">
             <i class="fas fa-folder"></i> Mening Loyihalarim
         </a>
         <a href="{% url 'liked_videos' %}" class="nav-item">
             <i class="fas fa-thumbs-up"></i> Yoqqan loyihalar
         </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-clock"></i> Keyinroq ko'rish
+        </a>
         <hr>
 
-        <div class="text-muted small px-3 mb-2" style="font-size: 11px; font-weight: bold; text-transform: uppercase;">
-            Tools
-        </div>
+        <div class="sidebar-header">Tools</div>
         <a href="{% url 'cpp_test' %}" class="nav-item {% if 'cpp' in request.path %}active{% endif %}">
             <i class="fas fa-terminal text-success"></i> C++ Kompilyator
+        </a>
+        <hr>
+
+        <div class="sidebar-header">Platforma</div>
+        <a href="#" class="nav-item">
+            <i class="fas fa-users-cog"></i> Hamjamiyat
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-cog"></i> Sozlamalar
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-flag"></i> Shikoyatlar
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-question-circle"></i> Yordam
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-comment-alt"></i> Fikr-mulohaza
         </a>
 
         <hr>
         <div class="text-muted small px-3">
-            &copy; 2024 DevTube<br>
-            Dasturchilar uchun
+            &copy; 2024 DevTube<br>Dasturchilar uchun
         </div>
     </div>
 
@@ -232,11 +239,9 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
         const toggleBtn = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
-
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
                 sidebar.classList.toggle('active');
