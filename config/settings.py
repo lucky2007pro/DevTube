@@ -1,20 +1,20 @@
 import os
 from pathlib import Path
-import dj_database_url
+import dj_database_url  # Render bazasi uchun shart
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- XAVFSIZLIK SOZLAMALARI ---
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-changeme')
 
-# PythonAnywhere-da DEBUG odatda True bo'lishi mumkin (xatolarni ko'rish uchun),
-# lekin sayt tayyor bo'lgach False qilinadi.
-DEBUG = True
+# Render-da DEBUG-ni False qilish tavsiya etiladi, lekin xatoni ko'rish uchun True qoldirsangiz ham bo'ladi
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
+# Render-da beriladigan manzilni qabul qilish uchun '*' qoldiramiz
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
-    'jazzmin',  # Admin panel dizayni (Har doim django.contrib.admin-dan tepada tursin)
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -22,10 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Loyiha ilovalari
     'projects',
 
-    # Allauth (Login/Register uchun)
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -34,7 +32,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Static fayllar uchun
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Static fayllar uchun Render-da shart
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -64,12 +62,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # --- MA'LUMOTLAR BAZASI ---
-# PythonAnywhere-da SQLite ishlatamiz (Render PostgreSQL-ga muhtoj emas)
+# Render-da PostgreSQL ishlatish uchun 'DATABASE_URL' dan foydalanamiz
+# Agar u yo'q bo'lsa (mahalliy kompyuterda), SQLite-ga qaytadi
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f'sqlite:///{os.path.join(BASE_DIR, "db.sqlite3")}',
+        conn_max_age=600
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -89,17 +88,15 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-# WhiteNoise storage (Cloudinary-ga bog'liq qismlar o'chirildi)
+# WhiteNoise Render-da static fayllarni xatosiz ko'rsatishi uchun
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# --- MEDIA FILES (Rasm, Video, Fayl yuklash) ---
-# ENDI FAYLLAR SERVERNING O'ZIGA TUSHADI (Cloudinary-siz)
+# --- MEDIA FILES (Rasm, Video) ---
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# --- MAXFIYLIK VA CHEKLOVLAR ---
-FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024 # 100MB gacha fayl yuklashga ruxsat
-DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
+# Render-da CSRF xatosi chiqmasligi uchun:
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
