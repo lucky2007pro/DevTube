@@ -4,10 +4,11 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# XAVFSIZLIK: Kalitlarni Render Environment-dan olamiz
+# XAVFSIZLIK: Kalitlarni Render Environment-dan olamiz.
+# Agar Renderda SECRET_KEY kiritilmagan bo'lsa, default qiymat ishlatiladi.
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-changeme')
 
-# Renderda DEBUG=False bo'lishi kerak, lekin muammolarni ko'rish uchun True qoldiramiz
+# Renderda DEBUG=False bo'lishi kerak, lekin hozircha xatolarni ko'rish uchun True
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
@@ -19,11 +20,15 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # Cloudinary staticdan oldin turishi shart!
+    # DIQQAT: Cloudinary staticdan oldin turishi SHART
     'cloudinary_storage',
     'django.contrib.staticfiles',
     'cloudinary',
+
+    # Loyiha ilovalari
     'projects',
+
+    # Allauth
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -32,7 +37,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise - Static fayllar uchun
+    # WhiteNoise - Static fayllar uchun (SecurityMiddleware dan keyin turishi shart)
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -83,17 +88,24 @@ USE_TZ = True
 
 # --- STATIC FILES (MUHIM TUZATISHLAR) ---
 STATIC_URL = '/static/'
-# 1. Bu qator ImproperlyConfigured xatosini yo'qotadi
+
+# 1. ImproperlyConfigured xatosini yo'qotadi
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# Agar 'static' papkasi loyihada bo'lmasa, xato bermasligi uchun tekshirib olamiz
+if os.path.exists(os.path.join(BASE_DIR, 'static')):
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+else:
+    STATICFILES_DIRS = []
 
 # 2. WhiteNoise sozlamalari
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-# Bu qator map fayllar yo'q bo'lsa ham (image_a59909.png) buildni to'xtatmaydi
+
+# ENG MUHIMI: .map fayllar yo'qligi sababli "Build Failed" bo'lishini to'xtatadi
 WHITENOISE_MANIFEST_STRICT = False
 
 # --- CLOUDINARY ---
+# Bu kalitlarni Render Dashboard -> Environment Variables ga kiritishingiz SHART!
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
@@ -101,6 +113,10 @@ CLOUDINARY_STORAGE = {
 }
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Xotira xatolarini oldini olish
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
