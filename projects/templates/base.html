@@ -1,302 +1,202 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevTube</title>
-
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1005/1005141.png" type="image/png">
-
+    <title>DevTube - Dasturchilar Platformasi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- RANGLAR (YOUTUBE DARK) --- */
         :root {
-            /* DARK MODE (DEFAULT) */
             --bg-body: #0f0f0f;
-            --bg-nav: #0f0f0f;
             --bg-sidebar: #0f0f0f;
-            --text-main: #f1f1f1;
+            --text-main: #ffffff;
             --text-sec: #aaaaaa;
-            --border-color: #2a2a2a;
-
-            --search-bg: #121212;
-            --search-border: #303030;
-            --search-btn: #222222;
-
             --hover-bg: #272727;
-            --icon-color: #fff;
-
             --pill-bg: #272727;
             --pill-text: #fff;
             --pill-active-bg: #f1f1f1;
             --pill-active-text: #0f0f0f;
+            --border-color: #303030;
         }
-
-        [data-theme="light"] {
-            /* LIGHT MODE */
-            --bg-body: #ffffff;
-            --bg-nav: #ffffff;
-            --bg-sidebar: #ffffff;
-            --text-main: #0f0f0f;
-            --text-sec: #606060;
-            --border-color: #e5e5e5;
-
-            --search-bg: #fff;
-            --search-border: #ccc;
-            --search-btn: #f8f8f8;
-
-            --hover-bg: #f2f2f2;
-            --icon-color: #0f0f0f;
-
-            --pill-bg: #f2f2f2;
-            --pill-text: #0f0f0f;
-            --pill-active-bg: #0f0f0f;
-            --pill-active-text: #fff;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Roboto, Arial, sans-serif; }
 
         body {
             background-color: var(--bg-body);
             color: var(--text-main);
-            padding-top: 56px;
-            transition: 0.2s;
+            font-family: Roboto, Arial, sans-serif;
+            margin: 0;
+            overflow-x: hidden;
         }
 
-        a { text-decoration: none; color: var(--text-main); }
-
-        /* NAVBAR */
+        /* --- NAVBAR (TEPA) --- */
         .navbar {
-            position: fixed; top: 0; left: 0; width: 100%; height: 56px;
-            background-color: var(--bg-nav);
+            background-color: var(--bg-body);
+            height: 56px;
+            padding: 0 16px;
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 100;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 16px; z-index: 1000;
         }
 
-        .start-section { display: flex; align-items: center; gap: 16px; }
+        .logo-area { display: flex; align-items: center; gap: 16px; }
+        .logo-text { font-weight: bold; font-size: 20px; letter-spacing: -1px; text-decoration: none; color: white; }
 
-        .menu-btn {
-            background: none; border: none; color: var(--icon-color);
-            font-size: 18px; cursor: pointer; padding: 8px; border-radius: 50%;
-            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+        .search-box {
+            display: flex; align-items: center;
+            background: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: 40px;
+            padding: 0 10px;
+            width: 500px;
+            max-width: 100%;
         }
-        .menu-btn:hover { background-color: var(--hover-bg); }
+        .search-input {
+            background: transparent; border: none; color: white;
+            padding: 8px 10px; flex-grow: 1; outline: none;
+        }
+        .search-btn {
+            background: #222; border: none; border-left: 1px solid var(--border-color);
+            color: var(--text-sec); padding: 8px 20px;
+            border-top-right-radius: 40px; border-bottom-right-radius: 40px;
+        }
 
-        /* QIDIRUV */
-        .center-section { flex: 1; display: flex; justify-content: center; max-width: 700px; }
-        .search-box { display: flex; width: 100%; margin: 0 40px; }
-        .search-box input {
-            width: 100%; padding: 8px 16px; background: var(--search-bg);
-            border: 1px solid var(--search-border); color: var(--text-main);
-            border-radius: 40px 0 0 40px; outline: none; font-size: 16px;
-        }
-        .search-box button {
-            padding: 8px 20px; background: var(--search-btn);
-            border: 1px solid var(--search-border); border-left: none;
-            color: var(--text-sec); border-radius: 0 40px 40px 0; cursor: pointer;
-        }
-        .search-box button:hover { background-color: var(--hover-bg); color: var(--text-main); }
+        .user-actions { display: flex; align-items: center; gap: 15px; }
+        .icon-btn { color: white; font-size: 1.2rem; cursor: pointer; }
 
-        /* IKONKALAR */
-        .end-section { display: flex; align-items: center; gap: 10px; }
-        .icon-btn {
-            background: none; border: none; color: var(--icon-color);
-            font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%;
-            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-        }
-        .icon-btn:hover { background-color: var(--hover-bg); }
-
-        .login-btn {
-            border: 1px solid var(--border-color); color: #3ea6ff; padding: 6px 12px;
-            border-radius: 18px; font-size: 14px; display: flex; align-items: center; gap: 6px;
-            font-weight: 500;
-            background: transparent;
-            cursor: pointer;
-        }
-        .login-btn:hover { background: rgba(62, 166, 255, 0.1); border-color: transparent; }
-
-        /* SIDEBAR */
+        /* --- SIDEBAR (CHAP MENU) --- */
         .sidebar {
-            position: fixed; top: 56px; left: -240px; width: 240px; height: calc(100vh - 56px);
-            background-color: var(--bg-sidebar); overflow-y: auto; transition: 0.2s ease-in-out;
-            z-index: 999; padding-right: 10px;
+            position: fixed; top: 56px; left: 0; bottom: 0;
+            width: 240px;
+            background-color: var(--bg-sidebar);
+            overflow-y: auto;
+            padding: 12px;
+            /* Scrollbar ni yashirish */
+            -ms-overflow-style: none; scrollbar-width: none;
         }
-        .sidebar.active { left: 0; }
+        .sidebar::-webkit-scrollbar { display: none; }
 
-        .sidebar::-webkit-scrollbar { width: 8px; }
-        .sidebar::-webkit-scrollbar-thumb { background-color: #909090; border-radius: 4px; }
-        .sidebar:hover::-webkit-scrollbar-thumb { background-color: #717171; }
-
-        .sidebar-section { padding: 12px; border-bottom: 1px solid var(--border-color); }
-        .sidebar-link {
-            display: flex; align-items: center; padding: 8px 12px;
-            color: var(--text-main); font-size: 14px; border-radius: 10px; margin-bottom: 2px;
+        .nav-item {
+            display: flex; align-items: center; gap: 24px;
+            padding: 10px 12px;
+            color: var(--text-main);
             text-decoration: none;
-            width: 100%;
-            border: none;
-            background: transparent;
-            text-align: left;
+            border-radius: 10px;
+            margin-bottom: 4px;
+            font-size: 14px;
         }
-        .sidebar-link:hover { background-color: var(--hover-bg); }
-        .sidebar-link i { margin-right: 24px; font-size: 20px; width: 24px; text-align: center; }
-        .sidebar-link.active { background-color: var(--hover-bg); font-weight: 500; }
+        .nav-item:hover { background-color: var(--hover-bg); }
+        .nav-item.active { background-color: var(--hover-bg); font-weight: bold; }
+        .nav-item i { width: 24px; font-size: 18px; text-align: center; }
 
-        .overlay {
-            position: fixed; top: 56px; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 998; display: none;
+        /* --- MAIN CONTENT (O'NG TOMON) --- */
+        .main-content {
+            margin-top: 56px;
+            margin-left: 240px; /* Sidebar kengligi qadar joy tashlaymiz */
+            min-height: 100vh;
         }
-        .overlay.active { display: block; }
 
-        /* Login sahifasi uchun maxsus CSS (Oq fon muammosini oldini olish uchun) */
-        .socialaccount_provider { color: black; }
+        @media (max-width: 768px) {
+            .sidebar { display: none; } /* Mobil telefonda sidebar yo'qoladi */
+            .main-content { margin-left: 0; }
+            .search-box { display: none; } /* Mobil telefonda qidiruvni yashiramiz */
+        }
 
+        hr { border-color: var(--border-color); margin: 12px 0; }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <div class="start-section">
-            <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-
-            <a href="{% url 'home' %}" class="logo" style="display: flex; align-items: center; gap: 5px; text-decoration: none; color: var(--text-main);">
-                <span style="display: flex; align-items: center; background: #222; padding: 5px 8px; border-radius: 8px; border: 1px solid #333;">
-                    <i class="fas fa-code" style="color: #3ea6ff; font-size: 16px; margin-right: 3px;"></i>
-                    <i class="fas fa-play" style="color: #ff0000; font-size: 12px;"></i>
-                </span>
-                <span class="d-none d-sm-block" style="font-weight: bold; font-size: 20px; letter-spacing: -0.5px; margin-left: 5px;">
-                    Dev<span style="color: #ff0000;">Tube</span>
-                </span>
+        <div class="logo-area">
+            <i class="fas fa-bars icon-btn"></i>
+            <a href="/" class="logo-text">
+                <i class="fas fa-code text-primary"></i> DevTube
             </a>
         </div>
 
-        <div class="center-section d-flex flex-grow-1 justify-content-center" style="max-width: 600px;">
-            <form class="search-box w-100 mx-2 mx-md-4" method="GET" action="{% url 'home' %}">
-                <input type="text" name="q" placeholder="Qidiruv" value="{{ request.GET.q|default:'' }}">
-                <button type="submit"><i class="fas fa-search"></i></button>
-            </form>
-            <button class="icon-btn d-none d-md-flex" style="background: var(--search-bg); margin-left: 10px;" onclick="alert('Ovozli qidiruv funksiyasi tez orada!')"><i class="fas fa-microphone"></i></button>
-        </div>
+        <form action="{% url 'home' %}" method="GET" class="search-box d-none d-md-flex">
+            <input type="text" name="q" class="search-input" placeholder="Loyiha qidirish..." value="{{ request.GET.q }}">
+            <button class="search-btn"><i class="fas fa-search"></i></button>
+        </form>
 
-        <div class="end-section">
-            <button class="icon-btn d-none d-sm-block" onclick="toggleTheme()" title="Rejim"><i id="theme-icon" class="fas fa-moon"></i></button>
-
+        <div class="user-actions">
             {% if user.is_authenticated %}
-                <a href="{% url 'create_project' %}" class="icon-btn d-none d-sm-block"><i class="fas fa-video"></i></a>
-                <button class="icon-btn d-none d-sm-block"><i class="far fa-bell"></i></button>
-                <a href="{% url 'profile' %}" style="margin-left: 5px;">
-                    {% if user.profile.avatar %}
-                        <img src="{{ user.profile.avatar.url }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
-                    {% else %}
-                        <i class="fas fa-user-circle" style="font-size: 32px;"></i>
-                    {% endif %}
-                </a>
-            {% else %}
-                <button class="icon-btn d-none d-sm-block"><i class="fas fa-ellipsis-v"></i></button>
+                <a href="{% url 'create_project' %}" class="icon-btn" title="Yuklash"><i class="fas fa-plus-circle text-danger"></i></a>
+                <a href="#" class="icon-btn"><i class="fas fa-bell"></i></a>
 
-                <a href="{% url 'account_login' %}" class="login-btn">
-                    <i class="far fa-user-circle" style="font-size: 20px;"></i>
-                    <span class="d-none d-sm-inline ms-1">Kirish</span>
-                </a>
+                <div class="dropdown">
+                    <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{{ user.profile.avatar.url }}" alt="mdo" width="32" height="32" class="rounded-circle">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="right: 0; left: auto;">
+                        <li><a class="dropdown-item" href="{% url 'profile' %}">Mening Profilim</a></li>
+                        <li><a class="dropdown-item" href="{% url 'my_videos' %}">Mening Loyihalarim</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form action="{% url 'logout' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger">Chiqish</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Kirish</a>
+                <a href="{% url 'register' %}" class="btn btn-primary btn-sm rounded-pill px-3">Ro'yxatdan o'tish</a>
             {% endif %}
         </div>
     </nav>
 
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-section pt-2 border-0">
-            <a href="{% url 'home' %}" class="sidebar-link {% if request.path == '/' %}active{% endif %}">
-                <i class="fas fa-home"></i> Asosiy
-            </a>
-            <a href="#" class="sidebar-link" onclick="alert('Mini loyihalar (Snippetlar) bo\'limi tez orada!')">
-                <i class="fas fa-code"></i> Mini Loyihalar
-            </a>
-            <a href="{% url 'trending' %}" class="sidebar-link {% if 'trending' in request.path %}active{% endif %}">
-                <i class="fas fa-fire"></i> Trenddagilar
-            </a>
+    <div class="sidebar">
+        <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+            <i class="fas fa-home"></i> Bosh sahifa
+        </a>
+        <a href="{% url 'trending' %}" class="nav-item">
+            <i class="fas fa-fire"></i> Trenddagilar
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fas fa-layer-group"></i> Obunalar
+        </a>
+
+        <hr> <a href="{% url 'my_videos' %}" class="nav-item">
+            <i class="fas fa-folder"></i> Mening Loyihalarim
+        </a>
+        <a href="{% url 'liked_videos' %}" class="nav-item">
+            <i class="fas fa-thumbs-up"></i> Yoqqan loyihalar
+        </a>
+
+        <hr> <div class="text-muted small px-3 mb-2" style="font-size: 11px; font-weight: bold; text-transform: uppercase;">
+            Tools
         </div>
 
-        <div class="sidebar-section">
-            <h6 class="px-3 mt-2 mb-2 fw-bold" style="font-size: 16px;">Sizning Ishlanmalar</h6>
-            {% if user.is_authenticated %}
-                <a href="{% url 'profile' %}" class="sidebar-link"><i class="fas fa-id-card"></i> Mening Profilim</a>
+        <a href="{% url 'cpp_test' %}" class="nav-item {% if 'cpp' in request.path %}active{% endif %}">
+            <i class="fas fa-terminal text-success"></i> C++ Kompilyator
+        </a>
 
-                <a href="{% url 'my_videos' %}" class="sidebar-link {% if 'my-videos' in request.path %}active{% endif %}">
-                    <i class="fas fa-laptop-code"></i> Mening Loyihalarim
-                </a>
+        <hr>
 
-                <a href="{% url 'liked_videos' %}" class="sidebar-link {% if 'liked' in request.path %}active{% endif %}">
-                    <i class="fas fa-thumbs-up"></i> Saralangan Loyihalar
-                </a>
-
-                <a href="#" class="sidebar-link" onclick="alert('Tarix saqlash tez orada ishga tushadi!')">
-                    <i class="fas fa-history"></i> Ko'rilganlar Tarixi
-                </a>
-            {% else %}
-                <p class="px-3 small text-muted">Loyihalarni saqlash va baholash uchun tizimga kiring.</p>
-                <a href="{% url 'account_login' %}" class="login-btn mx-3 w-auto justify-content-center">Kirish</a>
-            {% endif %}
-        </div>
-
-        {% if user.is_authenticated %}
-        <div class="sidebar-section">
-            <h6 class="px-3 mt-2 mb-2 fw-bold">Kuzatilayotganlar</h6>
-            <a href="#" class="sidebar-link"><i class="fas fa-user-friends"></i> Dasturchilar Hamjamiyati</a>
-            <a href="#" class="sidebar-link"><i class="fab fa-python"></i> Python Darslari</a>
-        </div>
-        {% endif %}
-
-        <div class="sidebar-section border-0">
-             <a href="#" class="sidebar-link" onclick="alert('Sozlamalar bo\'limi hozircha mavjud emas.')"><i class="fas fa-cog"></i> Sozlamalar</a>
-             <a href="#" class="sidebar-link"><i class="fas fa-flag"></i> Shikoyatlar</a>
-             <a href="#" class="sidebar-link"><i class="fas fa-question-circle"></i> Yordam</a>
-             {% if user.is_authenticated %}
-                 <form action="{% url 'account_logout' %}" method="post">{% csrf_token %}
-                    <button type="submit" class="sidebar-link w-100 border-0 bg-transparent text-start" style="color: var(--text-main); cursor: pointer;">
-                        <i class="fas fa-sign-out-alt"></i> Chiqish
-                    </button>
-                 </form>
-             {% endif %}
-        </div>
-
-        <div class="px-3 py-3 small text-muted">
-            &copy; 2025 DevTube Inc.<br>
-            <small>Toshkent, O'zbekiston</small>
+        <div class="text-muted small px-3">
+            &copy; 2026 DevTube<br>
+            Dasturchilar uchun
         </div>
     </div>
 
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div class="main-content">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-3" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
 
-    <div class="container-fluid">
-        {% block content %}{% endblock %}
+        {% block content %}
+        {% endblock %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('overlay').classList.toggle('active');
-        }
-
-        const themeIcon = document.getElementById('theme-icon');
-        if (localStorage.getItem('theme') === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
-            themeIcon.className = 'fas fa-moon';
-        } else {
-            themeIcon.className = 'fas fa-sun';
-        }
-
-        function toggleTheme() {
-            if (document.documentElement.getAttribute('data-theme') === 'light') {
-                document.documentElement.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'dark');
-                themeIcon.className = 'fas fa-sun';
-            } else {
-                document.documentElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-                themeIcon.className = 'fas fa-moon';
-            }
-        }
-    </script>
 </body>
 </html>

@@ -63,3 +63,9 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 # Video yuklashda xotira (RAM) xatosini oldini olish uchun
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB dan katta fayllar xotiraga emas, diskka yoziladi
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
+# settings.py ning eng oxiriga:
+
+LOGIN_REDIRECT_URL = 'home'  # Kirgandan keyin Bosh sahifaga
+LOGOUT_REDIRECT_URL = 'home' # Chiqib ketgandan keyin Bosh sahifaga
+LOGIN_URL = 'login'          # Login sahifasi manzili

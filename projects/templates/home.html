@@ -34,7 +34,7 @@
     .video-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 40px 16px; /* Qator orasi kattaroq */
+        gap: 40px 16px;
         padding: 24px;
     }
 
@@ -44,7 +44,7 @@
         cursor: pointer;
     }
 
-    /* THUMBNAIL */
+    /* THUMBNAIL (LOOYIHA RASMI) */
     .thumbnail {
         width: 100%; aspect-ratio: 16/9;
         background-color: #202020;
@@ -53,22 +53,14 @@
         position: relative;
         margin-bottom: 12px;
         transition: 0.2s;
+        border: 1px solid rgba(128, 128, 128, 0.2); /* Yengil chegara */
     }
-    .video-card:hover .thumbnail { border-radius: 0; }
+    .video-card:hover .thumbnail {
+        border-radius: 0;
+        border-color: var(--text-main);
+    }
 
     .thumbnail img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* VAQT (RASM USTIDA) */
-    .duration-badge {
-        position: absolute; bottom: 6px; right: 6px;
-        background-color: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 1px 4px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 500;
-        font-family: Roboto, Arial, sans-serif;
-    }
 
     /* INFO */
     .video-info { display: flex; gap: 12px; align-items: flex-start; }
@@ -105,7 +97,7 @@
         margin-top: 4px;
     }
     .price-tag.free {
-        background-color: var(--hover-bg);
+        background-color: rgba(128, 128, 128, 0.2);
         color: var(--text-sec);
     }
 </style>
@@ -124,12 +116,10 @@
                 {% if project.image %}
                     <img src="{{ project.image.url }}">
                 {% else %}
-                    <div class="d-flex align-items-center justify-content-center h-100 text-white bg-dark">
-                        <i class="fas fa-play fa-2x"></i>
+                    <div class="d-flex align-items-center justify-content-center h-100 bg-dark text-secondary">
+                        <i class="fas fa-terminal fa-3x"></i>
                     </div>
                 {% endif %}
-
-                <div class="duration-badge">12:45</div>
             </div>
 
             <div class="video-info">
@@ -155,7 +145,9 @@
         </a>
     {% empty %}
         <div class="text-center w-100 py-5 text-muted col-12">
-            <h5>Videolar topilmadi 😔</h5>
+            <h3><i class="fas fa-search fa-2x mb-3"></i></h3>
+            <h5>Hozircha loyihalar yo'q</h5>
+            <p>Birinchi bo'lib o'z loyihangizni yuklang!</p>
         </div>
     {% endfor %}
 </div>

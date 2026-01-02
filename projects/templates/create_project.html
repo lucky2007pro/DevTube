@@ -1,72 +1,178 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card bg-dark text-white border-secondary shadow">
-                <div class="card-header border-secondary">
-                    <h4 class="mb-0">Yangi loyiha yuklash</h4>
-                </div>
-                <div class="card-body">
+<style>
+    /* Fayl yuklash inputlarini chiroyli qilish */
+    .custom-file-upload {
+        border: 2px dashed var(--border-color);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s;
+        background: rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        position: relative;
+    }
+    .custom-file-upload:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--text-main);
+    }
+    .custom-file-upload input[type="file"] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0; left: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    .upload-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        color: #6c757d;
+    }
 
-                    <div id="error-alert" class="alert alert-danger d-none"></div>
+    /* Section sarlavhalari */
+    .section-title {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #adb5bd;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #495057;
+        padding-bottom: 5px;
+    }
+
+    .form-control, .form-select {
+        background-color: #212529;
+        border: 1px solid #495057;
+        color: #fff;
+    }
+    .form-control:focus, .form-select:focus {
+        background-color: #2c3034;
+        color: #fff;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card bg-dark text-white border-secondary shadow-lg">
+
+                <div class="card-header border-secondary p-4 bg-gradient" style="background: #1a1e21;">
+                    <h3 class="mb-0"><i class="fas fa-rocket text-primary me-2"></i> Yangi Loyiha Yuklash</h3>
+                    <p class="text-muted small mb-0 mt-1">Loyihangizni yuklang va daromad olishni boshlang.</p>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <div id="error-alert" class="alert alert-danger d-none shadow-sm">
+                        <i class="fas fa-exclamation-circle me-2"></i> <span id="error-msg"></span>
+                    </div>
 
                     <form id="upload-form" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
 
-                        <div class="mb-3">
-                            <label class="form-label">Loyiha nomi</label>
-                            {{ form.title }}
-                        </div>
+                        <div class="section-title"><i class="fas fa-info-circle me-1"></i> Asosiy Ma'lumotlar</div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Tavsif</label>
-                            {{ form.description }}
+                        <div class="mb-4">
+                            <label class="form-label text-light">Loyiha Nomi</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-secondary border-secondary text-white"><i class="fas fa-heading"></i></span>
+                                {{ form.title }}
+                            </div>
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Kategoriya</label>
-                                {{ form.category }}
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label text-light">Kategoriya</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fas fa-list"></i></span>
+                                    {{ form.category }}
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Narxi ($)</label>
-                                {{ form.price }}
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label text-light">Narxi ($)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fas fa-dollar-sign"></i></span>
+                                    {{ form.price }}
+                                </div>
+                                <div class="form-text text-muted">0 kiritsangiz, loyiha tekin bo'ladi.</div>
                             </div>
                         </div>
 
-                        <div class="mb-3 p-3 border border-secondary rounded" style="background: rgba(255,0,0,0.05);">
-                            <label class="form-label text-danger fw-bold"><i class="fab fa-youtube"></i> YouTube Link</label>
-                            {{ form.youtube_link }}
-                            <div class="form-text text-muted">YouTube videosining ssilkasini qo'ysangiz ham bo'ladi.</div>
+                        <div class="mb-4">
+                            <label class="form-label text-light">Batafsil Tavsif</label>
+                            {{ form.description }}
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Rasm (Muqova)</label>
-                            {{ form.image }}
+                        <div class="section-title mt-5"><i class="fas fa-photo-video me-1"></i> Media Fayllar</div>
+
+                        <div class="card mb-4 border-danger" style="background: rgba(220, 53, 69, 0.05);">
+                            <div class="card-body">
+                                <label class="form-label text-danger fw-bold">
+                                    <i class="fab fa-youtube fa-lg me-1"></i> YouTube Video Linki (Majburiy)
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-danger text-white border-danger"><i class="fas fa-link"></i></span>
+                                    {{ form.youtube_link }}
+                                </div>
+                                <div class="form-text text-light opacity-75 mt-2">
+                                    <i class="fas fa-lightbulb text-warning"></i> Videoni YouTube-ga yuklang va ssilkasini shu yerga joylang. Bu serverni tez ishlashini ta'minlaydi.
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Video fayl (Agar YouTube bo'lmasa)</label>
-                            {{ form.video_file }}
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label text-light">Asosiy Muqova Rasm (Cover)</label>
+                                <div class="custom-file-upload">
+                                    <div class="upload-icon"><i class="fas fa-image"></i></div>
+                                    <div class="text-muted small">Rasm tanlash uchun bosing</div>
+                                    {{ form.image }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label text-info">Qo'shimcha Skrinshotlar (Gallery)</label>
+                                <div class="custom-file-upload" style="border-color: #0dcaf0;">
+                                    <div class="upload-icon text-info"><i class="fas fa-images"></i></div>
+                                    <div class="text-muted small">Ctrl bosib ko'p rasm tanlang</div>
+                                    {{ form.more_images }}
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Source Code (Zip)</label>
-                            {{ form.source_code }}
+                        <div class="section-title mt-4"><i class="fas fa-code me-1"></i> Manba Kodi</div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-light">Loyiha Fayli (Zip/Rar)</label>
+                            <div class="custom-file-upload border-success">
+                                <div class="upload-icon text-success"><i class="fas fa-file-archive"></i></div>
+                                <div class="text-muted small">Arxiv faylni shu yerga yuklang</div>
+                                {{ form.source_code }}
+                            </div>
+                            <div class="form-text text-muted">Maksimal hajm: 50MB. Faqat zip, rar, 7z formatlari.</div>
                         </div>
 
-                        <button type="submit" id="submit-btn" class="btn btn-primary w-100 py-2">Yuklash</button>
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" id="submit-btn" class="btn btn-primary btn-lg fw-bold py-3 shadow-primary">
+                                <i class="fas fa-cloud-upload-alt me-2"></i> LOYIHANI YUKLASH
+                            </button>
+                        </div>
                     </form>
 
                     <div id="progress-container" class="d-none mt-4">
-                        <p class="text-center mb-2">Jarayon: <span id="progress-text">0%</span></p>
-                        <div class="progress" style="height: 25px; background-color: #2c3e50;">
-                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-                                 role="progressbar" style="width: 0%;">0%</div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Yuklanmoqda...</span>
+                            <span id="progress-text">0%</span>
                         </div>
-                        <p class="text-muted text-center small mt-2">Iltimos, sahifani yopmang! Katta fayllar biroz vaqt olishi mumkin.</p>
+                        <div class="progress" style="height: 25px; background-color: #1a1e21; border-radius: 12px;">
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-gradient-primary"
+                                 role="progressbar" style="width: 0%;"></div>
+                        </div>
+                        <p class="text-muted text-center small mt-2">Iltimos, sahifani yopmang! Rasmlar va kodlar serverga yuklanmoqda.</p>
                     </div>
 
                 </div>
@@ -82,99 +188,79 @@
     const progressBar = document.getElementById('progress-bar');
     const progressText = document.getElementById('progress-text');
     const errorAlert = document.getElementById('error-alert');
+    const errorMsg = document.getElementById('error-msg');
+
+    // Inputlar o'zgarganda fayl nomini ko'rsatish (UX uchun)
+    document.querySelectorAll('input[type="file"]').forEach(input => {
+        input.addEventListener('change', function() {
+            const fileName = this.files[0]?.name || "Fayl tanlanmadi";
+            const label = this.parentElement.querySelector('.text-muted');
+            if(this.files.length > 1) {
+                label.innerText = this.files.length + " ta fayl tanlandi";
+                label.style.color = "#fff";
+            } else {
+                label.innerText = fileName;
+                label.style.color = "#fff";
+            }
+        });
+    });
 
     form.addEventListener('submit', function(e) {
-        e.preventDefault(); // Sahifa yangilanib ketishini to'xtatamiz
+        e.preventDefault();
 
         const formData = new FormData(form);
         const xhr = new XMLHttpRequest();
 
-        // 1. PROGRESSNI KUZATISH
+        // Progress
         xhr.upload.addEventListener('progress', function(e) {
             if (e.lengthComputable) {
                 const percentComplete = (e.loaded / e.total) * 100;
-
-                // Agar 99% dan oshsa, lekin hali javob kelmasa
-                if (percentComplete >= 99) {
-                    progressBar.style.width = "100%";
-                    progressBar.innerText = "99%";
-
-                    // Rangni sariqqa o'zgartiramiz (Kutish rejimi)
-                    progressBar.classList.remove('bg-success');
-                    progressBar.classList.add('bg-warning');
-                    progressBar.classList.add('text-dark'); // Yozuv qora bo'lishi uchun
-
-                    progressText.innerText = "Video Renderga yuklandi. Endi Cloudinaryga o'tmoqda... (Kuting)";
-                    progressText.style.color = "#ffc107"; // Sariq rang
-                    progressText.style.fontWeight = "bold";
-                } else {
-                    // Normal holat (1% dan 98% gacha)
-                    const percentString = Math.round(percentComplete) + '%';
-                    progressBar.style.width = percentString;
-                    progressBar.innerText = percentString;
-                    progressText.innerText = percentString;
-                }
+                const percentString = Math.round(percentComplete) + '%';
+                progressBar.style.width = percentString;
+                progressText.innerText = percentString;
             }
         });
 
-        // 2. SO'ROVNI OCHISH
         xhr.open('POST', window.location.href, true);
-
-        // CSRF Token qo'shish (Xavfsizlik uchun)
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         xhr.setRequestHeader('X-CSRFToken', csrfToken);
 
-        // Dizaynni o'zgartirish
+        // UI Updates
         submitBtn.classList.add('d-none');
         progressContainer.classList.remove('d-none');
         errorAlert.classList.add('d-none');
 
-        // 3. JAVOB KELGANDA
         xhr.onload = function() {
             if (xhr.status === 200) {
-                // Agar server "OK" desa, lekin biz hali ham "create" sahifasida bo'lsak
-                // Demak, formada xatolik bor (masalan, fayl formati noto'g'ri)
+                // Agar Django forma xatolarini HTML qilib qaytarsa (validatsiya xatosi)
                 if (xhr.responseURL.includes("create")) {
-                     showError("Formada xatolik bor! Fayl turini yoki majburiy maydonlarni tekshiring. Sahifani yangilab qayta urining.");
+                    // Xatolik bor, sahifani yangilaymiz (yoki HTMLni almashtiramiz)
+                    document.open();
+                    document.write(xhr.responseText);
+                    document.close();
                 } else {
-                    // Muvaffaqiyatli! Bosh sahifaga ketamiz
+                    // Muvaffaqiyatli
                     window.location.href = "/";
                 }
             } else {
-                // Aniq Xatolik Kodini chiqaramiz
-                if (xhr.status === 413) {
-                    showError("Fayl hajmi juda katta! (Xato 413). Kichikroq fayl yuklang.");
-                } else if (xhr.status === 502) {
-                    showError("Server band yoki Cloudinary javob bermayapti (Xato 502). Qayta urinib ko'ring.");
-                } else {
-                    showError(`Xatolik yuz berdi! Kod: ${xhr.status} (${xhr.statusText}).`);
-                }
+                showError(`Server Xatosi: ${xhr.status} (${xhr.statusText})`);
             }
         };
 
         xhr.onerror = function() {
-            showError("Internet uzildi yoki Server butunlay javob bermayapti.");
+            showError("Internet aloqasi yo'q yoki Server javob bermayapti.");
         };
 
-        // Yuborish
         xhr.send(formData);
     });
 
     function showError(message) {
-        errorAlert.innerText = message;
+        errorMsg.innerText = message;
         errorAlert.classList.remove('d-none');
 
-        // Tugmani qaytarish
         submitBtn.classList.remove('d-none');
         progressContainer.classList.add('d-none');
-
-        // Progressni reset qilish
         progressBar.style.width = "0%";
-        progressBar.classList.remove('bg-warning');
-        progressBar.classList.remove('text-dark');
-        progressBar.classList.add('bg-success');
-        progressText.style.color = "white";
-        progressText.innerText = "0%";
     }
 </script>
 {% endblock %}
