@@ -34,7 +34,7 @@
     .video-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 40px 16px; /* Qator orasi kattaroq */
+        gap: 40px 16px;
         padding: 24px;
     }
 
@@ -109,18 +109,23 @@
     {% for project in projects %}
         <a href="{% url 'project_detail' project.pk %}" class="video-card">
             <div class="thumbnail">
-                {% if project.image %}
-                    <img src="{{ project.image.url }}">
+                {% if project.featured_image %}
+                    <img src="{{ project.featured_image.url }}" alt="{{ project.title }}">
+                {% elif project.image %}
+                     <img src="{{ project.image.url }}" alt="{{ project.title }}">
                 {% else %}
-                    <div class="d-flex align-items-center justify-content-center h-100 text-white bg-dark">
-                        <i class="fas fa-terminal fa-3x text-secondary"></i>
+                    <div class="d-flex align-items-center justify-content-center h-100 text-white bg-dark" style="background: #333; height: 100%; display: flex; justify-content: center; align-items: center;">
+                        <span style="font-size: 30px;">📷</span>
                     </div>
                 {% endif %}
-
-                </div>
+            </div>
 
             <div class="video-info">
-                <img src="{{ project.author.profile.avatar.url }}" class="avatar">
+                {% if project.author.profile.avatar %}
+                    <img src="{{ project.author.profile.avatar.url }}" class="avatar">
+                {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ project.author.username }}" class="avatar">
+                {% endif %}
 
                 <div class="details">
                     <div class="video-title">{{ project.title }}</div>
