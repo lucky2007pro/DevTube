@@ -11,6 +11,7 @@ urlpatterns = [
     # --- ASOSIY SAHIFALAR ---
     path('', views.home_page, name='home'),
     path('trending/', views.trending, name='trending'),
+    path('syncing/', views.syncing_projects, name='syncing'), # Mana shu qatorni qo'shing
     path('liked/', views.liked_videos, name='liked_videos'),
     path('my-videos/', views.my_videos, name='my_videos'),
 

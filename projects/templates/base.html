@@ -1,5 +1,5 @@
-{% load static %}
 <!DOCTYPE html>
+{% load static %}
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -18,7 +18,7 @@
             --neon-glow: 0 0 15px rgba(99, 102, 241, 0.5);
             --glass-bg: rgba(15, 23, 42, 0.9);
             --glass-border: rgba(255, 255, 255, 0.08);
-            --nav-height: 60px; /* Markazlashtirilgan balandlik */
+            --nav-height: 60px;
         }
 
         body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
@@ -79,14 +79,14 @@
         }
         .btn-upload-neon:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(99, 102, 241, 0.7); }
 
-        /* --- SIDEBAR BO'SHLIQ YO'QOTISH --- */
+        /* --- SIDEBAR --- */
         .sidebar {
             background: var(--glass-bg);
             border-right: 1px solid var(--glass-border);
             backdrop-filter: blur(10px);
             width: 260px;
             position: fixed;
-            top: var(--nav-height) !important; /* Qat'iy yopishtirildi */
+            top: var(--nav-height) !important;
             bottom: 0;
             display: flex; flex-direction: column;
             z-index: 1040;
@@ -97,18 +97,29 @@
         .nav-item {
             margin: 4px 12px; padding: 10px 16px; border-radius: 12px; color: #94a3b8 !important;
             font-size: 14px; font-weight: 500; transition: 0.3s; display: flex; align-items: center;
+            text-decoration: none;
         }
         .nav-item i { width: 25px; text-align: center; margin-right: 10px; font-size: 16px; }
-        .nav-item:hover, .nav-item.active { background: rgba(99, 102, 241, 0.1); color: #fff !important; box-shadow: inset 4px 0 0 var(--neon-primary); }
+        .nav-item:hover, .nav-item.active { background: rgba(99, 102, 241, 0.1); color: #fff !important; }
+        .nav-item.active { box-shadow: inset 4px 0 0 var(--neon-primary); color: #fff !important; }
 
         .sidebar-header { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1.5px; padding: 20px 28px 8px; }
 
-        /* --- MAIN CONTENT & PROFIL TIKLASH --- */
+        /* --- SYNCED USERS STYLE --- */
+        .synced-user-item {
+            display: flex; align-items: center; gap: 12px; padding: 8px 24px;
+            text-decoration: none; color: #94a3b8; transition: 0.2s; border-radius: 0 50px 50px 0;
+            margin-right: 12px;
+        }
+        .synced-user-item:hover { background: rgba(99, 102, 241, 0.1); color: #fff; }
+        .synced-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid var(--glass-border); }
+
+        /* --- MAIN CONTENT --- */
         .main-content {
             margin-left: 260px;
-            padding: 80px 25px 30px; /* Navbar ostidan boshlanishini ta'minlaydi */
+            padding: 80px 25px 30px;
             min-height: 100vh;
-            display: block !important; /* Profilni majburan ko'rsatish */
+            display: block !important;
             transition: 0.3s;
             position: relative;
         }
@@ -116,6 +127,8 @@
 
         @media (max-width: 992px) {
             .main-content { margin-left: 0; padding-top: 80px; }
+            .sidebar { transform: translateX(-260px); }
+            .sidebar.active { transform: translateX(0); }
         }
     </style>
 </head>
@@ -157,7 +170,7 @@
                         <li><a class="dropdown-item py-2 text-light" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2 text-primary"></i> Profil</a></li>
                         <li><hr class="dropdown-divider opacity-10"></li>
                         <li>
-                            <form method="post" action="{% url 'account_logout' %}">
+                            <form method="post" action="{% url 'logout' %}">
                                 {% csrf_token %}<button type="submit" class="dropdown-item py-2 text-danger fw-bold"><i class="fas fa-sign-out-alt me-2"></i> Chiqish</button>
                             </form>
                         </li>
@@ -171,27 +184,45 @@
 
     <div class="sidebar" id="sidebar">
         <div class="flex-grow-1 overflow-auto py-2">
-            <a href="{% url 'home' %}" class="nav-item text-decoration-none active"><i class="fas fa-home"></i> Bosh sahifa</a>
-            <a href="{% url 'trending' %}" class="nav-item text-decoration-none"><i class="fas fa-fire"></i> Trenddagilar</a>
+            <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}"><i class="fas fa-home"></i> Bosh sahifa</a>
+            <a href="{% url 'trending' %}" class="nav-item {% if request.resolver_match.url_name == 'trending' %}active{% endif %}"><i class="fas fa-fire"></i> Trenddagilar</a>
+
+            <a href="{% url 'syncing' %}" class="nav-item {% if request.resolver_match.url_name == 'syncing' %}active{% endif %}">
+                <i class="fas fa-sync-alt"></i> Sinxronlarim
+            </a>
 
             <div class="sidebar-header px-4">Kutubxona</div>
-            <a href="{% url 'liked_videos' %}" class="nav-item text-decoration-none"><i class="fas fa-heart text-danger"></i> Yoqqanlar</a>
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bookmark text-warning"></i> Saqlanganlar</a>
-            <a href="{% url 'my_videos' %}" class="nav-item text-decoration-none"><i class="fas fa-folder-open"></i> Mening kodlarim</a>
+            <a href="{% url 'liked_videos' %}" class="nav-item {% if request.resolver_match.url_name == 'liked_videos' %}active{% endif %}"><i class="fas fa-heart text-danger"></i> Yoqqanlar</a>
+            <a href="#" class="nav-item"><i class="fas fa-bookmark text-warning"></i> Saqlanganlar</a>
+            <a href="{% url 'my_videos' %}" class="nav-item {% if request.resolver_match.url_name == 'my_videos' %}active{% endif %}"><i class="fas fa-folder-open"></i> Mening kodlarim</a>
+
+            {% if user.is_authenticated %}
+                <div class="sidebar-header px-4">Sinxronlar</div>
+                <div class="synced-users-list">
+                    {% for sync in user.profile.following.all|slice:":8" %}
+                        <a href="{% url 'profile_by_username' sync.following.user.username %}" class="synced-user-item">
+                            <img src="{{ sync.following.avatar.url }}" class="synced-avatar">
+                            <span class="small opacity-75">{{ sync.following.user.username }}</span>
+                        </a>
+                    {% empty %}
+                        <div class="px-4 py-2 small text-muted opacity-50">Hali hech kim yo'q</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
 
             <div class="sidebar-header px-4">Asboblar</div>
-            <a href="/cpp/" class="nav-item text-decoration-none"><i class="fab fa-cuttlefish text-primary"></i> C++ Integratsiya</a>
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-terminal text-info"></i> Online Compiler</a>
+            <a href="{% url 'cpp_test' %}" class="nav-item {% if request.resolver_match.url_name == 'cpp_test' %}active{% endif %}"><i class="fab fa-cuttlefish text-primary"></i> C++ Integratsiya</a>
+            <a href="#" class="nav-item"><i class="fas fa-terminal text-info"></i> Online Compiler</a>
 
             <div class="sidebar-header px-4">Hamjamiyat</div>
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-users"></i> Dasturchilar</a>
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bullhorn text-success"></i> E'lonlar</a>
+            <a href="#" class="nav-item"><i class="fas fa-users"></i> Dasturchilar</a>
+            <a href="#" class="nav-item"><i class="fas fa-bullhorn text-success"></i> E'lonlar</a>
         </div>
 
         <div class="py-3 border-top" style="border-color: rgba(255,255,255,0.05) !important; background: rgba(15, 23, 42, 0.5);">
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-cog text-secondary"></i> Sozlamalar</a>
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-question-circle text-secondary"></i> Yordam</a>
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-headset text-info"></i> Murojaat</a>
+            <a href="#" class="nav-item"><i class="fas fa-cog text-secondary"></i> Sozlamalar</a>
+            <a href="#" class="nav-item"><i class="fas fa-question-circle text-secondary"></i> Yordam</a>
+            <a href="#" class="nav-item"><i class="fas fa-headset text-info"></i> Murojaat</a>
             <div class="text-center mt-3 small opacity-25" style="font-size: 10px;">&copy; 2026 DevTube</div>
         </div>
     </div>

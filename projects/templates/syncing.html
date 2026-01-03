@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center gap-3 mb-5">
+        <div class="sync-icon-glow">
+            <i class="fas fa-sync-alt fa-2x text-primary"></i>
+        </div>
+        <div>
+            <h2 class="text-white fw-bold m-0">Sinxronlarim</h2>
+            <p class="text-muted small">Siz kuzatib borayotgan dasturchilarning yangi loyihalari</p>
+        </div>
+    </div>
+
+    {% if projects %}
+        <div class="video-grid">
+            {% for project in projects %}
+                <a href="{% url 'project_detail' project.pk %}" class="project-card-wrapper text-decoration-none">
+                    <div class="project-card">
+                        <div class="thumbnail-container">
+                            <img src="{{ project.image.url }}" class="thumbnail-img">
+                            <div class="price-badge {% if project.price == 0 %}free{% endif %}">
+                                {% if project.price > 0 %}${{ project.price }}{% else %}Free{% endif %}
+                            </div>
+                        </div>
+                        <div class="card-info p-3 d-flex gap-3">
+                            <img src="{{ project.author.profile.avatar.url }}" class="rounded-circle" width="40" height="40">
+                            <div class="info-text">
+                                <h3 class="project-title text-white fs-6 fw-bold">{{ project.title }}</h3>
+                                <div class="meta-data text-muted small">
+                                    {{ project.author.username }} <br>
+                                    {{ project.views }} ko'rish • {{ project.created_at|timesince }} oldin
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-user-friends fa-4 shadow-sm opacity-25 mb-3" style="font-size: 5rem; color: var(--neon-primary);"></i>
+            <h4 class="text-white">Hali hech kimga sinxronlanmagansiz</h4>
+            <p class="text-muted">Dasturchilarni toping va ularning yangiliklaridan xabardor bo'lish uchun "Sync" tugmasini bosing.</p>
+            <a href="{% url 'home' %}" class="btn-sync-neon mt-3 text-decoration-none d-inline-block">Dasturchilarni qidirish</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .sync-icon-glow {
+        width: 60px; height: 60px;
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 15px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+</style>
+{% endblock %}

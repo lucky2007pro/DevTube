@@ -3,7 +3,7 @@
 
 {% block content %}
 <style>
-    /* --- SIZNING MAVJUD STILLARINGIZ (O'ZGARISHSIZ) --- */
+    /* --- ASOSIY LAYOUT --- */
     .project-container {
         max-width: 1300px; margin: 30px auto;
         display: grid; grid-template-columns: 2.5fr 1fr; gap: 30px; padding: 0 15px;
@@ -11,6 +11,8 @@
     @media (max-width: 992px) {
         .project-container { grid-template-columns: 1fr; }
     }
+
+    /* GLASS CARD STYLE */
     .neon-preview-card {
         background: rgba(255, 255, 255, 0.02);
         backdrop-filter: blur(15px);
@@ -19,23 +21,53 @@
         border-radius: 20px; overflow: hidden; margin-bottom: 25px;
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     }
+
     .preview-header {
         padding: 15px 20px; background: rgba(255, 255, 255, 0.03);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         display: flex; justify-content: space-between; align-items: center;
     }
     .preview-title { font-weight: 700; color: #fff; font-size: 15px; }
+
+    /* Visual Preview */
     .visual-preview {
         width: 100%; height: 500px; background-color: #0d1117;
         display: flex; align-items: center; justify-content: center; position: relative;
     }
     .visual-preview img { width: 100%; height: 100%; object-fit: contain; }
     .live-iframe { width: 100%; height: 100%; border: none; background: #fff; }
-    .code-lock-wrapper { position: relative; background: #010409; }
+
+    /* --- KOD QUTISI & SECURITY (YANGILANGAN) --- */
+    .code-lock-wrapper { position: relative; background: #010409; border-radius: 0 0 20px 20px; }
     .code-content {
         font-family: 'Consolas', 'Fira Code', monospace; font-size: 14px;
-        padding: 0; margin: 0; overflow: hidden;
+        padding: 20px; margin: 0; overflow: hidden;
     }
+
+    /* Bepul loyihalar uchun pastga qarab yo'qolish */
+    .code-blur-free {
+        filter: blur(1px);
+        opacity: 0.6;
+        mask-image: linear-gradient(to bottom, black 30%, transparent 95%);
+        -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 95%);
+    }
+
+    /* Pullik loyihalar uchun qattiq blokirovka */
+    .code-blur-locked { filter: blur(15px); user-select: none; pointer-events: none; opacity: 0.3; }
+
+    /* Neon Qulf Overlay */
+    .neon-lock-box {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: rgba(0,0,0,0.5); z-index: 20; backdrop-filter: blur(2px);
+    }
+    .neon-lock-icon {
+        font-size: 60px; color: #f59e0b; filter: drop-shadow(0 0 20px #f59e0b);
+        margin-bottom: 15px; animation: pulseLock 2s infinite;
+    }
+    @keyframes pulseLock { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.6; } 100% { transform: scale(1); opacity: 1; } }
+
+    /* --- SIDEBAR PANEL --- */
     .info-panel { position: sticky; top: 100px; }
     .neon-price-card {
         background: rgba(255, 255, 255, 0.03);
@@ -45,69 +77,51 @@
         margin-bottom: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.4);
     }
     .price-tag { font-size: 38px; font-weight: 900; color: #fff; display: block; margin-bottom: 20px; text-shadow: 0 0 15px rgba(79, 70, 229, 0.3); }
+
+    /* Tugmalar */
     .btn-neon-action {
         width: 100%; padding: 14px; border: none; border-radius: 50px;
         font-weight: 700; font-size: 16px; transition: 0.3s;
         display: flex; align-items: center; justify-content: center; gap: 10px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 15px; text-decoration: none;
     }
     .btn-neon-buy { background: linear-gradient(90deg, #4f46e5, #7c3aed); color: #fff; }
     .btn-neon-buy:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(79, 70, 229, 0.5); color: #fff; }
+
     .btn-neon-download { background: #238636; color: #fff; }
     .btn-neon-download:hover { background: #2ea043; transform: translateY(-2px); color: #fff; }
+
     .btn-neon-video { background: #da3633; color: white; }
     .btn-neon-video:hover { background: #f85149; }
+
+    /* Sync Tugmasi */
+    .btn-sync-neon {
+        background: transparent; border: 2px solid var(--neon-primary);
+        color: var(--neon-primary) !important; padding: 6px 22px;
+        border-radius: 50px; font-weight: 700; transition: 0.4s;
+    }
+    .btn-sync-neon:hover, .btn-sync-neon.active {
+        background: var(--neon-primary); color: white !important;
+        box-shadow: 0 0 20px var(--neon-primary);
+    }
+
+    /* Author Card */
     .neon-author-card {
         background: rgba(255, 255, 255, 0.02); padding: 20px;
         border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05);
         display: flex; align-items: center; gap: 15px;
     }
 
-    /* --- YANGI QO'SHILGAN: KOD HIMOYASI VA SYNC --- */
-    .code-blur-free { filter: blur(2px); opacity: 0.5; mask-image: linear-gradient(to bottom, black 40%, transparent 90%); }
-    .code-blur-locked { filter: blur(12px); user-select: none; pointer-events: none; }
-
-    .neon-lock-box {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        background: rgba(0,0,0,0.4); z-index: 20; backdrop-filter: blur(2px);
-    }
-    .neon-lock-icon {
-        font-size: 50px; color: #f59e0b; filter: drop-shadow(0 0 15px #f59e0b);
-        margin-bottom: 10px; animation: pulseLock 2s infinite;
-    }
-    @keyframes pulseLock { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-    .btn-sync-neon {
-        background: transparent; border: 2px solid var(--neon-primary);
-        color: var(--neon-primary) !important; padding: 6px 20px;
-        border-radius: 50px; font-weight: 700; transition: 0.4s;
-    }
-    .btn-sync-neon:hover, .btn-sync-neon.active {
-        background: var(--neon-primary); color: white !important;
-        box-shadow: 0 0 15px var(--neon-primary);
-    }
-
-    /* --- YANGI QO'SHILGAN: PRISM.JS NEON RANGS --- */
-    pre[class*="language-"] {
-        background: #010409 !important;
-        border: 1px solid var(--glass-border) !important;
-        box-shadow: inset 0 0 20px rgba(0,0,0,0.5) !important;
-    }
-
-    .token.function, .token.class-name, .token.keyword {
-        color: var(--neon-secondary) !important;
-        text-shadow: 0 0 10px var(--neon-secondary);
-    }
-
-    .token.string, .token.attr-value {
-        color: #10b981 !important;
-        text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-    }
+    /* --- PRISM NEON SYNTAX --- */
+    pre[class*="language-"] { background: #010409 !important; border: none !important; }
+    .token.function, .token.class-name, .token.keyword { color: #a855f7 !important; text-shadow: 0 0 10px #a855f7; }
+    .token.string, .token.attr-value { color: #10b981 !important; text-shadow: 0 0 8px #10b981; }
+    .token.comment { color: #475569 !important; font-style: italic; }
 </style>
 
 <div class="project-container">
     <div class="main-column">
+
         <div class="neon-preview-card">
             <div class="preview-header">
                 <span class="preview-title">
@@ -148,7 +162,8 @@
                 <div class="neon-lock-box">
                     <i class="fas fa-lock neon-lock-icon"></i>
                     <h5 class="text-white fw-bold">Premium Kod</h5>
-                    <p class="text-muted small">Sotib olib, to'liq kodga ega bo'ling.</p>
+                    <p class="text-muted small">To'liq kodni ko'rish va yuklab olish uchun xarid qiling.</p>
+                    <a href="#buy-section" class="btn btn-warning btn-sm mt-2 rounded-pill fw-bold px-4">Sotib olish</a>
                 </div>
                 {% endif %}
             </div>
@@ -157,8 +172,8 @@
         <div class="mb-5 px-2">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <h1 class="text-white fw-bold m-0">{{ project.title }}</h1>
-                <button class="btn-sync-neon" id="syncBtn" onclick="toggleSync()">
-                    <i class="fas fa-sync-alt me-1"></i> <span id="syncText">Sync</span>
+                <button class="btn-sync-neon {% if is_synced %}active{% endif %}" id="syncBtn" onclick="toggleSync()">
+                    <i class="fas fa-sync-alt me-1"></i> <span id="syncText">{% if is_synced %}Synced{% else %}Sync{% endif %}</span>
                 </button>
             </div>
             <div class="d-flex gap-4 text-muted mb-4 small fw-bold">
@@ -181,16 +196,22 @@
                     <form id="comment-form" method="post" class="w-100">
                         {% csrf_token %}
                         <textarea id="comment-body" name="body" class="form-control bg-dark text-white border-0" placeholder="Fikringizni qoldiring..." rows="2" style="border-radius: 12px; resize: none;"></textarea>
-                        <div class="text-end mt-2"><button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold">Yuborish</button></div>
+                        <div class="text-end mt-2">
+                            <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold">Yuborish</button>
+                        </div>
                     </form>
                 </div>
             {% endif %}
+
             <div id="comment-list" class="mt-4">
                 {% for comment in project.comments.all reversed %}
                 <div class="d-flex gap-3 mb-4">
-                    <img src="{% if comment.user.profile.avatar %}{{ comment.user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ comment.user.username }}&background=random{% endif %}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                    <img src="{% if comment.user.profile.avatar %}{{ comment.user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ comment.user.username }}{% endif %}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                     <div>
-                        <div class="d-flex gap-2 align-items-center"><strong class="text-white">{{ comment.user.username }}</strong><small class="text-muted">{{ comment.created_at|timesince }} oldin</small></div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <strong class="text-white">{{ comment.user.username }}</strong>
+                            <small class="text-muted">{{ comment.created_at|timesince }} oldin</small>
+                        </div>
                         <p class="mb-0 text-light opacity-75 mt-1">{{ comment.body }}</p>
                     </div>
                 </div>
@@ -203,17 +224,27 @@
         <div class="info-panel" id="buy-section">
             <div class="neon-price-card">
                 <span class="text-muted small text-uppercase fw-bold letter-spacing-1">Loyiha Narxi</span>
-                {% if project.price > 0 %}<span class="price-tag">${{ project.price }}</span>
-                {% else %}<span class="price-tag text-success">BEPUL</span>{% endif %}
-
-                {% if has_bought %}
-                    <a href="{{ project.source_code.url }}" class="btn-neon-action btn-neon-download" download><i class="fas fa-download"></i> Faylni Yuklash</a>
-                    <div class="text-success small fw-bold mt-2"><i class="fas fa-check-circle"></i> Sizga ruxsat berilgan</div>
+                {% if project.price > 0 %}
+                    <span class="price-tag">${{ project.price }}</span>
                 {% else %}
-                    <a href="{% url 'buy_project' project.pk %}" class="btn-neon-action btn-neon-buy" onclick="return confirm('Sotib olishni tasdiqlaysizmi?')"><i class="fas fa-shopping-cart"></i> Hozir Xarid Qilish</a>
+                    <span class="price-tag text-success">BEPUL</span>
                 {% endif %}
 
-                {% if project.get_youtube_id %}<button class="btn-neon-action btn-neon-video" onclick="openVideoModal()"><i class="fab fa-youtube"></i> Video Preview</button>{% endif %}
+                {% if has_bought %}
+                    <a href="{{ project.source_code.url }}" class="btn-neon-action btn-neon-download" download>
+                        <i class="fas fa-download"></i> Faylni Yuklash
+                    </a>
+                {% else %}
+                    <a href="{% url 'buy_project' project.pk %}" class="btn-neon-action btn-neon-buy" onclick="return confirm('Sotib olishni tasdiqlaysizmi?')">
+                        <i class="fas fa-shopping-cart"></i> Hozir Xarid Qilish
+                    </a>
+                {% endif %}
+
+                {% if project.get_youtube_id %}
+                    <button class="btn-neon-action btn-neon-video" onclick="openVideoModal()">
+                        <i class="fab fa-youtube"></i> Video Preview
+                    </button>
+                {% endif %}
 
                 <button id="like-btn" data-url="{% url 'like_project' project.pk %}" class="btn btn-outline-light w-100 mt-2 rounded-pill border-opacity-25 py-2">
                     <i id="like-icon" class="{% if request.user in project.likes.all %}fas text-danger{% else %}far{% endif %} fa-heart me-2"></i>
@@ -222,34 +253,67 @@
             </div>
 
             <div class="neon-author-card">
-                <img src="{% if project.author.profile.avatar %}{{ project.author.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ project.author.username }}&background=4f46e5&color=fff{% endif %}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
-                <div><div class="text-white fw-bold">{{ project.author.username }}</div><div class="text-muted small">Loyiha Muallifi</div></div>
+                <a href="{% url 'profile_by_username' project.author.username %}">
+                    <img src="{% if project.author.profile.avatar %}{{ project.author.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ project.author.username }}{% endif %}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                </a>
+                <div>
+                    <div class="text-white fw-bold">{{ project.author.username }}</div>
+                    <div class="text-muted small">{{ project.author.profile.followers.count }} Sinxronlar</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <div id="videoModal" class="modal-overlay" onclick="closeVideoModal(event)">
-    <div class="modal-content-box"><span class="close-modal" onclick="closeVideoModal(event)">&times;</span><div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe id="youtubeIframe" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allow="autoplay; encrypted-media" allowfullscreen></iframe></div></div>
+    <div class="modal-content-box">
+        <span class="close-modal" onclick="closeVideoModal(event)">&times;</span>
+        <div style="position: relative; padding-bottom: 56.25%; height: 0;">
+            <iframe id="youtubeIframe" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+    </div>
 </div>
 
 <script>
+    // --- SYNC AJAX ---
     function toggleSync() {
         const btn = document.getElementById('syncBtn');
         const txt = document.getElementById('syncText');
         const icon = btn.querySelector('i');
-        if(btn.classList.contains('active')) {
-            btn.classList.remove('active'); txt.innerText = 'Sync'; icon.classList.remove('fa-spin');
-        } else {
-            btn.classList.add('active'); txt.innerText = 'Synced'; icon.classList.add('fa-spin');
-            setTimeout(() => { icon.classList.remove('fa-spin'); }, 1000);
+
+        fetch("{% url 'toggle_sync' project.author.username %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.is_synced) {
+                btn.classList.add('active'); txt.innerText = 'Synced'; icon.classList.add('fa-spin');
+                setTimeout(() => icon.classList.remove('fa-spin'), 800);
+            } else {
+                btn.classList.remove('active'); txt.innerText = 'Sync';
+            }
+            // Update stats in sidebar
+            document.querySelector('.neon-author-card .text-muted').innerText = data.followers_count + " Sinxronlar";
+        });
+    }
+
+    // --- VIDEO MODAL JS ---
+    const youtubeId = "{{ project.get_youtube_id }}";
+    function openVideoModal() {
+        if(youtubeId) {
+            document.getElementById('youtubeIframe').src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
+            document.getElementById('videoModal').style.display = "flex";
+        }
+    }
+    function closeVideoModal(e) {
+        if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-modal')) {
+            document.getElementById('videoModal').style.display = "none";
+            document.getElementById('youtubeIframe').src = "";
         }
     }
 
-    const youtubeId = "{{ project.get_youtube_id }}";
-    function openVideoModal() { if(youtubeId) { document.getElementById('youtubeIframe').src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1"; document.getElementById('videoModal').style.display = "flex"; } }
-    function closeVideoModal(e) { if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-modal')) { document.getElementById('videoModal').style.display = "none"; document.getElementById('youtubeIframe').src = ""; } }
-
+    // --- COPY CODE ---
     function copyCode() {
         const codeText = document.getElementById('sourceCode').innerText;
         navigator.clipboard.writeText(codeText).then(() => {
@@ -259,32 +323,44 @@
         });
     }
 
-    const likeBtn = document.getElementById('like-btn');
-    if (likeBtn) {
-        likeBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            fetch(this.getAttribute('data-url'), {
-                method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('like-count').innerText = data.total_likes;
-                const icon = document.getElementById('like-icon');
-                if (data.is_liked) { icon.classList.replace('far', 'fas'); icon.classList.add('text-danger'); }
-                else { icon.classList.replace('fas', 'far'); icon.classList.remove('text-danger'); }
-            });
+    // --- LIKE AJAX ---
+    document.getElementById('like-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        fetch(this.getAttribute('data-url'), {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('like-count').innerText = data.total_likes;
+            const icon = document.getElementById('like-icon');
+            if (data.is_liked) { icon.classList.replace('far', 'fas'); icon.classList.add('text-danger'); }
+            else { icon.classList.replace('fas', 'far'); icon.classList.remove('text-danger'); }
         });
-    }
+    });
 
+    // --- COMMENT AJAX ---
     const commentForm = document.getElementById('comment-form');
     if (commentForm) {
         commentForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
-            fetch(window.location.href, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            fetch(window.location.href, {
+                method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
             .then(res => res.json())
             .then(data => {
-                const html = `<div class="d-flex gap-3 mb-4" style="animation: slideUp 0.4s ease;"><img src="${data.avatar_url || 'https://ui-avatars.com/api/?name=' + data.username}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;"><div><div class="d-flex gap-2 align-items-center"><strong class="text-white">${data.username}</strong><small class="text-muted">hozirgina</small></div><p class="mb-0 text-light opacity-75 mt-1">${data.body}</p></div></div>`;
+                const html = `
+                    <div class="d-flex gap-3 mb-4" style="animation: slideUp 0.4s ease;">
+                        <img src="${data.avatar_url || 'https://ui-avatars.com/api/?name=' + data.username}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                        <div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <strong class="text-white">${data.username}</strong>
+                                <small class="text-muted">hozirgina</small>
+                            </div>
+                            <p class="mb-0 text-light opacity-75 mt-1">${data.body}</p>
+                        </div>
+                    </div>`;
                 document.getElementById('comment-list').insertAdjacentHTML('afterbegin', html);
                 document.getElementById('comment-body').value = '';
                 document.getElementById('comment-count-txt').innerText = parseInt(document.getElementById('comment-count-txt').innerText) + 1;

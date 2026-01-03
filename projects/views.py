@@ -320,3 +320,22 @@ def cpp_test(request):
             return JsonResponse({'result': result})
 
     return render(request, 'cpp_test.html', {'code': code, 'input': input_data, 'result': result})
+
+
+# --- 14. SINXRONLARIM (SUBSCRIPTIONS) ---
+@login_required
+def syncing_projects(request):
+    # Siz "Sync" qilgan (kuzatayotgan) profillarni olamiz
+    # following related_name orqali Sync modelidan ma'lumot topadi
+    my_syncs = request.user.profile.following.all().values_list('following__user', flat=True)
+
+    # O'sha dasturchilar tomonidan yuklangan loyihalar
+    projects = Project.objects.filter(author__id__in=my_syncs).order_by('-created_at')
+
+    categories = Project.CATEGORY_CHOICES
+    context = {
+        'projects': projects,
+        'categories': categories,
+        'page_title': 'Sinxronlarim'
+    }
+    return render(request, 'syncing.html', context)
