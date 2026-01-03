@@ -31,7 +31,6 @@ def home_page(request):
 
     categories = Project.CATEGORY_CHOICES
     context = {'projects': projects, 'categories': categories}
-    # O'ZGARISH: 'projects/home.html' -> 'home.html'
     return render(request, 'home.html', context)
 
 
@@ -56,13 +55,14 @@ def create_project(request):
     return render(request, 'create_project.html', {'form': form})
 
 
-# 3. LOYIHA TAFSILOTLARI
+# 3. LOYIHA TAFSILOTLARI (LIVE PREVIEW BILAN)
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
 
     project.views += 1
     project.save()
 
+    # --- IZOHLAR ---
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
@@ -83,6 +83,7 @@ def project_detail(request, pk):
     else:
         comment_form = CommentForm()
 
+    # --- SOTIB OLISH ---
     has_bought = False
     if project.price == 0:
         has_bought = True
@@ -90,26 +91,50 @@ def project_detail(request, pk):
         if request.user == project.author or request.user in project.buyers.all():
             has_bought = True
 
-    # KOD PREVIEW
+    # --- KOD VA LIVE PREVIEW LOGIKASI ---
     code_preview = "// Kod mavjud emas."
+    live_preview = None  # <--- YANGI O'ZGARUVCHI (HTML natijasi uchun)
 
     if project.source_code:
         try:
             ext = os.path.splitext(project.source_code.name)[1].lower()
-            text_extensions = ['.html', '.css', '.js', '.py', '.php', '.txt', '.cpp', '.c', '.java', '.json']
+            text_extensions = ['.css', '.js', '.py', '.php', '.txt', '.cpp', '.c', '.java', '.json']
 
-            if ext in text_extensions:
+            # 1. AGAR HTML BO'LSA -> JONLI NATIJA (IFRAME UCHUN)
+            if ext == '.html':
+                project.source_code.open('r')
+
+                # To'liq o'qib olamiz (Iframe uchun)
+                full_content = project.source_code.read()
+                if isinstance(full_content, bytes):
+                    live_preview = full_content.decode('utf-8', errors='ignore')
+                else:
+                    live_preview = full_content
+
+                # Kursor boshiga qaytariladi (Preview uchun 15 qator olishga)
+                project.source_code.seek(0)
+                lines = []
+                for _ in range(15):
+                    line = project.source_code.readline()
+                    if not line: break
+                    if isinstance(line, bytes):
+                        lines.append(line.decode('utf-8', errors='ignore'))
+                    else:
+                        lines.append(line)
+                code_preview = "".join(lines)
+                project.source_code.close()
+
+            # 2. BOSHQA FAYLLAR -> FAQAT KOD
+            elif ext in text_extensions:
                 project.source_code.open('r')
                 lines = []
                 for _ in range(15):
                     line = project.source_code.readline()
                     if not line: break
-
                     if isinstance(line, bytes):
                         lines.append(line.decode('utf-8', errors='ignore'))
                     else:
                         lines.append(line)
-
                 code_preview = "".join(lines)
                 project.source_code.close()
 
@@ -119,15 +144,15 @@ def project_detail(request, pk):
                 code_preview = "// Bu fayl formatini oldindan ko'rish imkonsiz."
 
         except Exception as e:
-            code_preview = f"// Kodni o'qishda xatolik yuz berdi: {str(e)}"
+            code_preview = f"// Xatolik: {str(e)}"
 
     context = {
         'project': project,
         'form': comment_form,
         'code_preview': code_preview,
+        'live_preview': live_preview,  # Shablonga yuboramiz
         'has_bought': has_bought,
     }
-    # O'ZGARISH: 'projects/project_detail.html' -> 'project_detail.html'
     return render(request, 'project_detail.html', context)
 
 
@@ -241,7 +266,6 @@ def buy_project(request, pk):
 def trending(request):
     projects = Project.objects.all().order_by('-views')
     categories = Project.CATEGORY_CHOICES
-    # O'ZGARISH: 'projects/home.html' -> 'home.html'
     return render(request, 'home.html', {'projects': projects, 'categories': categories})
 
 
@@ -250,7 +274,6 @@ def trending(request):
 def liked_videos(request):
     projects = Project.objects.filter(likes=request.user)
     categories = Project.CATEGORY_CHOICES
-    # O'ZGARISH: 'projects/home.html' -> 'home.html'
     return render(request, 'home.html', {'projects': projects, 'categories': categories})
 
 
@@ -259,7 +282,6 @@ def liked_videos(request):
 def my_videos(request):
     projects = Project.objects.filter(author=request.user)
     categories = Project.CATEGORY_CHOICES
-    # O'ZGARISH: 'projects/home.html' -> 'home.html'
     return render(request, 'home.html', {'projects': projects, 'categories': categories})
 
 

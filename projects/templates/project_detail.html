@@ -38,13 +38,22 @@
     /* Rasm (Output) */
     .visual-preview {
         width: 100%;
-        height: 400px;
-        background-color: #000;
+        height: 450px; /* Biroz kattalashtirdik */
+        background-color: #1e1e1e; /* Default qora fon */
         display: flex; align-items: center; justify-content: center;
         position: relative;
     }
     .visual-preview img {
-        width: 100%; height: 100%; object-fit: contain; /* Rasm to'liq ko'rinadi */
+        width: 100%; height: 100%; object-fit: contain;
+    }
+
+    /* --- JONLI NATIJA (IFRAME) STILI --- */
+    .live-iframe {
+        width: 100%;
+        height: 100%;
+        background-color: #ffffff; /* HTML odatda oq fonda ko'rinishi kerak */
+        border: none;
+        display: block;
     }
 
     /* Kod Qutisi (Security) */
@@ -60,7 +69,7 @@
         overflow: hidden;
         opacity: 0.7;
         line-height: 1.5;
-        white-space: pre-wrap; /* Uzun qatorlarni pastga tushirish */
+        white-space: pre-wrap;
     }
 
     /* Blur & Lock Overlay */
@@ -76,7 +85,7 @@
 
     /* --- SIDEBAR (O'ng tomon) --- */
     .info-panel {
-        position: sticky; top: 80px; /* Scroll qilganda qotib turadi */
+        position: sticky; top: 80px;
     }
 
     .price-card {
@@ -156,19 +165,37 @@
 
         <div class="preview-card">
             <div class="preview-header">
-                <span class="preview-title"><i class="fas fa-desktop me-2"></i> Loyiha Ko'rinishi</span>
-                <span class="badge bg-secondary">Output Preview</span>
+                <span class="preview-title">
+                    {% if live_preview %}
+                        <i class="fas fa-play-circle me-2 text-success"></i> Jonli Natija (Live)
+                    {% else %}
+                        <i class="fas fa-desktop me-2"></i> Loyiha Ko'rinishi
+                    {% endif %}
+                </span>
+                <span class="badge bg-secondary">
+                    {% if live_preview %}Interactive{% else %}Image Preview{% endif %}
+                </span>
             </div>
+
             <div class="visual-preview">
-                {% if project.featured_image %}
-                    <img src="{{ project.featured_image.url }}" alt="Project Preview">
-                {% elif project.image %}
-                    <img src="{{ project.image.url }}" alt="Project Preview">
+                {% if live_preview %}
+                    <iframe
+                        srcdoc="{{ live_preview }}"
+                        frameborder="0"
+                        sandbox="allow-scripts allow-pointer-lock allow-same-origin"
+                        class="live-iframe">
+                    </iframe>
                 {% else %}
-                    <div class="text-secondary d-flex flex-column align-items-center">
-                        <i class="fas fa-image fa-4x mb-3"></i>
-                        <span>Rasm yuklanmagan</span>
-                    </div>
+                    {% if project.featured_image %}
+                        <img src="{{ project.featured_image.url }}" alt="Project Preview">
+                    {% elif project.image %}
+                        <img src="{{ project.image.url }}" alt="Project Preview">
+                    {% else %}
+                        <div class="text-secondary d-flex flex-column align-items-center">
+                            <i class="fas fa-image fa-4x mb-3"></i>
+                            <span>Rasm yuklanmagan</span>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -347,10 +374,9 @@
     }
 
     function closeVideoModal(e) {
-        // Faqat qora fonga yoki X ga bosilganda yopilsin
         if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-modal')) {
             document.getElementById('videoModal').style.display = "none";
-            document.getElementById('youtubeIframe').src = ""; // Videoni to'xtatish
+            document.getElementById('youtubeIframe').src = "";
         }
     }
 
@@ -418,7 +444,6 @@
                 commentList.insertAdjacentHTML('afterbegin', html);
                 bodyInput.value = '';
 
-                // Sonini oshirish
                 let currentCount = parseInt(commentCountTxt.innerText);
                 commentCountTxt.innerText = currentCount + 1;
             })
