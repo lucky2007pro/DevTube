@@ -1,5 +1,5 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -22,7 +22,24 @@
 
         body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; }
 
-        /* --- NEON NAVBAR --- */
+        /* --- SCROLLBAR MOSLASHTIRISH (Oq narsani o'rniga neon) --- */
+        /* Sidebar va barcha elementlar uchun aylantirgichni chiroyli qilish */
+        ::-webkit-scrollbar {
+            width: 6px; /* Aylantirgich kengligi */
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2); /* Aylantirgich yo'li */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-primary); /* Aylantirgichning o'zi (Neon rangda) */
+            border-radius: 10px;
+            box-shadow: 0 0 10px var(--neon-primary);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-secondary); /* Ustiga borganda rang o'zgarishi */
+        }
+
+        /* --- NAVBAR VA SIDEBAR (Dizayn o'zgarishsiz) --- */
         .navbar {
             background: var(--glass-bg) !important;
             backdrop-filter: blur(15px);
@@ -30,7 +47,6 @@
             padding: 0.75rem 1.5rem;
         }
 
-        /* Menu Button Fix */
         #sidebarToggle {
             width: 42px; height: 42px;
             display: flex; align-items: center; justify-content: center;
@@ -40,7 +56,6 @@
         }
         #sidebarToggle:hover { background: var(--neon-primary); box-shadow: var(--neon-glow); }
 
-        /* Neon Search */
         .search-box-neon {
             background: rgba(0, 0, 0, 0.5) !important;
             border: 1px solid var(--glass-border);
@@ -53,7 +68,6 @@
             box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
         }
 
-        /* Voice Search Neon */
         .voice-search-btn {
             background: rgba(255,255,255,0.05);
             border: 1px solid var(--glass-border);
@@ -64,7 +78,6 @@
             box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
         }
 
-        /* Upload Button Neon */
         .btn-upload-neon {
             background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
             border: none; color: white; font-weight: 600;
@@ -73,12 +86,17 @@
         }
         .btn-upload-neon:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6); }
 
-        /* --- SIDEBAR NEON --- */
+        /* --- SIDEBAR STRUKTURASI --- */
         .sidebar {
             background: var(--glass-bg);
             border-right: 1px solid var(--glass-border);
             backdrop-filter: blur(10px);
             width: 260px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column; /* Elementlarni ustma-ust taxlash */
         }
         .nav-item {
             margin: 4px 12px; padding: 10px 16px;
@@ -96,7 +114,6 @@
             text-transform: uppercase; letter-spacing: 1.5px;
             padding: 20px 28px 8px;
         }
-        .sidebar-divider { margin: 10px 20px; opacity: 0.05; background-color: #fff; }
     </style>
 </head>
 <body>
@@ -151,31 +168,29 @@
     </nav>
 
     <div class="sidebar" id="sidebar">
-        <div class="nav flex-column h-100">
-            <div class="flex-grow-1 overflow-auto py-3">
-                <a href="{% url 'home' %}" class="nav-item text-decoration-none active"><i class="fas fa-home"></i> Bosh sahifa</a>
-                <a href="{% url 'trending' %}" class="nav-item text-decoration-none"><i class="fas fa-fire"></i> Trenddagilar</a>
+        <div class="flex-grow-1 overflow-auto py-3">
+            <a href="{% url 'home' %}" class="nav-item text-decoration-none active"><i class="fas fa-home"></i> Bosh sahifa</a>
+            <a href="{% url 'trending' %}" class="nav-item text-decoration-none"><i class="fas fa-fire"></i> Trenddagilar</a>
 
-                <div class="sidebar-header">Kutubxona</div>
-                <a href="{% url 'liked_videos' %}" class="nav-item text-decoration-none"><i class="fas fa-heart text-danger"></i> Yoqqanlar</a>
-                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bookmark text-warning"></i> Saqlanganlar</a>
-                <a href="{% url 'my_videos' %}" class="nav-item text-decoration-none"><i class="fas fa-folder-open"></i> Mening kodlarim</a>
+            <div class="sidebar-header">Kutubxona</div>
+            <a href="{% url 'liked_videos' %}" class="nav-item text-decoration-none"><i class="fas fa-heart text-danger"></i> Yoqqanlar</a>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bookmark text-warning"></i> Saqlanganlar</a>
+            <a href="{% url 'my_videos' %}" class="nav-item text-decoration-none"><i class="fas fa-folder-open"></i> Mening kodlarim</a>
 
-                <div class="sidebar-header">Asboblar</div>
-                <a href="/cpp/" class="nav-item text-decoration-none"><i class="fab fa-cuttlefish text-primary"></i> C++ Integratsiya</a>
-                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-terminal"></i> Online Compiler</a>
+            <div class="sidebar-header">Asboblar</div>
+            <a href="/cpp/" class="nav-item text-decoration-none"><i class="fab fa-cuttlefish text-primary"></i> C++ Integratsiya</a>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-terminal"></i> Online Compiler</a>
 
-                <div class="sidebar-header">Hamjamiyat</div>
-                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-users"></i> Dasturchilar</a>
-                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bullhorn text-success"></i> E'lonlar</a>
-            </div>
+            <div class="sidebar-header">Hamjamiyat</div>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-users"></i> Dasturchilar</a>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bullhorn text-success"></i> E'lonlar</a>
+        </div>
 
-            <div class="py-3 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
-                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-cog"></i> Sozlamalar</a>
-                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-question-circle"></i> Yordam</a>
-                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-headset text-info"></i> Dasturchiga murojaat</a>
-                <div class="text-center mt-3 small opacity-25">&copy; 2026 DevTube</div>
-            </div>
+        <div class="py-3 border-top" style="border-color: rgba(255,255,255,0.05) !important; background: rgba(15, 23, 42, 0.5);">
+            <a href="#" class="nav-item text-decoration-none d-flex align-items-center"><i class="fas fa-cog"></i> Sozlamalar</a>
+            <a href="#" class="nav-item text-decoration-none d-flex align-items-center"><i class="fas fa-question-circle"></i> Yordam</a>
+            <a href="#" class="nav-item text-decoration-none d-flex align-items-center"><i class="fas fa-headset text-info"></i> Dasturchiga murojaat</a>
+            <div class="text-center mt-3 small opacity-25" style="font-size: 10px;">&copy; 2026 DevTube</div>
         </div>
     </div>
 
@@ -192,24 +207,21 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sidebar Toggle Fix
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
-        document.getElementById('sidebarToggle').addEventListener('click', () => {
+        const toggleBtn = document.getElementById('sidebarToggle');
+        toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
         });
 
-        // Voice Search Improved
         function startVoiceSearch() {
             if ('webkitSpeechRecognition' in window) {
                 const recognition = new webkitSpeechRecognition();
                 recognition.lang = 'uz-UZ';
                 const voiceBtn = document.getElementById('voiceBtn');
-
                 recognition.onstart = () => { voiceBtn.style.color = '#ef4444'; voiceBtn.classList.add('pulse'); };
                 recognition.onend = () => { voiceBtn.style.color = '#fff'; voiceBtn.classList.remove('pulse'); };
-
                 recognition.onresult = (event) => {
                     const transcript = event.results[0][0].transcript;
                     document.getElementById('searchInput').value = transcript;
