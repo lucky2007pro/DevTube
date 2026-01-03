@@ -20,14 +20,14 @@
             --glass-border: rgba(255, 255, 255, 0.08);
         }
 
-        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; }
+        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
 
         /* --- NEON SCROLLBAR --- */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
         ::-webkit-scrollbar-thumb { background: var(--neon-primary); border-radius: 10px; box-shadow: 0 0 10px var(--neon-primary); }
 
-        /* --- NAVBAR & MARKAZLASH --- */
+        /* --- NAVBAR --- */
         .navbar {
             background: var(--glass-bg) !important;
             backdrop-filter: blur(15px);
@@ -35,7 +35,7 @@
             padding: 0.75rem 1.5rem;
             z-index: 1060;
             display: flex;
-            align-items: center; /* Vertikal markazlash */
+            align-items: center;
         }
 
         #sidebarToggle {
@@ -45,15 +45,9 @@
             border: 1px solid var(--glass-border); color: #fff;
             transition: 0.3s;
         }
+        #sidebarToggle:hover { background: var(--neon-primary); box-shadow: var(--neon-glow); }
 
-        .search-box-neon {
-            background: rgba(0, 0, 0, 0.5) !important;
-            border: 1px solid var(--glass-border);
-            border-radius: 50px !important;
-            transition: 0.4s;
-        }
-
-        /* --- SIDEBAR FIX (Tepasi navbar ostida qolmaydi) --- */
+        /* --- SIDEBAR STRUKTURASI --- */
         .sidebar {
             background: var(--glass-bg);
             border-right: 1px solid var(--glass-border);
@@ -76,16 +70,23 @@
             font-size: 14px; font-weight: 500; transition: 0.3s;
             display: flex; align-items: center;
         }
-        .nav-item i { width: 20px; text-align: center; margin-right: 12px; font-size: 16px; }
+        .nav-item i { width: 25px; text-align: center; margin-right: 10px; font-size: 16px; }
         .nav-item:hover, .nav-item.active {
             background: rgba(99, 102, 241, 0.1);
             color: #fff !important;
             box-shadow: inset 4px 0 0 var(--neon-primary);
         }
 
+        .sidebar-header {
+            font-size: 11px; font-weight: 700; color: #475569;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            padding: 20px 28px 8px;
+        }
+
         .main-content {
             margin-left: 260px;
             padding: 100px 25px 30px;
+            min-height: 100vh;
             transition: 0.3s;
         }
         .main-content.expanded { margin-left: 0; }
@@ -153,11 +154,16 @@
 
             <div class="sidebar-header px-4">Asboblar</div>
             <a href="/cpp/" class="nav-item text-decoration-none"><i class="fab fa-cuttlefish text-primary"></i> C++ Integratsiya</a>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-terminal text-info"></i> Online Compiler</a>
+
+            <div class="sidebar-header px-4">Hamjamiyat</div>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-users"></i> Dasturchilar</a>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bullhorn text-success"></i> E'lonlar</a>
         </div>
 
         <div class="py-3 border-top" style="border-color: rgba(255,255,255,0.05) !important; background: rgba(15, 23, 42, 0.5);">
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-cog"></i> Sozlamalar</a>
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-question-circle"></i> Yordam</a>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-cog text-secondary"></i> Sozlamalar</a>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-question-circle text-secondary"></i> Yordam</a>
             <a href="#" class="nav-item text-decoration-none"><i class="fas fa-headset text-info"></i> Murojaat</a>
             <div class="text-center mt-3 small opacity-25" style="font-size: 10px;">&copy; 2026 DevTube</div>
         </div>
@@ -193,7 +199,7 @@
                     setTimeout(() => document.getElementById('mainSearchForm').submit(), 400);
                 };
                 recognition.start();
-            } else { alert("Ovozni qo'llab-quvvatlamaydi."); }
+            }
         }
     </script>
 </body>
