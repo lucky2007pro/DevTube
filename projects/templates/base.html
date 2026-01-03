@@ -1,61 +1,135 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevTube</title>
+    <title>DevTube | Professional Code Platform</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        /* --- PROFESSIONAL NEON EFFECTS --- */
+        :root {
+            --neon-primary: #4f46e5;
+            --neon-secondary: #9333ea;
+            --glass-bg: rgba(15, 23, 42, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { background-color: #020617; color: #f8fafc; }
+
+        /* Navbar Glassmorphism */
+        .navbar {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1050;
+        }
+
+        /* Neon Search Box */
+        .search-box-neon {
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid var(--glass-border);
+            border-radius: 50px !important;
+            padding: 2px;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .search-box-neon:focus-within {
+            border-color: var(--neon-primary);
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+        }
+        .search-box-neon input {
+            background: transparent !important;
+            border: none !important;
+            color: white !important;
+            padding-left: 20px !important;
+        }
+
+        /* Voice Search Glow */
+        .voice-search-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: white;
+            transition: 0.3s;
+        }
+        .voice-search-btn:hover {
+            background: var(--neon-primary);
+            box-shadow: 0 0 15px var(--neon-primary);
+        }
+        .voice-active {
+            animation: pulse-red 1.5s infinite;
+            color: #ef4444 !important;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Sidebar Glass */
+        .sidebar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--glass-border);
+        }
+        .nav-item {
+            margin: 4px 12px;
+            border-radius: 12px;
+            transition: 0.2s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(79, 70, 229, 0.15);
+            color: #818cf8 !important;
+        }
+    </style>
 </head>
 <body>
 
-    <nav class="navbar fixed-top d-flex align-items-center px-2 px-md-3">
-        <div class="d-flex align-items-center gap-2 gap-md-3" style="min-width: fit-content;">
-            <button class="btn btn-dark border-0 p-1 p-md-2" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+    <nav class="navbar fixed-top d-flex align-items-center px-3 py-2">
+        <div class="d-flex align-items-center gap-2" style="flex: 0 0 auto;">
+            <button class="btn btn-dark border-0 p-2" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
             <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center gap-2 m-0">
-                <div class="logo-icon-neon" style="background: linear-gradient(135deg, #4f46e5, #9333ea); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);">
-                    <i class="fas fa-play text-white" style="font-size: 12px;"></i>
+                <div class="logo-icon-neon" style="background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);">
+                    <i class="fas fa-play text-white" style="font-size: 14px;"></i>
                 </div>
-                <span class="d-none d-sm-inline" style="font-weight: 800; letter-spacing: -1px; color: #fff;">Dev<span style="color: #4f46e5;">Tube</span></span>
+                <span class="d-none d-lg-inline" style="font-weight: 800; color: #fff; letter-spacing: -1px;">Dev<span style="color: var(--neon-primary);">Tube</span></span>
             </a>
         </div>
 
-        <div class="search-container-wrapper d-flex align-items-center justify-content-center flex-grow-1 px-2 px-md-4">
-            <form id="mainSearchForm" class="d-flex align-items-center w-100" style="max-width: 600px;" action="{% url 'home' %}" method="GET">
+        <div class="search-wrapper flex-grow-1 d-flex justify-content-center px-2">
+            <form id="mainSearchForm" class="d-flex align-items-center w-100" style="max-width: 550px;" action="{% url 'home' %}" method="GET">
                 <div class="input-group search-box-neon">
-                    <input type="text" name="q" id="searchInput" class="form-control border-secondary bg-dark text-white" style="border-radius: 40px 0 0 40px; padding-left: 15px; height: 35px; font-size: 14px;" placeholder="Qidirish..." aria-label="Search">
-                    <button class="btn btn-outline-secondary px-2 px-md-3" style="border-radius: 0 40px 40px 0; background: rgba(255,255,255,0.05);" type="submit">
-                        <i class="fas fa-search" style="font-size: 13px;"></i>
+                    <input type="text" name="q" id="searchInput" class="form-control" placeholder="Loyihalarni qidirish..." autocomplete="off">
+                    <button class="btn border-0 text-muted px-3" type="submit">
+                        <i class="fas fa-search"></i>
                     </button>
                 </div>
-                <button type="button" class="btn btn-dark rounded-circle ms-1 ms-md-2 voice-search-btn" onclick="startVoiceSearch()" style="width: 35px; height: 35px; background: #1e293b; border: none; flex-shrink: 0;">
-                    <i class="fas fa-microphone" style="font-size: 13px;"></i>
+                <button type="button" class="btn voice-search-btn rounded-circle ms-2" onclick="startVoiceSearch()" id="voiceBtn" style="width: 40px; height: 40px; flex-shrink: 0;">
+                    <i class="fas fa-microphone"></i>
                 </button>
             </form>
         </div>
 
-        <div class="d-flex align-items-center gap-2 gap-md-3 justify-content-end" style="min-width: fit-content;">
+        <div class="d-flex align-items-center gap-2" style="flex: 0 0 auto;">
             {% if user.is_authenticated %}
-                <a href="{% url 'create_project' %}" class="btn btn-primary btn-sm rounded-pill d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; padding: 0;">
-                    <i class="fas fa-plus"></i> <span class="d-none d-md-inline ms-1">Yuklash</span>
+                <a href="{% url 'create_project' %}" class="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-2">
+                    <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Yuklash</span>
                 </a>
 
                 <div class="dropdown">
-                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                        {% if user.profile.avatar %}
-                            <img src="{{ user.profile.avatar.url }}" class="rounded-circle border border-secondary" width="30" height="30" style="object-fit: cover;">
-                        {% else %}
-                            <img src="https://ui-avatars.com/api/?name={{ user.username }}" class="rounded-circle" width="30" height="30">
-                        {% endif %}
+                    <a href="#" class="dropdown-toggle text-decoration-none" data-bs-toggle="dropdown">
+                        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="rounded-circle border border-primary border-opacity-25" width="32" height="32" style="object-fit: cover;">
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end dark-dropdown" style="background: #1e293b; border: 1px solid #334155;">
-                        <li><a class="dropdown-item text-light" href="{% url 'profile' %}"><i class="fas fa-user me-2"></i> Profil</a></li>
-                        <li><a class="dropdown-item text-light" href="{% url 'my_videos' %}"><i class="fas fa-video me-2"></i> Loyihalarim</a></li>
-                        <li><hr class="dropdown-divider bg-secondary"></li>
+                    <ul class="dropdown-menu dropdown-menu-end dark-dropdown border-0 shadow-lg mt-2" style="background: #111827; border: 1px solid var(--glass-border) !important;">
+                        <li><a class="dropdown-item text-light" href="{% url 'profile' %}"><i class="fas fa-user me-2 text-primary"></i> Profil</a></li>
+                        <li><hr class="dropdown-divider opacity-10"></li>
                         <li>
                             <form method="post" action="{% url 'account_logout' %}">
                                 {% csrf_token %}
@@ -65,74 +139,61 @@
                     </ul>
                 </div>
             {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm rounded-pill px-2 px-md-3">Kirish</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">Kirish</a>
             {% endif %}
         </div>
     </nav>
 
     <div class="sidebar" id="sidebar">
-        <div class="nav flex-column">
-            <a href="{% url 'home' %}" class="nav-item active"><i class="fas fa-home"></i> Bosh sahifa</a>
-            <a href="{% url 'trending' %}" class="nav-item"><i class="fas fa-fire"></i> Trenddagilar</a>
-            <hr class="sidebar-divider">
-            <div class="sidebar-header">Tools</div>
-            <a href="/cpp/" class="nav-item"><i class="fab fa-cuttlefish" style="color: #00599C;"></i> C++ Integratsiyasi</a>
-            <a href="#" class="nav-item"><i class="fas fa-terminal"></i> Online Compiler</a>
-            <hr class="sidebar-divider">
-            <div class="sidebar-header">Hamjamiyat</div>
-            <a href="#" class="nav-item"><i class="fas fa-users"></i> Dasturchilar guruhi</a>
-            <a href="#" class="nav-item"><i class="fas fa-bullhorn"></i> Yangiliklar</a>
-            <hr class="sidebar-divider">
-            <div class="sidebar-header">Kutubxona</div>
-            <a href="{% url 'liked_videos' %}" class="nav-item"><i class="fas fa-thumbs-up"></i> Yoqqanlar</a>
-            <a href="{% url 'my_videos' %}" class="nav-item"><i class="fas fa-folder"></i> Loyihalarim</a>
+        <div class="nav flex-column py-3">
+            <a href="{% url 'home' %}" class="nav-item p-2 text-decoration-none text-light active"><i class="fas fa-home me-3"></i> Bosh sahifa</a>
+            <a href="{% url 'trending' %}" class="nav-item p-2 text-decoration-none text-light"><i class="fas fa-fire me-3"></i> Trenddagilar</a>
+            <hr class="sidebar-divider mx-3 opacity-10">
+            <div class="sidebar-header px-4 small text-muted text-uppercase mb-2">Tools</div>
+            <a href="/cpp/" class="nav-item p-2 text-decoration-none text-light"><i class="fab fa-cuttlefish me-3 text-info"></i> C++ Integratsiya</a>
+            <a href="#" class="nav-item p-2 text-decoration-none text-light"><i class="fas fa-terminal me-3"></i> Online Compiler</a>
+            <hr class="sidebar-divider mx-3 opacity-10">
+            <div class="sidebar-header px-4 small text-muted text-uppercase mb-2">Hamjamiyat</div>
+            <a href="#" class="nav-item p-2 text-decoration-none text-light"><i class="fas fa-users me-3"></i> Dasturchilar</a>
         </div>
-        <div class="mt-auto p-3 text-muted small text-center border-top border-secondary border-opacity-25">&copy; 2026 DevTube</div>
+        <div class="mt-auto p-3 text-muted small text-center">&copy; 2026 DevTube</div>
     </div>
 
     <div class="main-content" id="mainContent">
-        {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
+        {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 shadow-sm" style="background: rgba(255,255,255,0.05); color: #fff;">{{ message }}<button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
         {% block content %}{% endblock %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script>
+        // Sidebar Toggle
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
-        const toggleBtn = document.getElementById('sidebarToggle');
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        });
 
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-            });
-        }
-
-        // --- OVOZLI QIDIRUV (TO'G'RILANDI) ---
+        // --- OVOZLI QIDIRUV (FIXED & IMPROVED) ---
         function startVoiceSearch() {
             if ('webkitSpeechRecognition' in window) {
                 const recognition = new webkitSpeechRecognition();
                 recognition.lang = 'uz-UZ';
-                const voiceBtn = document.querySelector('.voice-search-btn');
+                const voiceBtn = document.getElementById('voiceBtn');
                 const searchInput = document.getElementById('searchInput');
-                const searchForm = document.getElementById('mainSearchForm');
 
-                voiceBtn.style.color = 'red';
-                recognition.start();
+                recognition.onstart = () => voiceBtn.classList.add('voice-active');
+                recognition.onend = () => voiceBtn.classList.remove('voice-active');
 
-                recognition.onresult = function(event) {
+                recognition.onresult = (event) => {
                     const transcript = event.results[0][0].transcript;
-                    searchInput.value = transcript; // Matnni inputga yozish
-                    voiceBtn.style.color = 'white';
-                    searchForm.submit(); // Formani yuborish
+                    searchInput.value = transcript;
+                    setTimeout(() => document.getElementById('mainSearchForm').submit(), 500);
                 };
 
-                recognition.onerror = function() {
-                    voiceBtn.style.color = 'white';
-                };
+                recognition.start();
             } else {
-                alert("Brauzeringiz ovozli qidiruvni qo'llab-quvvatlamaydi.");
+                alert("Ovozli qidiruv brauzeringizda ishlamaydi.");
             }
         }
     </script>
