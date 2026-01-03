@@ -2,177 +2,161 @@
 
 {% block content %}
 <style>
-    /* Fayl yuklash inputlarini chiroyli qilish */
+    /* --- NEON GLASSMORPHISM CARD --- */
+    .neon-upload-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+    }
+
+    /* --- CUSTOM FILE UPLOAD (Rasmda ko'ringan dizayn) --- */
     .custom-file-upload {
-        border: 2px dashed var(--border-color);
-        border-radius: 10px;
-        padding: 20px;
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 30px;
         text-align: center;
-        transition: all 0.3s;
-        background: rgba(255, 255, 255, 0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(0, 0, 0, 0.2);
         cursor: pointer;
         position: relative;
     }
     .custom-file-upload:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: var(--text-main);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: #4f46e5;
+        transform: translateY(-2px);
     }
     .custom-file-upload input[type="file"] {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0; left: 0;
-        opacity: 0;
-        cursor: pointer;
+        position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer;
     }
-    .upload-icon {
-        font-size: 2rem;
-        margin-bottom: 10px;
-        color: #6c757d;
+    .upload-icon { font-size: 2.5rem; margin-bottom: 12px; color: rgba(255,255,255,0.4); }
+
+    /* --- YOUTUBE SECTION (Rasmda ko'ringan qizil neon) --- */
+    .youtube-neon-section {
+        background: rgba(220, 53, 69, 0.05);
+        border: 1px solid rgba(220, 53, 69, 0.3);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+    .youtube-label { color: #ff4d4d; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+    /* --- INPUT STYLES --- */
+    .neon-input {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px;
+        color: #fff !important;
+        padding: 12px 15px;
+    }
+    .neon-input:focus {
+        border-color: #4f46e5 !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
     }
 
-    /* Section sarlavhalari */
-    .section-title {
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #adb5bd;
-        margin-bottom: 15px;
-        border-bottom: 1px solid #495057;
-        padding-bottom: 5px;
+    .section-header {
+        font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px;
+        color: rgba(255,255,255,0.5); margin-bottom: 20px;
+        display: flex; align-items: center; gap: 10px;
     }
-
-    .form-control, .form-select {
-        background-color: #212529;
-        border: 1px solid #495057;
-        color: #fff;
-    }
-    .form-control:focus, .form-select:focus {
-        background-color: #2c3034;
-        color: #fff;
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
+    .section-header::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
 </style>
 
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">
-        <div class="col-lg-9">
-            <div class="card bg-dark text-white border-secondary shadow-lg">
+        <div class="col-lg-10">
+            <div class="neon-upload-card">
 
-                <div class="card-header border-secondary p-4 bg-gradient" style="background: #1a1e21;">
-                    <h3 class="mb-0"><i class="fas fa-rocket text-primary me-2"></i> Yangi Loyiha Yuklash</h3>
-                    <p class="text-muted small mb-0 mt-1">Loyihangizni yuklang va daromad olishni boshlang.</p>
+                <div class="p-4 border-bottom border-secondary border-opacity-25" style="background: rgba(255,255,255,0.02);">
+                    <h3 class="mb-0 text-white fw-bold"><i class="fas fa-rocket text-primary me-2"></i> Loyiha Yuklash</h3>
+                    <p class="text-muted small mb-0 mt-1">Loyiha tafsilotlarini to'ldiring va hamjamiyat bilan ulashing.</p>
                 </div>
 
-                <div class="card-body p-4">
-
-                    <div id="error-alert" class="alert alert-danger d-none shadow-sm">
-                        <i class="fas fa-exclamation-circle me-2"></i> <span id="error-msg"></span>
-                    </div>
-
+                <div class="card-body p-4 p-md-5">
                     <form id="upload-form" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
 
-                        <div class="section-title"><i class="fas fa-info-circle me-1"></i> Asosiy Ma'lumotlar</div>
-
-                        <div class="mb-4">
-                            <label class="form-label text-light">Loyiha Nomi</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-secondary border-secondary text-white"><i class="fas fa-heading"></i></span>
+                        <div class="section-header">Asosiy Ma'lumotlar</div>
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-4">
+                                <label class="form-label text-muted small fw-bold">LOYIHA NOMI</label>
                                 {{ form.title }}
                             </div>
-                        </div>
-
-                        <div class="row">
                             <div class="col-md-6 mb-4">
-                                <label class="form-label text-light">Kategoriya</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fas fa-list"></i></span>
-                                    {{ form.category }}
-                                </div>
+                                <label class="form-label text-muted small fw-bold">KATEGORIYA</label>
+                                {{ form.category }}
                             </div>
                             <div class="col-md-6 mb-4">
-                                <label class="form-label text-light">Narxi ($)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fas fa-dollar-sign"></i></span>
-                                    {{ form.price }}
-                                </div>
-                                <div class="form-text text-muted">0 kiritsangiz, loyiha tekin bo'ladi.</div>
+                                <label class="form-label text-muted small fw-bold">NARXI ($)</label>
+                                {{ form.price }}
+                                <div class="form-text text-muted">0 bo'lsa tekin ko'rinadi.</div>
+                            </div>
+                            <div class="col-md-12 mb-4">
+                                <label class="form-label text-muted small fw-bold">TAVSIF</label>
+                                {{ form.description }}
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label text-light">Batafsil Tavsif</label>
-                            {{ form.description }}
-                        </div>
+                        <div class="section-header">Media Fayllar</div>
 
-                        <div class="section-title mt-5"><i class="fas fa-photo-video me-1"></i> Media Fayllar</div>
-
-                        <div class="card mb-4 border-danger" style="background: rgba(220, 53, 69, 0.05);">
-                            <div class="card-body">
-                                <label class="form-label text-danger fw-bold">
-                                    <i class="fab fa-youtube fa-lg me-1"></i> YouTube Video Linki (Majburiy)
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-danger text-white border-danger"><i class="fas fa-link"></i></span>
-                                    {{ form.youtube_link }}
-                                </div>
-                                <div class="form-text text-light opacity-75 mt-2">
-                                    <i class="fas fa-lightbulb text-warning"></i> Videoni YouTube-ga yuklang va ssilkasini shu yerga joylang. Bu serverni tez ishlashini ta'minlaydi.
-                                </div>
+                        <div class="youtube-neon-section">
+                            <label class="youtube-label mb-2">
+                                <i class="fab fa-youtube fa-lg"></i> YouTube Video Linki (Majburiy)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-danger border-0 text-white" style="border-radius: 10px 0 0 10px;"><i class="fas fa-link"></i></span>
+                                {{ form.youtube_link }}
                             </div>
+                            <p class="small text-muted mt-2 mb-0">
+                                <i class="fas fa-lightbulb text-warning me-1"></i> Videoni YouTube-ga yuklang va ssilkasini shu yerga joylang.
+                            </p>
                         </div>
 
-                        <div class="row">
+                        <div class="row mb-4">
                             <div class="col-md-6 mb-4">
-                                <label class="form-label text-light">Asosiy Muqova Rasm (Cover)</label>
+                                <label class="form-label text-muted small fw-bold">ASOSIY MUQOVA (COVER)</label>
                                 <div class="custom-file-upload">
                                     <div class="upload-icon"><i class="fas fa-image"></i></div>
-                                    <div class="text-muted small">Rasm tanlash uchun bosing</div>
+                                    <div class="text-white small fw-bold">Rasm tanlang</div>
                                     {{ form.image }}
                                 </div>
                             </div>
 
                             <div class="col-md-6 mb-4">
-                                <label class="form-label text-info">Qo'shimcha Skrinshotlar (Gallery)</label>
-                                <div class="custom-file-upload" style="border-color: #0dcaf0;">
+                                <label class="form-label text-info small fw-bold">QO'SHIMCHA SKRINSHOTLAR (GALLERY)</label>
+                                <div class="custom-file-upload" style="border-color: rgba(13, 202, 240, 0.3);">
                                     <div class="upload-icon text-info"><i class="fas fa-images"></i></div>
-                                    <div class="text-muted small">Ctrl bosib ko'p rasm tanlang</div>
-                                    {{ form.more_images }}
+                                    <div class="text-white small fw-bold">Ctrl bosib ko'p rasm tanlang</div>
+                                    <input type="file" name="more_images" id="id_more_images" multiple accept="image/*">
                                 </div>
+                                <div id="gallery-count" class="text-info small mt-2"></div>
                             </div>
                         </div>
 
-                        <div class="section-title mt-4"><i class="fas fa-code me-1"></i> Manba Kodi</div>
-
-                        <div class="mb-4">
-                            <label class="form-label text-light">Loyiha Fayli (Zip/Rar)</label>
-                            <div class="custom-file-upload border-success">
+                        <div class="section-header">Manba Kodi</div>
+                        <div class="mb-5">
+                            <div class="custom-file-upload" style="border-color: rgba(40, 167, 69, 0.3);">
                                 <div class="upload-icon text-success"><i class="fas fa-file-archive"></i></div>
-                                <div class="text-muted small">Arxiv faylni shu yerga yuklang</div>
+                                <div class="text-white small fw-bold">Arxiv faylni yuklang (Zip/Rar)</div>
                                 {{ form.source_code }}
                             </div>
-                            <div class="form-text text-muted">Maksimal hajm: 50MB. Faqat zip, rar, 7z formatlari.</div>
                         </div>
 
-                        <div class="d-grid gap-2 mt-5">
-                            <button type="submit" id="submit-btn" class="btn btn-primary btn-lg fw-bold py-3 shadow-primary">
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="submit-btn" class="btn btn-primary btn-lg fw-bold py-3" style="border-radius: 15px; background: linear-gradient(90deg, #4f46e5, #7c3aed); border: none; box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);">
                                 <i class="fas fa-cloud-upload-alt me-2"></i> LOYIHANI YUKLASH
                             </button>
                         </div>
                     </form>
 
                     <div id="progress-container" class="d-none mt-4">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>Yuklanmoqda...</span>
-                            <span id="progress-text">0%</span>
+                        <div class="progress" style="height: 10px; background-color: rgba(255,255,255,0.05); border-radius: 20px;">
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;"></div>
                         </div>
-                        <div class="progress" style="height: 25px; background-color: #1a1e21; border-radius: 12px;">
-                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-gradient-primary"
-                                 role="progressbar" style="width: 0%;"></div>
-                        </div>
-                        <p class="text-muted text-center small mt-2">Iltimos, sahifani yopmang! Rasmlar va kodlar serverga yuklanmoqda.</p>
+                        <p id="progress-text" class="text-center text-muted small mt-2">Yuklanmoqda: 0%</p>
                     </div>
 
                 </div>
@@ -182,85 +166,55 @@
 </div>
 
 <script>
-    const form = document.getElementById('upload-form');
-    const submitBtn = document.getElementById('submit-btn');
-    const progressContainer = document.getElementById('progress-container');
-    const progressBar = document.getElementById('progress-bar');
-    const progressText = document.getElementById('progress-text');
-    const errorAlert = document.getElementById('error-alert');
-    const errorMsg = document.getElementById('error-msg');
+    // Multiple fayllarni boshqarish
+    const galleryInput = document.getElementById('id_more_images');
+    const galleryCountText = document.getElementById('gallery-count');
 
-    // Inputlar o'zgarganda fayl nomini ko'rsatish (UX uchun)
-    document.querySelectorAll('input[type="file"]').forEach(input => {
-        input.addEventListener('change', function() {
-            const fileName = this.files[0]?.name || "Fayl tanlanmadi";
-            const label = this.parentElement.querySelector('.text-muted');
-            if(this.files.length > 1) {
-                label.innerText = this.files.length + " ta fayl tanlandi";
-                label.style.color = "#fff";
-            } else {
-                label.innerText = fileName;
-                label.style.color = "#fff";
-            }
-        });
+    galleryInput.addEventListener('change', function() {
+        if(this.files.length > 0) {
+            galleryCountText.innerText = `✅ ${this.files.length} ta rasm tanlandi`;
+            this.parentElement.querySelector('.text-white').innerText = "Rasmlar yangilandi";
+        }
     });
 
+    // Boshqa inputlar uchun vizual effekt
+    document.querySelectorAll('input[type="file"]').forEach(input => {
+        if(input.id !== 'id_more_images') {
+            input.addEventListener('change', function() {
+                const fileName = this.files[0]?.name || "Rasm tanlang";
+                this.parentElement.querySelector('.text-white').innerText = fileName;
+            });
+        }
+    });
+
+    // Form submission AJAX bilan (Progress bar uchun)
+    const form = document.getElementById('upload-form');
     form.addEventListener('submit', function(e) {
         e.preventDefault();
+        const submitBtn = document.getElementById('submit-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
 
-        const formData = new FormData(form);
+        const formData = new FormData(this);
         const xhr = new XMLHttpRequest();
 
-        // Progress
-        xhr.upload.addEventListener('progress', function(e) {
+        xhr.upload.addEventListener('progress', e => {
             if (e.lengthComputable) {
-                const percentComplete = (e.loaded / e.total) * 100;
-                const percentString = Math.round(percentComplete) + '%';
-                progressBar.style.width = percentString;
-                progressText.innerText = percentString;
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressContainer.classList.remove('d-none');
+                submitBtn.classList.add('d-none');
+                progressBar.style.width = percent + '%';
+                progressText.innerText = `Yuklanmoqda: ${percent}%`;
             }
         });
 
-        xhr.open('POST', window.location.href, true);
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        xhr.setRequestHeader('X-CSRFToken', csrfToken);
-
-        // UI Updates
-        submitBtn.classList.add('d-none');
-        progressContainer.classList.remove('d-none');
-        errorAlert.classList.add('d-none');
-
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                // Agar Django forma xatolarini HTML qilib qaytarsa (validatsiya xatosi)
-                if (xhr.responseURL.includes("create")) {
-                    // Xatolik bor, sahifani yangilaymiz (yoki HTMLni almashtiramiz)
-                    document.open();
-                    document.write(xhr.responseText);
-                    document.close();
-                } else {
-                    // Muvaffaqiyatli
-                    window.location.href = "/";
-                }
-            } else {
-                showError(`Server Xatosi: ${xhr.status} (${xhr.statusText})`);
-            }
+        xhr.open('POST', window.location.href);
+        xhr.onload = () => {
+            if (xhr.status === 200) window.location.href = "/";
+            else alert("Xatolik yuz berdi!");
         };
-
-        xhr.onerror = function() {
-            showError("Internet aloqasi yo'q yoki Server javob bermayapti.");
-        };
-
         xhr.send(formData);
     });
-
-    function showError(message) {
-        errorMsg.innerText = message;
-        errorAlert.classList.remove('d-none');
-
-        submitBtn.classList.remove('d-none');
-        progressContainer.classList.add('d-none');
-        progressBar.style.width = "0%";
-    }
 </script>
 {% endblock %}

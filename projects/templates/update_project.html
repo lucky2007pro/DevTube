@@ -1,18 +1,123 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card p-4 shadow-sm">
-            <h3 class="mb-4">Loyihani Tahrirlash</h3>
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary w-100">O'zgarishlarni saqlash</button>
-            </form>
+<style>
+    /* --- NEON GLASS CARD --- */
+    .neon-update-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+        margin-top: 30px;
+    }
+
+    /* --- FORM ELEMENTS --- */
+    .neon-field {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px;
+        color: #fff !important;
+        padding: 12px 15px;
+        transition: 0.3s;
+    }
+
+    .neon-field:focus {
+        border-color: #4f46e5 !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
+        outline: none;
+    }
+
+    /* --- LABELS & TITLES --- */
+    .form-label-custom {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .btn-neon-save {
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        border: none;
+        border-radius: 15px;
+        color: white;
+        font-weight: 700;
+        padding: 15px;
+        box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        transition: 0.3s;
+    }
+
+    .btn-neon-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(79, 70, 229, 0.5);
+        color: white;
+    }
+
+    .update-header {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 25px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+</style>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="neon-update-card">
+
+                <div class="update-header text-center">
+                    <h3 class="text-white fw-bold mb-1">
+                        <i class="fas fa-edit text-primary me-2"></i> Loyihani Tahrirlash
+                    </h3>
+                    <p class="text-muted small mb-0">"{{ project.title }}" loyihasiga o'zgartirishlar kiriting</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            {% for field in form %}
+                                <div class="col-12 mb-4">
+                                    <label class="form-label-custom">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <div class="form-text text-muted small mt-1">{{ field.help_text }}</div>
+                                    {% endif %}
+                                    {% for error in field.errors %}
+                                        <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-grid gap-3 mt-4">
+                            <button type="submit" class="btn btn-neon-save">
+                                <i class="fas fa-save me-2"></i> O'ZGARISHLARNI SAQLASH
+                            </button>
+                            <a href="{% url 'project_detail' project.pk %}" class="btn btn-link text-muted text-decoration-none small text-center">
+                                Bekor qilish va qaytish
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
 <script>
-    document.querySelectorAll('input, textarea, select').forEach(e => e.classList.add('form-control'));
+    // Dinamik ravishda barcha form elementlariga neon klassini qo'shish
+    document.querySelectorAll('input, textarea, select').forEach(e => {
+        if (e.type !== 'checkbox' && e.type !== 'file') {
+            e.classList.add('neon-field', 'w-100');
+        } else if (e.type === 'file') {
+            e.classList.add('form-control', 'bg-dark', 'text-white', 'border-secondary');
+        }
+    });
 </script>
 {% endblock %}
