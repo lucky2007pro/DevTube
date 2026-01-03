@@ -73,6 +73,13 @@
     }
     .btn-neon-signup:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5); }
 
+    /* Terms checkbox custom neon style */
+    .neon-checkbox-group {
+        display: flex; align-items: flex-start; gap: 10px; margin: 20px 0;
+        color: #94a3b8; font-size: 13px; cursor: pointer;
+    }
+    .neon-checkbox-group input { width: auto; margin-top: 3px; accent-color: #4f46e5; }
+
     .bottom-link { margin-top: 25px; font-size: 14px; color: #94a3b8; text-align: center; }
     .bottom-link a { color: #818cf8; text-decoration: none; font-weight: 600; }
 
@@ -102,7 +109,7 @@
 
         <div class="divider text-center">yoki email orqali</div>
 
-        <form method="POST">
+        <form method="POST" action="{% url 'account_signup' %}">
             {% csrf_token %}
 
             {% for field in form %}
@@ -118,13 +125,18 @@
                 </div>
             {% endfor %}
 
+            <label class="neon-checkbox-group">
+                <input type="checkbox" required name="terms">
+                <span>Men <a href="#" style="color: #818cf8;">Foydalanish shartlari</a> va maxfiylik siyosatiga roziman.</span>
+            </label>
+
             <button type="submit" class="btn-neon-signup">
                 AKKAUNT YARATISH
             </button>
         </form>
 
         <div class="bottom-link">
-            Akkauntingiz bormi? <a href="{% url 'login' %}">Kiring</a>
+            Akkauntingiz bormi? <a href="{% url 'account_login' %}">Kiring</a>
         </div>
     </div>
 </div>
@@ -132,7 +144,9 @@
 <script>
     // Barcha inputlarga neon-field klassini avtomatik qo'shish
     document.querySelectorAll('input, select, textarea').forEach(e => {
-        e.classList.add('neon-field');
+        if (e.type !== 'checkbox') {
+            e.classList.add('neon-field');
+        }
     });
 </script>
 {% endblock %}

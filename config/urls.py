@@ -28,7 +28,7 @@ urlpatterns = [
     # --- USER PROFILI VA AUTH ---
     path('profile/', views.profile, name='profile'),
     path('register/', views.register, name='register'),
-
+    path('signup/', views.register, name='signup'), # Yangi qo'shilgan qator
     # Login va Logout (O'zining standart views'lari ishlatildi)
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
