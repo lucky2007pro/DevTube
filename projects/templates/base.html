@@ -1,5 +1,5 @@
-{% load static %}
 <!DOCTYPE html>
+{% load static %}
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -8,50 +8,48 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
 
-    <nav class="navbar fixed-top d-flex align-items-center px-3">
-        <div class="d-flex align-items-center gap-3" style="min-width: 200px;">
-            <button class="btn btn-dark border-0" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+    <nav class="navbar fixed-top d-flex align-items-center px-2 px-md-3">
+        <div class="d-flex align-items-center gap-2 gap-md-3" style="min-width: fit-content;">
+            <button class="btn btn-dark border-0 p-1 p-md-2" id="sidebarToggle"><i class="fas fa-bars"></i></button>
             <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center gap-2 m-0">
-                <div class="logo-icon-neon" style="background: linear-gradient(135deg, #4f46e5, #9333ea); width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);">
-                    <i class="fas fa-play text-white" style="font-size: 14px;"></i>
+                <div class="logo-icon-neon" style="background: linear-gradient(135deg, #4f46e5, #9333ea); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);">
+                    <i class="fas fa-play text-white" style="font-size: 12px;"></i>
                 </div>
-                <span style="font-weight: 800; letter-spacing: -1px; color: #fff;">Dev<span style="color: #4f46e5;">Tube</span></span>
+                <span class="d-none d-sm-inline" style="font-weight: 800; letter-spacing: -1px; color: #fff;">Dev<span style="color: #4f46e5;">Tube</span></span>
             </a>
         </div>
 
-        <div class="search-container-wrapper d-none d-md-flex align-items-center justify-content-center flex-grow-1 px-4">
-            <form class="d-flex align-items-center w-100" style="max-width: 600px;" action="{% url 'home' %}" method="GET">
+        <div class="search-container-wrapper d-flex align-items-center justify-content-center flex-grow-1 px-2 px-md-4">
+            <form id="mainSearchForm" class="d-flex align-items-center w-100" style="max-width: 600px;" action="{% url 'home' %}" method="GET">
                 <div class="input-group search-box-neon">
-                    <input type="text" name="q" class="form-control border-secondary bg-dark text-white" style="border-radius: 40px 0 0 40px; padding-left: 20px;" placeholder="Loyiha qidirish..." aria-label="Search">
-                    <button class="btn btn-outline-secondary px-4" style="border-radius: 0 40px 40px 0; background: rgba(255,255,255,0.05);" type="submit">
-                        <i class="fas fa-search"></i>
+                    <input type="text" name="q" id="searchInput" class="form-control border-secondary bg-dark text-white" style="border-radius: 40px 0 0 40px; padding-left: 15px; height: 35px; font-size: 14px;" placeholder="Qidirish..." aria-label="Search">
+                    <button class="btn btn-outline-secondary px-2 px-md-3" style="border-radius: 0 40px 40px 0; background: rgba(255,255,255,0.05);" type="submit">
+                        <i class="fas fa-search" style="font-size: 13px;"></i>
                     </button>
                 </div>
-                <button type="button" class="btn btn-dark rounded-circle ms-2 voice-search-btn" onclick="startVoiceSearch()" style="width: 40px; height: 40px; background: #1e293b; border: none;">
-                    <i class="fas fa-microphone"></i>
+                <button type="button" class="btn btn-dark rounded-circle ms-1 ms-md-2 voice-search-btn" onclick="startVoiceSearch()" style="width: 35px; height: 35px; background: #1e293b; border: none; flex-shrink: 0;">
+                    <i class="fas fa-microphone" style="font-size: 13px;"></i>
                 </button>
             </form>
         </div>
 
-        <div class="d-flex align-items-center gap-3 justify-content-end" style="min-width: 200px;">
+        <div class="d-flex align-items-center gap-2 gap-md-3 justify-content-end" style="min-width: fit-content;">
             {% if user.is_authenticated %}
-                <a href="{% url 'create_project' %}" class="btn btn-primary btn-sm rounded-pill d-none d-lg-block">
-                    <i class="fas fa-plus"></i> Yuklash
+                <a href="{% url 'create_project' %}" class="btn btn-primary btn-sm rounded-pill d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; padding: 0;">
+                    <i class="fas fa-plus"></i> <span class="d-none d-md-inline ms-1">Yuklash</span>
                 </a>
 
                 <div class="dropdown">
                     <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
                         {% if user.profile.avatar %}
-                            <img src="{{ user.profile.avatar.url }}" class="rounded-circle border border-secondary" width="32" height="32" style="object-fit: cover;">
+                            <img src="{{ user.profile.avatar.url }}" class="rounded-circle border border-secondary" width="30" height="30" style="object-fit: cover;">
                         {% else %}
-                            <img src="https://ui-avatars.com/api/?name={{ user.username }}" class="rounded-circle" width="32" height="32">
+                            <img src="https://ui-avatars.com/api/?name={{ user.username }}" class="rounded-circle" width="30" height="30">
                         {% endif %}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end dark-dropdown" style="background: #1e293b; border: 1px solid #334155;">
@@ -67,73 +65,38 @@
                     </ul>
                 </div>
             {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">Kirish</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm rounded-pill px-2 px-md-3">Kirish</a>
             {% endif %}
         </div>
     </nav>
 
     <div class="sidebar" id="sidebar">
         <div class="nav flex-column">
-            <a href="{% url 'home' %}" class="nav-item active">
-                <i class="fas fa-home"></i> Bosh sahifa
-            </a>
-            <a href="{% url 'trending' %}" class="nav-item">
-                <i class="fas fa-fire"></i> Trenddagilar
-            </a>
-
+            <a href="{% url 'home' %}" class="nav-item active"><i class="fas fa-home"></i> Bosh sahifa</a>
+            <a href="{% url 'trending' %}" class="nav-item"><i class="fas fa-fire"></i> Trenddagilar</a>
             <hr class="sidebar-divider">
-
             <div class="sidebar-header">Tools</div>
-            <a href="/cpp/" class="nav-item">
-                <i class="fab fa-cuttlefish" style="color: #00599C;"></i> C++ Integratsiyasi
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-terminal"></i> Online Compiler
-            </a>
-
+            <a href="/cpp/" class="nav-item"><i class="fab fa-cuttlefish" style="color: #00599C;"></i> C++ Integratsiyasi</a>
+            <a href="#" class="nav-item"><i class="fas fa-terminal"></i> Online Compiler</a>
             <hr class="sidebar-divider">
-
             <div class="sidebar-header">Hamjamiyat</div>
-            <a href="#" class="nav-item">
-                <i class="fas fa-users"></i> Dasturchilar guruhi
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-bullhorn"></i> Yangiliklar
-            </a>
-
+            <a href="#" class="nav-item"><i class="fas fa-users"></i> Dasturchilar guruhi</a>
+            <a href="#" class="nav-item"><i class="fas fa-bullhorn"></i> Yangiliklar</a>
             <hr class="sidebar-divider">
-
             <div class="sidebar-header">Kutubxona</div>
             <a href="{% url 'liked_videos' %}" class="nav-item"><i class="fas fa-thumbs-up"></i> Yoqqanlar</a>
             <a href="{% url 'my_videos' %}" class="nav-item"><i class="fas fa-folder"></i> Loyihalarim</a>
         </div>
-
-        <div class="mt-auto p-3 text-muted small text-center border-top border-secondary border-opacity-25">
-            &copy; 2026 DevTube
-        </div>
+        <div class="mt-auto p-3 text-muted small text-center border-top border-secondary border-opacity-25">&copy; 2026 DevTube</div>
     </div>
 
     <div class="main-content" id="mainContent">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        {% block content %}
-        {% endblock %}
+        {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
+        {% block content %}{% endblock %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
-
     <script>
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
@@ -146,22 +109,23 @@
             });
         }
 
-        // --- OVOZLI QIDIRUV FUNKSIYASI ---
+        // --- OVOZLI QIDIRUV (TO'G'RILANDI) ---
         function startVoiceSearch() {
             if ('webkitSpeechRecognition' in window) {
                 const recognition = new webkitSpeechRecognition();
-                recognition.lang = 'uz-UZ'; // O'zbek tili uchun
-
+                recognition.lang = 'uz-UZ';
                 const voiceBtn = document.querySelector('.voice-search-btn');
-                voiceBtn.style.color = 'red';
+                const searchInput = document.getElementById('searchInput');
+                const searchForm = document.getElementById('mainSearchForm');
 
+                voiceBtn.style.color = 'red';
                 recognition.start();
 
                 recognition.onresult = function(event) {
                     const transcript = event.results[0][0].transcript;
-                    document.querySelector('.search-box-neon input').value = transcript;
+                    searchInput.value = transcript; // Matnni inputga yozish
                     voiceBtn.style.color = 'white';
-                    document.querySelector('form').submit();
+                    searchForm.submit(); // Formani yuborish
                 };
 
                 recognition.onerror = function() {
