@@ -1,0 +1,173 @@
+/* --- DEVTUBE: ZAMONAVIY TA'LIM STILI --- */
+
+:root {
+    /* ASOSIY RANG: Professional Ko'k-Binafsha */
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+
+    /* DARK MODE (Standart) */
+    --bg-color: #0f172a;       /* Asosiy fon */
+    --sidebar-bg: #0f172a;     /* Sidebar foni */
+    --card-bg: #1e293b;        /* Kartalar foni */
+    --border-color: #334155;   /* Chegaralar */
+    --text-color: #f1f5f9;     /* Asosiy matn */
+    --text-muted: #94a3b8;     /* Ikkilamchi matn */
+    --radius: 12px;            /* Burchaklar */
+    --navbar-height: 60px;
+    --sidebar-width: 240px;
+}
+
+/* LIGHT MODE (Yorug' rejim uchun) */
+body.light-mode {
+    --bg-color: #f8fafc;
+    --sidebar-bg: #ffffff;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --text-color: #0f172a;
+    --text-muted: #64748b;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* --- NAVBAR --- */
+.navbar {
+    background-color: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border-color);
+    height: var(--navbar-height);
+    z-index: 1000;
+}
+
+/* LOGO */
+.navbar-brand {
+    font-family: 'Consolas', 'Monaco', monospace; /* Kod shrifti */
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--text-color) !important;
+    letter-spacing: -1px;
+}
+.brand-highlight {
+    color: var(--primary-color);
+}
+
+/* QIDIRUV */
+.search-input {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-right: none;
+    border-radius: 20px 0 0 20px;
+}
+.search-input:focus {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-color: var(--primary-color);
+    box-shadow: none;
+}
+.search-btn {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    border-radius: 0 20px 20px 0;
+}
+.search-btn:hover {
+    background-color: var(--border-color);
+    color: var(--text-color);
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    position: fixed;
+    top: var(--navbar-height);
+    left: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+    padding: 15px;
+    transition: transform 0.3s ease;
+    z-index: 900;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: background 0.2s;
+    font-weight: 500;
+}
+
+.nav-item i {
+    width: 25px;
+    font-size: 18px;
+    color: var(--text-muted);
+}
+
+.nav-item:hover, .nav-item.active {
+    background-color: var(--card-bg);
+    color: var(--primary-color);
+}
+.nav-item.active i { color: var(--primary-color); }
+
+.sidebar-header {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin: 15px 0 5px 10px;
+}
+
+/* Sidebar yig'ilganda (Mobile/Collapsed) */
+.sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+/* --- MAIN CONTENT --- */
+.main-content {
+    margin-top: var(--navbar-height);
+    margin-left: var(--sidebar-width);
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+}
+
+/* Sidebar yopilganda content kengayishi */
+.main-content.expanded {
+    margin-left: 0;
+}
+
+/* --- COMPONENTLAR --- */
+.btn-primary {
+    background-color: var(--primary-color);
+    border: none;
+}
+
+.dropdown-menu.dark-dropdown {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+}
+.dropdown-menu.dark-dropdown .dropdown-item {
+    color: var(--text-color);
+}
+.dropdown-menu.dark-dropdown .dropdown-item:hover {
+    background-color: var(--border-color);
+}
+.dropdown-divider {
+    border-top-color: var(--border-color);
+}
+
+/* Mobil moslashuv */
+@media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .main-content { margin-left: 0; }
+    .sidebar.collapsed { transform: translateX(0); } /* Mobilda teskari ishlaydi */
+}
