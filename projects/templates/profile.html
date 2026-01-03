@@ -41,11 +41,34 @@
         font-size: 14px; color: #cbd5e1;
     }
 
-    .btn-edit-profile {
-        margin-top: 20px;
-        background: linear-gradient(90deg, var(--neon-primary), var(--neon-secondary));
-        border: none; color: white; padding: 10px 25px;
+    /* --- HAMMA TUGMALAR UCHUN NEON EFFEKT --- */
+    .btn-neon-action {
+        background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+        border: none; color: white !important; padding: 10px 25px;
         border-radius: 50px; font-weight: 700; transition: 0.3s;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-neon-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 25px rgba(99, 102, 241, 0.7);
+    }
+
+    /* --- IT USLUBIDAGI SYNC TUGMASI --- */
+    .btn-sync-outline {
+        background: transparent;
+        border: 2px solid var(--neon-primary);
+        color: var(--neon-primary) !important;
+        padding: 9px 25px;
+        border-radius: 50px;
+        font-weight: 700;
+        transition: 0.4s;
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+    }
+    .btn-sync-outline:hover, .btn-sync-outline.active {
+        background: var(--neon-primary);
+        color: white !important;
+        box-shadow: 0 0 20px var(--neon-primary);
     }
 
     /* --- PROJECT CARDS --- */
@@ -88,16 +111,22 @@
 
         <div class="profile-stats">
             <div class="stat-item"><b>{{ projects.count }}</b> Loyihalar</div>
-            <div class="stat-item"><b>{{ user.date_joined|date:"Y" }}</b>-yildan beri</div>
+            <div class="stat-item"><b>1.4k</b> Sinxronlar</div> <div class="stat-item"><b>{{ user.date_joined|date:"Y" }}</b>-yildan beri</div>
         </div>
 
         <p class="mt-3 text-secondary small" style="max-width: 500px;">
             {{ user.profile.bio|default:"Ushbu foydalanuvchi hali o'zi haqida ma'lumot kiritmagan." }}
         </p>
 
-        <button class="btn-edit-profile" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-            <i class="fas fa-user-edit me-2"></i> Profilni tahrirlash
-        </button>
+        <div class="d-flex gap-3 mt-4">
+            <button class="btn-neon-action" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="fas fa-user-edit"></i> Profilni tahrirlash
+            </button>
+
+            <button class="btn-sync-outline" id="syncBtn" onclick="handleSync()">
+                <i class="fas fa-sync-alt me-2"></i> <span id="syncLabel">Sync</span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -154,7 +183,7 @@
                         </div>
                     </div>
                     <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-primary fw-bold py-2 rounded-pill" style="background: linear-gradient(90deg, var(--neon-primary), var(--neon-secondary)); border: none;">
+                        <button type="submit" class="btn-neon-action w-100 justify-content-center">
                             O'zgarishlarni saqlash
                         </button>
                     </div>
@@ -166,7 +195,6 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Modal inputlarini neon qilish
         const profileInputs = document.querySelectorAll('#editProfileModal input, #editProfileModal textarea');
         profileInputs.forEach(input => {
             if(input.type !== 'file') {
@@ -174,7 +202,6 @@
             }
         });
 
-        // Fayl tanlash
         const avatarInput = document.querySelector('.profile-file-zone input');
         if (avatarInput) {
             avatarInput.addEventListener('change', function() {
@@ -183,5 +210,23 @@
             });
         }
     });
+
+    // Sync tugmasi uchun IT uslubidagi logika
+    function handleSync() {
+        const btn = document.getElementById('syncBtn');
+        const label = document.getElementById('syncLabel');
+        const icon = btn.querySelector('i');
+
+        if (btn.classList.contains('active')) {
+            btn.classList.remove('active');
+            label.innerText = 'Sync';
+            icon.classList.remove('fa-spin');
+        } else {
+            btn.classList.add('active');
+            icon.classList.add('fa-spin'); // Sinxronizatsiya animatsiyasi
+            label.innerText = 'Synced';
+            setTimeout(() => icon.classList.remove('fa-spin'), 800);
+        }
+    }
 </script>
 {% endblock %}
