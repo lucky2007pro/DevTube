@@ -5,103 +5,57 @@
 <style>
     /* --- ASOSIY LAYOUT --- */
     .project-container {
-        max-width: 1200px;
-        margin: 30px auto;
-        display: grid;
-        grid-template-columns: 2fr 1fr; /* Chap tomon kengroq */
-        gap: 30px;
-        padding: 0 15px;
+        max-width: 1200px; margin: 30px auto;
+        display: grid; grid-template-columns: 2fr 1fr; gap: 30px; padding: 0 15px;
     }
-
     @media (max-width: 992px) {
         .project-container { grid-template-columns: 1fr; }
         .info-panel { position: static !important; }
     }
 
-    /* --- KARTALAR VA PREVIEW --- */
+    /* --- KARTALAR --- */
     .preview-card {
-        background-color: #1e1e1e;
-        border: 1px solid #333;
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 25px;
+        background-color: #1e1e1e; border: 1px solid #333;
+        border-radius: 12px; overflow: hidden; margin-bottom: 25px;
     }
-
     .preview-header {
-        padding: 12px 20px;
-        background-color: #252526;
-        border-bottom: 1px solid #333;
-        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 20px; background-color: #252526;
+        border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;
     }
     .preview-title { font-weight: 600; color: #e1e1e1; font-size: 15px; }
 
-    /* Rasm (Output) */
+    /* Visual Preview */
     .visual-preview {
-        width: 100%;
-        height: 450px; /* Biroz kattalashtirdik */
-        background-color: #1e1e1e; /* Default qora fon */
-        display: flex; align-items: center; justify-content: center;
-        position: relative;
+        width: 100%; height: 450px; background-color: #1e1e1e;
+        display: flex; align-items: center; justify-content: center; position: relative;
     }
-    .visual-preview img {
-        width: 100%; height: 100%; object-fit: contain;
-    }
+    .visual-preview img { width: 100%; height: 100%; object-fit: contain; }
+    .live-iframe { width: 100%; height: 100%; background-color: #ffffff; border: none; display: block; }
 
-    /* --- JONLI NATIJA (IFRAME) STILI --- */
-    .live-iframe {
-        width: 100%;
-        height: 100%;
-        background-color: #ffffff; /* HTML odatda oq fonda ko'rinishi kerak */
-        border: none;
-        display: block;
-    }
-
-    /* Kod Qutisi (Security) */
-    .code-lock-wrapper {
-        position: relative;
-        background-color: #1e1e1e;
-        border-top: 1px solid #333;
-    }
+    /* --- KOD QUTISI & SECURITY --- */
+    .code-lock-wrapper { position: relative; background-color: #1e1e1e; border-top: 1px solid #333; }
     .code-content {
-        font-family: 'Consolas', 'Fira Code', monospace;
-        font-size: 14px; color: #d4d4d4;
-        padding: 20px; margin: 0;
-        overflow: hidden;
-        opacity: 0.7;
-        line-height: 1.5;
-        white-space: pre-wrap;
+        font-family: 'Consolas', 'Fira Code', monospace; font-size: 14px;
+        color: #d4d4d4; padding: 20px; margin: 0; overflow: hidden;
+        opacity: 0.7; line-height: 1.5; white-space: pre-wrap;
     }
-
-    /* Blur & Lock Overlay */
     .code-overlay {
         position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
         background: linear-gradient(to bottom, rgba(30,30,30,0) 0%, rgba(30,30,30,0.95) 50%, #1e1e1e 100%);
         display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-        padding-bottom: 40px;
-        z-index: 10;
+        padding-bottom: 40px; z-index: 10;
     }
     .lock-message { text-align: center; color: #fff; }
     .lock-icon { font-size: 32px; color: #f59e0b; margin-bottom: 10px; }
 
-    /* --- SIDEBAR (O'ng tomon) --- */
-    .info-panel {
-        position: sticky; top: 80px;
-    }
-
+    /* --- SIDEBAR --- */
+    .info-panel { position: sticky; top: 80px; }
     .price-card {
-        background-color: #252526;
-        padding: 25px;
-        border-radius: 12px;
-        border: 1px solid #333;
-        text-align: center;
-        margin-bottom: 20px;
+        background-color: #252526; padding: 25px; border-radius: 12px;
+        border: 1px solid #333; text-align: center; margin-bottom: 20px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
-
-    .price-tag {
-        font-size: 36px; font-weight: 800; color: #fff;
-        display: block; margin-bottom: 20px;
-    }
+    .price-tag { font-size: 36px; font-weight: 800; color: #fff; display: block; margin-bottom: 20px; }
 
     /* Tugmalar */
     .btn-action {
@@ -110,27 +64,20 @@
         transition: 0.2s; text-decoration: none; display: flex;
         align-items: center; justify-content: center; gap: 8px;
     }
-
     .btn-buy { background-color: #2ecc71; color: #fff; }
     .btn-buy:hover { background-color: #27ae60; transform: translateY(-2px); color: #fff; }
-
     .btn-download { background-color: #3498db; color: #fff; }
     .btn-download:hover { background-color: #2980b9; color: #fff; }
-
-    .btn-video {
-        background-color: #e74c3c; color: white; margin-top: 15px;
-    }
+    .btn-video { background-color: #e74c3c; color: white; margin-top: 15px; }
     .btn-video:hover { background-color: #c0392b; color: white; }
 
-    /* Author Card */
     .author-card {
-        background-color: #1e1e1e; padding: 15px;
-        border-radius: 12px; border: 1px solid #333;
-        display: flex; align-items: center; gap: 15px;
+        background-color: #1e1e1e; padding: 15px; border-radius: 12px;
+        border: 1px solid #333; display: flex; align-items: center; gap: 15px;
     }
     .author-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
 
-    /* --- COMMENTS & GALLERY --- */
+    /* Gallery & Comments */
     .gallery-grid {
         display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 15px;
     }
@@ -140,12 +87,10 @@
     }
     .gallery-thumb:hover { transform: scale(1.05); border-color: #fff; }
 
-    /* --- MODAL (Video) --- */
     .modal-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.9); z-index: 9999;
-        justify-content: center; align-items: center;
-        backdrop-filter: blur(5px);
+        justify-content: center; align-items: center; backdrop-filter: blur(5px);
     }
     .modal-content-box {
         width: 90%; max-width: 900px; background: #000;
@@ -154,13 +99,11 @@
     }
     .close-modal {
         position: absolute; top: 10px; right: 20px; color: #fff;
-        font-size: 40px; cursor: pointer; z-index: 100;
-        text-shadow: 0 0 10px #000;
+        font-size: 40px; cursor: pointer; z-index: 100; text-shadow: 0 0 10px #000;
     }
 </style>
 
 <div class="project-container">
-
     <div class="main-column">
 
         <div class="preview-card">
@@ -203,13 +146,20 @@
         <div class="preview-card">
             <div class="preview-header">
                 <span class="preview-title"><i class="fas fa-code me-2"></i> Manba Kodi (Preview)</span>
-                <span class="badge bg-primary">
-                    {% if project.source_code %}{{ project.source_code.name|slice:"14:" }}{% else %}Source Code{% endif %}
-                </span>
+
+                <div class="d-flex gap-2 align-items-center">
+                    <button class="btn btn-sm btn-dark border-secondary d-flex align-items-center gap-2" onclick="copyCode()" id="copyBtn" style="font-size: 12px;">
+                        <i class="fas fa-copy"></i> Nusxalash
+                    </button>
+
+                    <span class="badge bg-primary">
+                        {% if project.source_code %}{{ project.source_code.name|slice:"14:" }}{% else %}Source Code{% endif %}
+                    </span>
+                </div>
             </div>
 
             <div class="code-lock-wrapper">
-                <pre class="code-content"><code>{{ code_preview }}</code></pre>
+                <pre class="code-content" style="padding: 0; margin: 0;"><code id="sourceCode" class="language-html" style="text-shadow: none;">{{ code_preview }}</code></pre>
 
                 <div class="code-overlay">
                     <div class="lock-message">
@@ -226,17 +176,14 @@
 
         <div class="mb-5">
             <h2 style="color: #fff; margin-bottom: 15px;">{{ project.title }}</h2>
-
             <div class="d-flex gap-4 text-muted mb-4 small">
                 <span><i class="fas fa-eye me-1"></i> {{ project.views }} ko'rish</span>
                 <span><i class="fas fa-calendar me-1"></i> {{ project.created_at|date:"d M, Y" }}</span>
                 <span><i class="fas fa-comment me-1"></i> {{ project.comments.count }} izoh</span>
             </div>
-
             <div class="text-light" style="line-height: 1.6; opacity: 0.9;">
                 {{ project.description|linebreaksbr }}
             </div>
-
             {% if project.images.all %}
                 <h5 class="mt-4 text-white">Qo'shimcha Skrinshotlar</h5>
                 <div class="gallery-grid">
@@ -252,7 +199,6 @@
         <hr style="border-color: #444;">
         <div class="mt-4">
             <h4 class="text-white mb-4">Izohlar (<span id="comment-count-txt">{{ project.comments.count }}</span>)</h4>
-
             {% if user.is_authenticated %}
                 <div class="d-flex gap-3 mb-5">
                     {% if user.profile.avatar %}
@@ -260,7 +206,6 @@
                     {% else %}
                         <img src="https://ui-avatars.com/api/?name={{ user.username }}" class="author-avatar" style="width: 40px; height: 40px;">
                     {% endif %}
-
                     <form id="comment-form" method="post" class="w-100">
                         {% csrf_token %}
                         <input type="text" id="comment-body" name="body" class="form-control bg-dark text-white border-secondary" placeholder="Fikringizni yozib qoldiring..." required autocomplete="off">
@@ -294,15 +239,12 @@
                 {% endfor %}
             </div>
         </div>
-
     </div>
 
     <div class="right-column">
         <div class="info-panel" id="buy-section">
-
             <div class="price-card">
                 <span class="text-muted small text-uppercase fw-bold">Loyiha Narxi</span>
-
                 {% if project.price > 0 %}
                     <span class="price-tag">${{ project.price }}</span>
                 {% else %}
@@ -343,7 +285,6 @@
                     <div class="text-muted small">Loyiha Muallifi</div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
@@ -363,7 +304,6 @@
 <script>
     // --- VIDEO MODAL JS ---
     const youtubeId = "{{ project.get_youtube_id }}";
-
     function openVideoModal() {
         if(youtubeId) {
             document.getElementById('youtubeIframe').src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
@@ -372,7 +312,6 @@
             alert("Bu loyihada video mavjud emas.");
         }
     }
-
     function closeVideoModal(e) {
         if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-modal')) {
             document.getElementById('videoModal').style.display = "none";
@@ -380,52 +319,62 @@
         }
     }
 
-    // --- LIKE AJAX JS ---
-    const likeBtn = document.getElementById('like-btn');
-    const likeIcon = document.getElementById('like-icon');
-    const likeCount = document.getElementById('like-count');
+    // --- COPY CODE FUNCTION (YANGI QO'SHILDI) ---
+    function copyCode() {
+        const codeText = document.getElementById('sourceCode').innerText;
+        navigator.clipboard.writeText(codeText).then(() => {
+            const btn = document.getElementById('copyBtn');
+            const originalHTML = btn.innerHTML;
 
+            // Tugmani o'zgartirish
+            btn.innerHTML = '<i class="fas fa-check text-success"></i> Nusxalandi!';
+            btn.classList.add('border-success');
+
+            // 2 soniyadan keyin qaytarish
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-copy"></i> Nusxalash';
+                btn.classList.remove('border-success');
+            }, 2000);
+        }).catch(err => {
+            alert("Nusxalashda xatolik bo'ldi!");
+        });
+    }
+
+    // --- LIKE AJAX ---
+    const likeBtn = document.getElementById('like-btn');
     if (likeBtn) {
+        const likeIcon = document.getElementById('like-icon');
+        const likeCount = document.getElementById('like-count');
         likeBtn.addEventListener('click', function(e) {
             e.preventDefault();
             const url = this.getAttribute('data-url');
             fetch(url, {
                 method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
             })
             .then(res => res.json())
             .then(data => {
                 likeCount.innerText = data.total_likes;
                 if (data.is_liked) {
-                    likeIcon.classList.remove('far');
-                    likeIcon.classList.add('fas', 'text-danger');
+                    likeIcon.classList.remove('far'); likeIcon.classList.add('fas', 'text-danger');
                 } else {
-                    likeIcon.classList.remove('fas', 'text-danger');
-                    likeIcon.classList.add('far');
+                    likeIcon.classList.remove('fas', 'text-danger'); likeIcon.classList.add('far');
                 }
-            })
-            .catch(err => console.error("Like xatosi:", err));
+            });
         });
     }
 
-    // --- COMMENT AJAX JS ---
+    // --- COMMENT AJAX ---
     const commentForm = document.getElementById('comment-form');
-    const commentList = document.getElementById('comment-list');
-    const commentCountTxt = document.getElementById('comment-count-txt');
-
     if (commentForm) {
+        const commentList = document.getElementById('comment-list');
+        const commentCountTxt = document.getElementById('comment-count-txt');
         commentForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const bodyInput = document.getElementById('comment-body');
             const formData = new FormData(this);
-
             fetch(window.location.href, {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(res => res.json())
             .then(data => {
@@ -440,14 +389,11 @@
                             <p class="mb-0 text-light opacity-75" style="font-size: 14px;">${data.body}</p>
                         </div>
                     </div>`;
-
                 commentList.insertAdjacentHTML('afterbegin', html);
                 bodyInput.value = '';
-
                 let currentCount = parseInt(commentCountTxt.innerText);
                 commentCountTxt.innerText = currentCount + 1;
-            })
-            .catch(err => console.error("Comment xatosi:", err));
+            });
         });
     }
 </script>
