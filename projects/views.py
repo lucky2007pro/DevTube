@@ -1,12 +1,13 @@
-import subprocess
 import os
+import subprocess
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
-# ProjectImage ni import qilish esdan chiqmasin!
+
+# Modellar va Formalar
 from .models import Project, Comment, ProjectImage
 from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 
@@ -25,9 +26,12 @@ def home_page(request):
     if category:
         projects = projects.filter(category=category)
 
+    # Views bo'yicha saralash (eng ko'p ko'rilganlar tepada)
+    projects = projects.order_by('-views')
+
     categories = Project.CATEGORY_CHOICES
     context = {'projects': projects, 'categories': categories}
-    return render(request, 'home.html', context)
+    return render(request, 'projects/home.html', context)  # home.html joylashuvini tekshiring
 
 
 # 2. LOYIHA YUKLASH
@@ -41,6 +45,7 @@ def create_project(request):
             project.author = request.user
             project.save()
 
+            # Ko'proq rasmlarni saqlash
             images = request.FILES.getlist('more_images')
             for img in images:
                 ProjectImage.objects.create(project=project, image=img)
@@ -51,12 +56,15 @@ def create_project(request):
     return render(request, 'create_project.html', {'form': form})
 
 
-# 3. LOYIHA TAFSILOTLARI
+# 3. LOYIHA TAFSILOTLARI (YANGILANGAN: XAVFSIZ KOD PREVIEW)
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
+
+    # Ko'rishlar sonini oshirish
     project.views += 1
     project.save()
 
+    # Izoh qoldirish
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
@@ -68,7 +76,7 @@ def project_detail(request, pk):
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({
                     'username': comment.user.username,
-                    'avatar_url': comment.user.profile.avatar.url,
+                    'avatar_url': comment.user.profile.avatar.url if comment.user.profile.avatar else '',
                     'body': comment.body,
                     'created_at': "hozirgina"
                 })
@@ -77,31 +85,57 @@ def project_detail(request, pk):
     else:
         comment_form = CommentForm()
 
+    # Sotib olganlikni tekshirish
     has_bought = False
-    code_content = None
-
-    if project.price == 0 or (request.user.is_authenticated and request.user == project.author):
+    if project.price == 0:
         has_bought = True
+    elif request.user.is_authenticated:
+        # Agar user muallif bo'lsa yoki sotib olganlar ro'yxatida bo'lsa
+        if request.user == project.author or request.user in project.buyers.all():
+            has_bought = True
 
-    if project.source_code and has_bought:
-        file_ext = os.path.splitext(project.source_code.name)[1].lower()
-        if file_ext in ['.zip', '.rar', '.7z', '.tar', '.gz']:
-            code_content = "Bu arxiv fayl. Uni pastdagi tugma orqali yuklab olishingiz mumkin."
-        else:
-            try:
-                code_content = "Faylni yuklab olib ko'rishingiz mumkin."
-            except Exception:
-                code_content = "Faylni o'qish imkonsiz."
-    elif project.source_code:
-        code_content = "# Kodni yuklab olish uchun loyihani sotib oling."
+    # --- KOD PREVIEW MANTIG'I ---
+    code_preview = "// Kod mavjud emas."
+
+    if project.source_code:
+        try:
+            # Fayl kengaytmasini olish
+            ext = os.path.splitext(project.source_code.name)[1].lower()
+            text_extensions = ['.html', '.css', '.js', '.py', '.php', '.txt', '.cpp', '.c', '.java', '.json']
+
+            if ext in text_extensions:
+                # Faylni o'qish uchun ochamiz
+                project.source_code.open('r')
+                lines = []
+                # Faqat boshidagi 15 qatorni o'qiymiz
+                for _ in range(15):
+                    line = project.source_code.readline()
+                    if not line: break
+
+                    # Agar fayl bayt formatida bo'lsa (Cloudinary/S3), stringga o'giramiz
+                    if isinstance(line, bytes):
+                        lines.append(line.decode('utf-8', errors='ignore'))
+                    else:
+                        lines.append(line)
+
+                code_preview = "".join(lines)
+                project.source_code.close()
+
+            elif ext in ['.zip', '.rar', '.7z', '.tar', '.gz']:
+                code_preview = "// Bu arxiv fayl (ZIP/RAR).\n// Kodni ko'rish uchun loyihani xarid qiling va yuklab oling."
+            else:
+                code_preview = "// Bu fayl formatini oldindan ko'rish imkonsiz."
+
+        except Exception as e:
+            code_preview = f"// Kodni o'qishda xatolik yuz berdi: {str(e)}"
 
     context = {
         'project': project,
         'form': comment_form,
-        'code_content': code_content,
+        'code_preview': code_preview,  # Shablonga shu nom bilan boradi
         'has_bought': has_bought,
     }
-    return render(request, 'project_detail.html', context)
+    return render(request, 'projects/project_detail.html', context)
 
 
 # 4. RO'YXATDAN O'TISH
@@ -197,20 +231,27 @@ def like_project(request, pk):
     return JsonResponse({'error': 'POST required'}, status=400)
 
 
-# 9. SOTIB OLISH (MOCK)
+# 9. SOTIB OLISH
 @login_required
 def buy_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
-    project.buyers.add(request.user)
-    messages.success(request, f"{project.title} loyihasi sotib olindi!")
+    # Agar user allaqachon sotib olgan bo'lsa yoki muallif bo'lsa
+    if request.user in project.buyers.all() or request.user == project.author:
+        messages.info(request, "Siz bu loyihani allaqachon sotib olgansiz.")
+    else:
+        # Sotib oluvchilarga qo'shish
+        project.buyers.add(request.user)
+        messages.success(request, f"{project.title} loyihasi muvaffaqiyatli sotib olindi!")
+
     return redirect('project_detail', pk=pk)
 
 
 # 10. TRENDING
 def trending(request):
+    # Eng ko'p ko'rilgan loyihalar
     projects = Project.objects.all().order_by('-views')
     categories = Project.CATEGORY_CHOICES
-    return render(request, 'home.html', {'projects': projects, 'categories': categories})
+    return render(request, 'projects/home.html', {'projects': projects, 'categories': categories})
 
 
 # 11. YOQQAN LOYIHALAR
@@ -218,7 +259,7 @@ def trending(request):
 def liked_videos(request):
     projects = Project.objects.filter(likes=request.user)
     categories = Project.CATEGORY_CHOICES
-    return render(request, 'home.html', {'projects': projects, 'categories': categories})
+    return render(request, 'projects/home.html', {'projects': projects, 'categories': categories})
 
 
 # 12. MENING LOYIHALARIM
@@ -226,10 +267,10 @@ def liked_videos(request):
 def my_videos(request):
     projects = Project.objects.filter(author=request.user)
     categories = Project.CATEGORY_CHOICES
-    return render(request, 'home.html', {'projects': projects, 'categories': categories})
+    return render(request, 'projects/home.html', {'projects': projects, 'categories': categories})
 
 
-# 13. C++ INTEGRATSIYASI (YANGILANDI: AJAX va Dinamik Kompilyatsiya)
+# 13. C++ INTEGRATSIYASI
 def cpp_test(request):
     result = ""
     code = ""
@@ -239,50 +280,52 @@ def cpp_test(request):
         code = request.POST.get('code', '')
         input_data = request.POST.get('input', '')
 
-        # Fayl yo'lini aniqlash (Project root papkasida main.cpp va main.exe yaratiladi)
+        # Fayl yo'llarini aniqlash
         file_path = os.path.join(settings.BASE_DIR, 'main.cpp')
 
-        # Windows yoki Linux uchun output fayl nomi
-        if os.name == 'nt':
+        # OS ga qarab exe nomini tanlash
+        if os.name == 'nt':  # Windows
             output_exe = os.path.join(settings.BASE_DIR, 'main.exe')
-            run_cmd = [output_exe]
-        else:
+        else:  # Linux/Mac
             output_exe = os.path.join(settings.BASE_DIR, 'main')
-            run_cmd = [output_exe]
 
         # 1. C++ faylni yozish
         with open(file_path, 'w') as f:
             f.write(code)
 
-        # 2. Kompilyatsiya qilish (g++)
-        # Diqqat: Serverda (Render/Heroku/Local) g++ o'rnatilgan bo'lishi shart!
-        compile_process = subprocess.run(['g++', file_path, '-o', output_exe], capture_output=True, text=True)
+        # 2. Kompilyatsiya (g++)
+        try:
+            compile_process = subprocess.run(
+                ['g++', file_path, '-o', output_exe],
+                capture_output=True,
+                text=True
+            )
 
-        if compile_process.returncode == 0:
-            # 3. Ishga tushirish (Input berish bilan)
-            try:
-                # Linuxda ruxsat berish (agar kerak bo'lsa)
+            if compile_process.returncode == 0:
+                # 3. Ishga tushirish
                 if os.name != 'nt':
                     subprocess.run(['chmod', '+x', output_exe])
 
                 run_process = subprocess.run(
-                    run_cmd,
+                    [output_exe],
                     input=input_data,
                     capture_output=True,
                     text=True,
-                    timeout=5  # 5 soniyadan oshsa to'xtatadi (Infinite loop himoyasi)
+                    timeout=5  # Cheksiz tsikldan himoya
                 )
                 result = run_process.stdout
                 if run_process.stderr:
                     result += "\nXatoliklar:\n" + run_process.stderr
-            except subprocess.TimeoutExpired:
-                result = "Xatolik: Dastur ishlash vaqti tugadi (Cheksiz tsikl?)"
-            except Exception as e:
-                result = f"Xatolik: {e}"
-        else:
-            result = "Kompilyatsiya xatosi:\n" + compile_process.stderr
+            else:
+                result = "Kompilyatsiya xatosi:\n" + compile_process.stderr
 
-        # AJAX so'rovlar uchun JSON qaytaramiz (Sahifa yangilanmasligi uchun)
+        except FileNotFoundError:
+            result = "Serverda G++ kompilyatori o'rnatilmagan."
+        except subprocess.TimeoutExpired:
+            result = "Dastur ishlash vaqti tugadi (Infinite Loop)."
+        except Exception as e:
+            result = f"Tizim xatoligi: {str(e)}"
+
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'result': result})
 
