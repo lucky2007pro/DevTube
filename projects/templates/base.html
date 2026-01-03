@@ -50,20 +50,49 @@
                     </ul>
                 </div>
             {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm rounded-pill">Kirish</a>            {% endif %}
+                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm rounded-pill">Kirish</a>
+            {% endif %}
         </div>
     </nav>
 
     <div class="sidebar" id="sidebar">
         <div class="nav flex-column">
-            <a href="{% url 'home' %}" class="nav-item active"><i class="fas fa-home"></i> Bosh sahifa</a>
-            <a href="{% url 'trending' %}" class="nav-item"><i class="fas fa-fire"></i> Trenddagilar</a>
+            <a href="{% url 'home' %}" class="nav-item active">
+                <i class="fas fa-home"></i> Bosh sahifa
+            </a>
+            <a href="{% url 'trending' %}" class="nav-item">
+                <i class="fas fa-fire"></i> Trenddagilar
+            </a>
+
+            <hr class="sidebar-divider">
+
+            <div class="sidebar-header">Tools</div>
+            <a href="/cpp/" class="nav-item">
+                <i class="fab fa-cuttlefish" style="color: #00599C;"></i> C++ Integratsiyasi
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-terminal"></i> Online Compiler
+            </a>
+
+            <hr class="sidebar-divider">
+
+            <div class="sidebar-header">Hamjamiyat</div>
+            <a href="#" class="nav-item">
+                <i class="fas fa-users"></i> Dasturchilar guruhi
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-bullhorn"></i> Yangiliklar
+            </a>
+
+            <hr class="sidebar-divider">
+
             <div class="sidebar-header">Kutubxona</div>
             <a href="{% url 'liked_videos' %}" class="nav-item"><i class="fas fa-thumbs-up"></i> Yoqqanlar</a>
             <a href="{% url 'my_videos' %}" class="nav-item"><i class="fas fa-folder"></i> Loyihalarim</a>
         </div>
-        <div class="mt-auto p-3 text-muted small text-center">
-            &copy; 2024 DevTube
+
+        <div class="mt-auto p-3 text-muted small text-center border-top border-secondary border-opacity-25">
+            &copy; 2026 DevTube
         </div>
     </div>
 
@@ -82,7 +111,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
