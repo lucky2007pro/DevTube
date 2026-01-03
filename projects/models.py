@@ -5,10 +5,12 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+# --- MUHIM: ZIP fayllar uchun maxsus saqlash turi ---
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
+
 # --- 1. PROFILE (Foydalanuvchi ma'lumotlari + HAMYON) ---
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    # CloudinaryField o'rniga ImageField. Fayllar 'media/avatars/' papkasiga tushadi.
     avatar = models.ImageField(upload_to='avatars/', default='default.jpg')
     bio = models.TextField(blank=True)
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=100.00)
@@ -23,14 +25,19 @@ class Project(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
 
-    # Asosiy rasm (Thumbnail) uchun ImageField
+    # Asosiy rasm (Thumbnail) - Bu oddiy rasm
     image = models.ImageField(upload_to='project_thumbnails/')
 
     # YouTube link
     youtube_link = models.URLField(max_length=200, help_text="YouTube video ssilkasini qo'ying (Majburiy)")
 
-    # Source code (Zip fayl). Serverning 'media/project_code/' papkasiga yuklanadi.
-    source_code = models.FileField(upload_to='project_code/', blank=True, null=True)
+    # --- O'ZGARISH SHU YERDA (ZIP FAYL UCHUN) ---
+    source_code = models.FileField(
+        upload_to='project_code/',
+        blank=True,
+        null=True,
+        storage=RawMediaCloudinaryStorage()  # <--- ZIP fayl xatosini shu tuzatadi
+    )
 
     CATEGORY_CHOICES = [
         ('web', 'Web Dasturlash'),
@@ -67,7 +74,6 @@ class Project(models.Model):
 # --- 3. QO'SHIMCHA RASMLAR ---
 class ProjectImage(models.Model):
     project = models.ForeignKey(Project, related_name='images', on_delete=models.CASCADE)
-    # Skrinshotlar uchun ImageField
     image = models.ImageField(upload_to='project_screenshots/')
 
     def __str__(self):
