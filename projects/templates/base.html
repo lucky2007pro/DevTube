@@ -1,5 +1,5 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -38,6 +38,7 @@
             align-items: center;
         }
 
+        /* --- MENU TOGGLE NEON --- */
         #sidebarToggle {
             width: 42px; height: 42px;
             display: flex; align-items: center; justify-content: center;
@@ -45,23 +46,78 @@
             border: 1px solid var(--glass-border); color: #fff;
             transition: 0.3s;
         }
-        #sidebarToggle:hover { background: var(--neon-primary); box-shadow: var(--neon-glow); }
+        #sidebarToggle:hover {
+            background: var(--neon-primary);
+            box-shadow: 0 0 15px var(--neon-primary);
+            border-color: var(--neon-primary);
+        }
 
-        /* --- SIDEBAR STRUKTURASI --- */
+        /* --- SEARCH & VOICE NEON --- */
+        .search-box-neon {
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: 50px !important;
+            transition: all 0.4s;
+        }
+        .search-box-neon:focus-within {
+            border-color: var(--neon-primary) !important;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .voice-search-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border) !important;
+            color: #fff;
+            width: 42px; height: 42px;
+            transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .voice-search-btn:hover {
+            background: #ef4444 !important;
+            box-shadow: 0 0 15px #ef4444;
+            border-color: #ef4444 !important;
+            color: white !important;
+        }
+
+        /* --- AVATAR NEON --- */
+        .user-avatar-neon {
+            border: 2px solid transparent;
+            border-radius: 50%;
+            transition: 0.3s;
+            padding: 2px;
+            object-fit: cover;
+        }
+        .user-avatar-neon:hover {
+            border-color: var(--neon-primary);
+            box-shadow: 0 0 15px var(--neon-primary);
+        }
+
+        /* --- YUKLASH TUGMASI --- */
+        .btn-upload-neon {
+            background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+            border: none; color: white !important; font-weight: 700;
+            padding: 8px 22px; border-radius: 50px;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+            transition: 0.3s;
+            display: flex; align-items: center; gap: 8px; text-decoration: none;
+        }
+        .btn-upload-neon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.7);
+        }
+
+        /* --- SIDEBAR --- */
         .sidebar {
             background: var(--glass-bg);
             border-right: 1px solid var(--glass-border);
             backdrop-filter: blur(10px);
             width: 260px;
             position: fixed;
-            top: 75px; /* Navbar balandligiga mos masofa */
-            bottom: 0;
-            display: flex;
-            flex-direction: column;
+            top: 75px; bottom: 0;
+            display: flex; flex-direction: column;
             z-index: 1040;
             transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         .sidebar.collapsed { transform: translateX(-260px); }
 
         .nav-item {
@@ -95,7 +151,7 @@
 <body>
 
     <nav class="navbar fixed-top">
-        <div class="d-flex align-items-center gap-3" style="min-width: 200px;">
+        <div class="d-flex align-items-center gap-3" style="min-width: 250px;">
             <button id="sidebarToggle"><i class="fas fa-bars"></i></button>
             <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center gap-2 m-0">
                 <div style="background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: var(--neon-glow);">
@@ -111,23 +167,23 @@
                     <input type="text" name="q" id="searchInput" class="form-control text-white border-0 bg-transparent py-2 px-4" placeholder="Loyihalarni qidirish..." autocomplete="off">
                     <button class="btn border-0 text-muted px-3" type="submit"><i class="fas fa-search"></i></button>
                 </div>
-                <button type="button" class="btn voice-search-btn rounded-circle ms-3 d-flex align-items-center justify-content-center" onclick="startVoiceSearch()" id="voiceBtn" style="width: 42px; height: 42px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff;">
+                <button type="button" class="btn voice-search-btn rounded-circle ms-3" onclick="startVoiceSearch()" id="voiceBtn">
                     <i class="fas fa-microphone"></i>
                 </button>
             </form>
         </div>
 
-        <div class="d-flex align-items-center justify-content-end gap-3" style="min-width: 200px;">
+        <div class="d-flex align-items-center justify-content-end gap-3" style="min-width: 250px;">
             {% if user.is_authenticated %}
-                <a href="{% url 'create_project' %}" class="btn btn-upload-neon btn-sm rounded-pill px-4 py-2">
-                    <i class="fas fa-plus me-1"></i> <span class="d-none d-sm-inline">Yuklash</span>
+                <a href="{% url 'create_project' %}" class="btn-upload-neon">
+                    <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Yuklash</span>
                 </a>
                 <div class="dropdown">
-                    <a href="#" class="dropdown-toggle text-decoration-none" data-bs-toggle="dropdown">
-                        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="rounded-circle border border-primary border-opacity-25 shadow" width="38" height="38" style="object-fit: cover;">
+                    <a href="#" class="dropdown-toggle text-decoration-none d-flex align-items-center" data-bs-toggle="dropdown">
+                        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="user-avatar-neon shadow" width="38" height="38">
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end dark-dropdown mt-3 shadow-lg" style="background: #0f172a; border: 1px solid var(--glass-border);">
-                        <li><a class="dropdown-item py-2 text-light" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2"></i> Profil</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end mt-3 shadow-lg" style="background: #0f172a; border: 1px solid var(--glass-border);">
+                        <li><a class="dropdown-item py-2 text-light" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2 text-primary"></i> Profil</a></li>
                         <li><hr class="dropdown-divider opacity-10"></li>
                         <li>
                             <form method="post" action="{% url 'account_logout' %}">
@@ -137,7 +193,7 @@
                     </ul>
                 </div>
             {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold">KIRISH</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">KIRISH</a>
             {% endif %}
         </div>
     </nav>
@@ -188,14 +244,8 @@
             if ('webkitSpeechRecognition' in window) {
                 const recognition = new webkitSpeechRecognition();
                 recognition.lang = 'uz-UZ';
-                const voiceBtn = document.getElementById('voiceBtn');
-
-                recognition.onstart = () => { voiceBtn.style.color = '#ef4444'; voiceBtn.classList.add('pulse'); };
-                recognition.onend = () => { voiceBtn.style.color = '#fff'; voiceBtn.classList.remove('pulse'); };
-
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    document.getElementById('searchInput').value = transcript;
+                recognition.onresult = (e) => {
+                    document.getElementById('searchInput').value = e.results[0][0].transcript;
                     setTimeout(() => document.getElementById('mainSearchForm').submit(), 400);
                 };
                 recognition.start();
