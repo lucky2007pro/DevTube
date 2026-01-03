@@ -29,7 +29,7 @@
         background: var(--neon-primary); box-shadow: 0 0 10px var(--neon-primary);
     }
 
-    /* --- LOYIHA KARTALARI VA SYNC STATS --- */
+    /* --- LOYIHA KARTALARI VA IXCHAM STYLE --- */
     .project-card {
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid var(--glass-border);
@@ -42,20 +42,46 @@
         transform: translateY(-5px);
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
+
+    /* "FREE" BELGISI UCHUN YANGI STYLE */
+    .price-badge-neon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 10;
+    }
+    .price-badge-neon.free {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+    }
+    .price-badge-neon.premium {
+        background: rgba(99, 102, 241, 0.2);
+        color: #a5b4fc;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+
     .meta-data .stats {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 15px; /* Bo'shliq kengaytirildi */
         font-size: 12px;
         color: #64748b;
     }
-    /* Yangi Sync statistikasi stili */
     .sync-count {
         color: var(--neon-primary);
         font-weight: 600;
         display: flex;
         align-items: center;
         gap: 4px;
+        text-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
     }
 </style>
 
@@ -97,8 +123,9 @@
                                 <i class="fas fa-code fa-3x text-muted opacity-25"></i>
                             </div>
                         {% endif %}
-                        <div class="price-badge" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 700; border: 1px solid var(--glass-border);">
-                            {% if project.price > 0 %}${{ project.price }}{% else %}<span class="text-success">Free</span>{% endif %}
+
+                        <div class="price-badge-neon {% if project.price == 0 %}free{% else %}premium{% endif %}">
+                            {% if project.price > 0 %}${{ project.price }}{% else %}Free{% endif %}
                         </div>
                     </div>
 
@@ -110,10 +137,10 @@
                         <div class="info-text flex-grow-1">
                             <h3 class="project-title text-white fs-6 fw-bold mb-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ project.title }}</h3>
                             <div class="meta-data">
-                                <div class="author-name text-muted small">{{ project.author.username }}</div>
-                                <div class="stats mt-1">
-                                    <span><i class="fas fa-eye"></i> {{ project.views }}</span>
-                                    <span class="sync-count"><i class="fas fa-sync-alt"></i> 1.4k</span>
+                                <div class="author-name text-muted small">@{{ project.author.username }}</div>
+                                <div class="stats mt-2">
+                                    <span><i class="fas fa-eye me-1"></i> {{ project.views }}</span>
+                                    <span class="sync-count"><i class="fas fa-sync-alt me-1"></i> {{ project.author.profile.followers.count }}</span>
                                     <span>{{ project.created_at|timesince }} oldin</span>
                                 </div>
                             </div>
@@ -122,7 +149,8 @@
                 </div>
             </a>
         {% empty %}
-            {% endfor %}
+            <div class="col-12 text-center py-5 text-muted">Hali loyihalar yo'q.</div>
+        {% endfor %}
     </div>
 </div>
 
