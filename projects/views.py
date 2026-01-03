@@ -26,12 +26,13 @@ def home_page(request):
     if category:
         projects = projects.filter(category=category)
 
-    # Views bo'yicha saralash (eng ko'p ko'rilganlar tepada)
+    # Views bo'yicha saralash
     projects = projects.order_by('-views')
 
     categories = Project.CATEGORY_CHOICES
     context = {'projects': projects, 'categories': categories}
-    return render(request, 'projects/home.html', context)  # home.html joylashuvini tekshiring
+    # O'ZGARISH: 'projects/home.html' -> 'home.html'
+    return render(request, 'home.html', context)
 
 
 # 2. LOYIHA YUKLASH
@@ -45,7 +46,6 @@ def create_project(request):
             project.author = request.user
             project.save()
 
-            # Ko'proq rasmlarni saqlash
             images = request.FILES.getlist('more_images')
             for img in images:
                 ProjectImage.objects.create(project=project, image=img)
@@ -56,15 +56,13 @@ def create_project(request):
     return render(request, 'create_project.html', {'form': form})
 
 
-# 3. LOYIHA TAFSILOTLARI (YANGILANGAN: XAVFSIZ KOD PREVIEW)
+# 3. LOYIHA TAFSILOTLARI
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
 
-    # Ko'rishlar sonini oshirish
     project.views += 1
     project.save()
 
-    # Izoh qoldirish
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
@@ -85,34 +83,28 @@ def project_detail(request, pk):
     else:
         comment_form = CommentForm()
 
-    # Sotib olganlikni tekshirish
     has_bought = False
     if project.price == 0:
         has_bought = True
     elif request.user.is_authenticated:
-        # Agar user muallif bo'lsa yoki sotib olganlar ro'yxatida bo'lsa
         if request.user == project.author or request.user in project.buyers.all():
             has_bought = True
 
-    # --- KOD PREVIEW MANTIG'I ---
+    # KOD PREVIEW
     code_preview = "// Kod mavjud emas."
 
     if project.source_code:
         try:
-            # Fayl kengaytmasini olish
             ext = os.path.splitext(project.source_code.name)[1].lower()
             text_extensions = ['.html', '.css', '.js', '.py', '.php', '.txt', '.cpp', '.c', '.java', '.json']
 
             if ext in text_extensions:
-                # Faylni o'qish uchun ochamiz
                 project.source_code.open('r')
                 lines = []
-                # Faqat boshidagi 15 qatorni o'qiymiz
                 for _ in range(15):
                     line = project.source_code.readline()
                     if not line: break
 
-                    # Agar fayl bayt formatida bo'lsa (Cloudinary/S3), stringga o'giramiz
                     if isinstance(line, bytes):
                         lines.append(line.decode('utf-8', errors='ignore'))
                     else:
@@ -132,10 +124,11 @@ def project_detail(request, pk):
     context = {
         'project': project,
         'form': comment_form,
-        'code_preview': code_preview,  # Shablonga shu nom bilan boradi
+        'code_preview': code_preview,
         'has_bought': has_bought,
     }
-    return render(request, 'projects/project_detail.html', context)
+    # O'ZGARISH: 'projects/project_detail.html' -> 'project_detail.html'
+    return render(request, 'project_detail.html', context)
 
 
 # 4. RO'YXATDAN O'TISH
@@ -235,11 +228,9 @@ def like_project(request, pk):
 @login_required
 def buy_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
-    # Agar user allaqachon sotib olgan bo'lsa yoki muallif bo'lsa
     if request.user in project.buyers.all() or request.user == project.author:
         messages.info(request, "Siz bu loyihani allaqachon sotib olgansiz.")
     else:
-        # Sotib oluvchilarga qo'shish
         project.buyers.add(request.user)
         messages.success(request, f"{project.title} loyihasi muvaffaqiyatli sotib olindi!")
 
@@ -248,10 +239,10 @@ def buy_project(request, pk):
 
 # 10. TRENDING
 def trending(request):
-    # Eng ko'p ko'rilgan loyihalar
     projects = Project.objects.all().order_by('-views')
     categories = Project.CATEGORY_CHOICES
-    return render(request, 'projects/home.html', {'projects': projects, 'categories': categories})
+    # O'ZGARISH: 'projects/home.html' -> 'home.html'
+    return render(request, 'home.html', {'projects': projects, 'categories': categories})
 
 
 # 11. YOQQAN LOYIHALAR
@@ -259,7 +250,8 @@ def trending(request):
 def liked_videos(request):
     projects = Project.objects.filter(likes=request.user)
     categories = Project.CATEGORY_CHOICES
-    return render(request, 'projects/home.html', {'projects': projects, 'categories': categories})
+    # O'ZGARISH: 'projects/home.html' -> 'home.html'
+    return render(request, 'home.html', {'projects': projects, 'categories': categories})
 
 
 # 12. MENING LOYIHALARIM
@@ -267,7 +259,8 @@ def liked_videos(request):
 def my_videos(request):
     projects = Project.objects.filter(author=request.user)
     categories = Project.CATEGORY_CHOICES
-    return render(request, 'projects/home.html', {'projects': projects, 'categories': categories})
+    # O'ZGARISH: 'projects/home.html' -> 'home.html'
+    return render(request, 'home.html', {'projects': projects, 'categories': categories})
 
 
 # 13. C++ INTEGRATSIYASI
@@ -280,20 +273,16 @@ def cpp_test(request):
         code = request.POST.get('code', '')
         input_data = request.POST.get('input', '')
 
-        # Fayl yo'llarini aniqlash
         file_path = os.path.join(settings.BASE_DIR, 'main.cpp')
 
-        # OS ga qarab exe nomini tanlash
-        if os.name == 'nt':  # Windows
+        if os.name == 'nt':
             output_exe = os.path.join(settings.BASE_DIR, 'main.exe')
-        else:  # Linux/Mac
+        else:
             output_exe = os.path.join(settings.BASE_DIR, 'main')
 
-        # 1. C++ faylni yozish
         with open(file_path, 'w') as f:
             f.write(code)
 
-        # 2. Kompilyatsiya (g++)
         try:
             compile_process = subprocess.run(
                 ['g++', file_path, '-o', output_exe],
@@ -302,7 +291,6 @@ def cpp_test(request):
             )
 
             if compile_process.returncode == 0:
-                # 3. Ishga tushirish
                 if os.name != 'nt':
                     subprocess.run(['chmod', '+x', output_exe])
 
@@ -311,7 +299,7 @@ def cpp_test(request):
                     input=input_data,
                     capture_output=True,
                     text=True,
-                    timeout=5  # Cheksiz tsikldan himoya
+                    timeout=5
                 )
                 result = run_process.stdout
                 if run_process.stderr:
