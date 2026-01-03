@@ -16,13 +16,17 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    # Cloudinary storage staticfiles'dan oldin tursa yaxshi
+    'cloudinary_storage',
     'django.contrib.staticfiles',
+    'cloudinary',  # Bu ham bo'lishi shart
+
     'projects',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'storages', # S3/Supabase uchun shart
+    # 'storages' kerak emas, o'chirildi
 ]
 
 MIDDLEWARE = [
@@ -64,34 +68,25 @@ DATABASES = {
     )
 }
 
-# --- STATIC FILES (CSS, JS) ---
+# --- STATIC FILES (CSS, JS) - Renderda qoladi (Whitenoise) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# --- SUPABASE (S3 INTERFACE) MEDIA STORAGE ---
-# Render Environment Variables bo'limidan olinadi
-# --- SUPABASE (S3 INTERFACE) MEDIA STORAGE ---
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
+# --- CLOUDINARY MEDIA STORAGE (Rasmlar uchun) ---
+# AWS/Supabase kodlari butunlay tozalandi
 
-# Supabase bilan ishlashda eng muhim qatorlar:
-AWS_S3_ADDRESSING_STYLE = "path"
-AWS_S3_REGION_NAME = 'eu-central-1'  # Supabase loyihangiz regionini tekshiring
-AWS_S3_SIGNATURE_VERSION = 's3v4'
-AWS_S3_FILE_OVERWRITE = False
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_CUSTOM_DOMAIN = None
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
 
-# Storage klassi
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# Faqat rasmlar Cloudinaryga yuklanadi
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# Media URL sozlamasi (Supabase orqali ko'rinishi uchun)
-# Agar rasmlar ko'rinmasa, bu qismni quyidagicha qoldiring
-MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # --- QOLGAN SOZLAMALAR ---
