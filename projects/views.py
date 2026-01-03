@@ -126,7 +126,7 @@ def register(request):
             return redirect('login')
     else:
         form = UserRegisterForm()
-    return render(request, 'register.html', {'form': form})
+    return render(request, 'signup.html', {'form': form})
 
 
 # 5. PROFIL
