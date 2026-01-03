@@ -1,149 +1,175 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevTube - Dasturchilar Platformasi</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body>
+{% extends 'base.html' %}
+{% load i18n %}
+{% load account socialaccount %}
 
-    <nav class="navbar fixed-top">
-        <div class="container-fluid">
-            <div class="d-flex align-items-center gap-3">
-                <button id="sidebarToggle" class="btn btn-link text-white p-0 border-0">
-                    <i class="fas fa-bars fs-5"></i>
-                </button>
+{% block content %}
+<style>
+    /* MAXSUS NEON LOGIN STILI */
+    .neon-login-wrapper {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
 
-                <a class="navbar-brand" href="{% url 'home' %}">
-                    &lt;Dev<span class="brand-highlight">Tube</span> /&gt;
-                </a>
-            </div>
+    /* Orqa fondagi nur (Glow effect) */
+    .neon-login-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 120%; height: 120%;
+        background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 60%);
+        z-index: 0;
+        pointer-events: none;
+    }
 
-            <form action="{% url 'home' %}" method="GET" class="d-none d-md-flex search-box flex-grow-1 mx-5" style="max-width: 600px;">
-                <input type="text" name="q" class="form-control search-input" placeholder="Loyihani qidiring..." value="{{ request.GET.q }}">
-                <button class="btn search-btn"><i class="fas fa-search"></i></button>
-            </form>
+    .neon-card {
+        width: 100%;
+        max-width: 420px;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.03); /* Juda to'q shisha */
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
 
-            <div class="d-flex align-items-center gap-3">
+    /* Logo qismi */
+    .neon-logo {
+        display: inline-flex; align-items: center; gap: 12px; margin-bottom: 30px;
+    }
+    .neon-logo-icon {
+        width: 45px; height: 45px;
+        background: linear-gradient(135deg, #4f46e5, #9333ea);
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 20px rgba(79, 70, 229, 0.5);
+        font-size: 20px; color: white;
+    }
+    .neon-logo-text {
+        font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.5px;
+    }
 
-                <button id="themeToggle" class="btn btn-icon" title="Rejimni o'zgartirish">
-                    <i class="fas fa-moon"></i>
-                </button>
+    /* Inputlar (Qop-qora fon bilan) */
+    .neon-input {
+        width: 100%;
+        padding: 14px 18px;
+        margin-bottom: 15px;
+        background: rgba(0, 0, 0, 0.3) !important; /* To'q fon */
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 14px;
+        color: #fff !important;
+        font-size: 15px;
+        outline: none;
+        transition: 0.3s;
+    }
+    .neon-input::placeholder { color: #64748b; }
+    
+    .neon-input:focus {
+        border-color: #4f46e5 !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
+    }
 
-                {% if user.is_authenticated %}
-                    <a href="{% url 'create_project' %}" class="btn btn-primary btn-sm d-flex align-items-center gap-2">
-                        <i class="fas fa-plus"></i> <span class="d-none d-md-inline">Loyiha</span>
-                    </a>
+    /* Asosiy tugma (Gradient) */
+    .btn-neon {
+        width: 100%; padding: 14px;
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        border: none; border-radius: 50px;
+        color: white; font-weight: 700; font-size: 16px;
+        cursor: pointer; transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        margin-top: 10px;
+    }
+    .btn-neon:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.5);
+        color: #fff;
+    }
 
-                    <div class="dropdown">
-                        <a href="#" class="d-block link-light text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="{{ user.profile.avatar.url }}" alt="user" width="32" height="32" class="rounded-circle border border-secondary">
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow dark-dropdown" aria-labelledby="dropdownUser1">
-                            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user me-2"></i> Profilim</a></li>
-                            <li><a class="dropdown-item" href="{% url 'my_videos' %}"><i class="fas fa-folder me-2"></i> Loyihalarim</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form action="{% url 'logout' %}" method="post">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item text-danger"><i class="fas fa-sign-out-alt me-2"></i> Chiqish</button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Kirish</a>
-                    <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Ro'yxatdan o'tish</a>
-                {% endif %}
-            </div>
+    /* Social Tugmalar */
+    .social-group {
+        display: flex; gap: 12px; margin-bottom: 25px;
+    }
+    .social-btn {
+        flex: 1;
+        background: white; color: #0f172a;
+        border: none; padding: 10px;
+        border-radius: 50px;
+        font-size: 14px; font-weight: 600;
+        cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+        transition: 0.2s; text-decoration: none;
+    }
+    .social-btn:hover { transform: translateY(-2px); background: #f8fafc; color: #0f172a; }
+    .social-btn i { font-size: 16px; }
+    
+    .divider {
+        color: #64748b; font-size: 12px; font-weight: 600;
+        margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;
+    }
+    
+    .bottom-links { margin-top: 25px; font-size: 14px; color: #94a3b8; }
+    .bottom-links a { color: #818cf8; text-decoration: none; font-weight: 600; }
+    .bottom-links a:hover { color: #a5b4fc; text-decoration: underline; }
+
+    /* Alert */
+    .neon-alert {
+        background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5; padding: 12px; border-radius: 12px; font-size: 14px; margin-bottom: 20px;
+    }
+</style>
+
+<div class="neon-login-wrapper">
+    <div class="neon-card">
+        
+        <div class="neon-logo">
+            <div class="neon-logo-icon"><i class="fas fa-play"></i></div>
+            <div class="neon-logo-text">DevTube</div>
         </div>
-    </nav>
 
-    <div id="sidebar" class="sidebar">
-        <div class="sidebar-content">
-            <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
-                <i class="fas fa-home"></i> <span>Bosh sahifa</span>
-            </a>
-            <a href="{% url 'trending' %}" class="nav-item">
-                <i class="fas fa-fire"></i> <span>Trenddagilar</span>
+        <div class="social-group">
+            {% get_providers as socialaccount_providers %}
+            
+            <a href="{% provider_login_url 'google' process='login' %}" class="social-btn">
+                <i class="fab fa-google" style="color: #DB4437;"></i> Google
             </a>
 
-            <hr class="my-3 border-secondary">
-
-            <div class="sidebar-header">Kutubxona</div>
-            <a href="{% url 'my_videos' %}" class="nav-item"><i class="fas fa-folder"></i> <span>Loyihalarim</span></a>
-            <a href="{% url 'liked_videos' %}" class="nav-item"><i class="fas fa-heart"></i> <span>Yoqqanlar</span></a>
-
-            <hr class="my-3 border-secondary">
-
-            <div class="sidebar-header">Tools</div>
-            <a href="{% url 'cpp_test' %}" class="nav-item {% if 'cpp' in request.path %}active{% endif %}">
-                <i class="fas fa-terminal text-success"></i> <span>C++ Compiler</span>
+            <a href="{% provider_login_url 'github' process='login' %}" class="social-btn">
+                <i class="fab fa-github" style="color: #333;"></i> GitHub
             </a>
         </div>
 
-        <div class="sidebar-footer">
-            &copy; 2026 DevTube
-        </div>
-    </div>
+        <div class="divider">yoki email orqali</div>
 
-    <div class="main-content">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-3" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <form method="POST" action="{% url 'account_login' %}">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <div class="neon-alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Login yoki parol noto'g'ri!
                 </div>
-            {% endfor %}
-        {% endif %}
+            {% endif %}
 
-        {% block content %}
-        {% endblock %}
+            <input type="text" name="login" placeholder="Email yoki Login" class="neon-input" required />
+            <input type="password" name="password" placeholder="Parol" class="neon-input" required />
+            
+            <button type="submit" class="btn-neon">
+                Tizimga Kirish
+            </button>
+        </form>
+
+        <div class="bottom-links">
+            <a href="{% url 'account_reset_password' %}" class="text-muted" style="font-weight: 400;">Parolni unutdingizmi?</a>
+            <br><br>
+            Hisobingiz yo'qmi? <a href="{% url 'account_signup' %}">Ro'yxatdan o'ting</a>
+        </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        // Sidebar va Rejim (Dark/Light) Skripti
-        document.addEventListener('DOMContentLoaded', function() {
-            // Sidebar
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.querySelector('.main-content');
-
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', () => {
-                    sidebar.classList.toggle('collapsed');
-                    mainContent.classList.toggle('expanded');
-                });
-            }
-
-            // Theme Toggle
-            const themeBtn = document.getElementById('themeToggle');
-            const body = document.body;
-            const icon = themeBtn.querySelector('i');
-
-            // Oldingi tanlovni tiklash
-            if (localStorage.getItem('theme') === 'light') {
-                body.classList.add('light-mode');
-                icon.classList.replace('fa-moon', 'fa-sun');
-            }
-
-            themeBtn.addEventListener('click', () => {
-                body.classList.toggle('light-mode');
-                if (body.classList.contains('light-mode')) {
-                    localStorage.setItem('theme', 'light');
-                    icon.classList.replace('fa-moon', 'fa-sun');
-                } else {
-                    localStorage.setItem('theme', 'dark');
-                    icon.classList.replace('fa-sun', 'fa-moon');
-                }
-            });
-        });
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}

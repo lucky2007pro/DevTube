@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Neon Login Page</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a; /* Dark Blue */
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #f1f5f9;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Neon Glow effektlari */
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 60%);
+            z-index: -1;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.6);
+        }
+        .logo-text { font-size: 24px; font-weight: 700; letter-spacing: -1px; }
+
+        input {
+            width: 100%;
+            padding: 14px 15px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: #4f46e5;
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+        }
+
+        .links {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        .links a { color: #818cf8; text-decoration: none; font-weight: 600; }
+        .links a:hover { text-decoration: underline; }
+
+        .social-login {
+            margin-bottom: 25px;
+            display: flex; gap: 10px; justify-content: center;
+        }
+        .social-btn {
+            background: white; color: #333;
+            border: none; padding: 10px 20px;
+            border-radius: 50px; font-size: 14px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: 0.2s;
+        }
+        .social-btn:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-bolt" style="color: white;"></i></div>
+            <div class="logo-text">NeonAuth</div>
+        </div>
+
+        <div class="social-login">
+            <button class="social-btn">
+                <i class="fab fa-google"></i> Google
+            </button>
+            <button class="social-btn">
+                <i class="fab fa-github"></i> GitHub
+            </button>
+        </div>
+
+        <p style="color: #64748b; font-size: 12px; margin-bottom: 20px;">YOKI EMAIL ORQALI</p>
+
+        <form onsubmit="event.preventDefault(); alert('Bu shunchaki demo!');">
+            <input type="email" placeholder="Email manzil" required>
+            <input type="password" placeholder="Parol" required>
+
+            <button type="submit" class="btn">Tizimga Kirish</button>
+        </form>
+
+        <div class="links">
+            Hisobingiz yo'qmi? <a href="#">Ro'yxatdan o'ting</a>
+        </div>
+    </div>
+
+</body>
+</html>

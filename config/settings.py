@@ -19,14 +19,16 @@ INSTALLED_APPS = [
     # Cloudinary storage staticfiles'dan oldin tursa yaxshi
     'cloudinary_storage',
     'django.contrib.staticfiles',
-    'cloudinary',  # Bu ham bo'lishi shart
+    'cloudinary',
 
     'projects',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+
+    # PROVAYDERLAR
     'allauth.socialaccount.providers.google',
-    # 'storages' kerak emas, o'chirildi
+    'allauth.socialaccount.providers.github',  # <--- MANA BU QATOR QO'SHILDI ✅
 ]
 
 MIDDLEWARE = [
@@ -72,13 +74,9 @@ DATABASES = {
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-WHITENOISE_MANIFEST_STRICT = False  # <--- MANA SHU QATORNI QO'SHING
+WHITENOISE_MANIFEST_STRICT = False
 
 # --- CLOUDINARY MEDIA STORAGE (Rasmlar uchun) ---
-# AWS/Supabase kodlari butunlay tozalandi
-
-
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
@@ -105,3 +103,23 @@ LOGIN_URL = 'login'
 SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# --- SOCIAL ACCOUNT PROVIDERS (YANGI QO'SHILDI) ---
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    },
+    'github': {
+        'SCOPE': [
+            'user',
+            'read:user',
+            'user:email',  # Emailni olish uchun muhim
+        ],
+    }
+}
