@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <style>
@@ -48,6 +49,7 @@
         border-radius: 50px; font-weight: 700; transition: 0.3s;
         box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
         display: inline-flex; align-items: center; gap: 8px;
+        text-decoration: none;
     }
     .btn-neon-action:hover {
         transform: translateY(-2px);
@@ -102,30 +104,33 @@
 
 <div class="profile-glass-header">
     <div class="position-relative">
-        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}&size=150{% endif %}" class="profile-avatar-lg">
+        <img src="{% if target_user.profile.avatar %}{{ target_user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ target_user.username }}&size=150{% endif %}" class="profile-avatar-lg">
     </div>
 
     <div class="profile-info">
-        <h1>{{ user.username }}</h1>
-        <div class="text-muted mb-2">@{{ user.username }} • Dasturchi</div>
+        <h1>{{ target_user.username }}</h1>
+        <div class="text-muted mb-2">@{{ target_user.username }} • Dasturchi</div>
 
         <div class="profile-stats">
             <div class="stat-item"><b>{{ projects.count }}</b> Loyihalar</div>
-            <div class="stat-item"><b>1.4k</b> Sinxronlar</div> <div class="stat-item"><b>{{ user.date_joined|date:"Y" }}</b>-yildan beri</div>
+            <div class="stat-item"><b>{{ target_user.profile.followers.count }}</b> Sinxronlar</div>
+            <div class="stat-item"><b>{{ target_user.date_joined|date:"Y" }}</b>-yildan beri</div>
         </div>
 
         <p class="mt-3 text-secondary small" style="max-width: 500px;">
-            {{ user.profile.bio|default:"Ushbu foydalanuvchi hali o'zi haqida ma'lumot kiritmagan." }}
+            {{ target_user.profile.bio|default:"Ushbu foydalanuvchi hali o'zi haqida ma'lumot kiritmagan." }}
         </p>
 
         <div class="d-flex gap-3 mt-4">
-            <button class="btn-neon-action" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                <i class="fas fa-user-edit"></i> Profilni tahrirlash
-            </button>
-
-            <button class="btn-sync-outline" id="syncBtn" onclick="handleSync()">
-                <i class="fas fa-sync-alt me-2"></i> <span id="syncLabel">Sync</span>
-            </button>
+            {% if request.user == target_user %}
+                <button class="btn-neon-action" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    <i class="fas fa-user-edit me-2"></i> Profilni tahrirlash
+                </button>
+            {% else %}
+                <button class="btn-sync-outline {% if is_synced %}active{% endif %}" id="syncBtn" onclick="handleSync()">
+                    <i class="fas fa-sync-alt me-2"></i> <span id="syncLabel">{% if is_synced %}Synced{% else %}Sync{% endif %}</span>
+                </button>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -141,8 +146,10 @@
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <a href="{% url 'project_detail' project.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Ko'rish</a>
                     <div class="d-flex gap-2">
-                        <a href="{% url 'update_project' project.pk %}" class="text-muted"><i class="fas fa-edit"></i></a>
-                        <a href="{% url 'delete_project' project.pk %}" class="text-danger"><i class="fas fa-trash"></i></a>
+                        {% if request.user == target_user %}
+                            <a href="{% url 'update_project' project.pk %}" class="text-muted"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'delete_project' project.pk %}" class="text-danger"><i class="fas fa-trash"></i></a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -211,22 +218,30 @@
         }
     });
 
-    // Sync tugmasi uchun IT uslubidagi logika
+    // Sync AJAX mantiqi
     function handleSync() {
         const btn = document.getElementById('syncBtn');
         const label = document.getElementById('syncLabel');
         const icon = btn.querySelector('i');
 
-        if (btn.classList.contains('active')) {
-            btn.classList.remove('active');
-            label.innerText = 'Sync';
-            icon.classList.remove('fa-spin');
-        } else {
-            btn.classList.add('active');
-            icon.classList.add('fa-spin'); // Sinxronizatsiya animatsiyasi
-            label.innerText = 'Synced';
-            setTimeout(() => icon.classList.remove('fa-spin'), 800);
-        }
+        fetch("{% url 'toggle_sync' target_user.username %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.is_synced) {
+                btn.classList.add('active');
+                label.innerText = 'Synced';
+                icon.classList.add('fa-spin');
+                setTimeout(() => icon.classList.remove('fa-spin'), 800);
+            } else {
+                btn.classList.remove('active');
+                label.innerText = 'Sync';
+            }
+            // Statistika sonini yangilash
+            document.querySelectorAll('.stat-item b')[1].innerText = data.followers_count;
+        });
     }
 </script>
 {% endblock %}
