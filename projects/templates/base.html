@@ -1,5 +1,5 @@
-{% load static %}
 <!DOCTYPE html>
+{% load static %}
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -20,31 +20,22 @@
             --glass-border: rgba(255, 255, 255, 0.08);
         }
 
-        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; }
 
-        /* --- SCROLLBAR MOSLASHTIRISH (Oq narsani o'rniga neon) --- */
-        /* Sidebar va barcha elementlar uchun aylantirgichni chiroyli qilish */
-        ::-webkit-scrollbar {
-            width: 6px; /* Aylantirgich kengligi */
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2); /* Aylantirgich yo'li */
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--neon-primary); /* Aylantirgichning o'zi (Neon rangda) */
-            border-radius: 10px;
-            box-shadow: 0 0 10px var(--neon-primary);
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--neon-secondary); /* Ustiga borganda rang o'zgarishi */
-        }
+        /* --- NEON SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        ::-webkit-scrollbar-thumb { background: var(--neon-primary); border-radius: 10px; box-shadow: 0 0 10px var(--neon-primary); }
 
-        /* --- NAVBAR VA SIDEBAR (Dizayn o'zgarishsiz) --- */
+        /* --- NAVBAR & MARKAZLASH --- */
         .navbar {
             background: var(--glass-bg) !important;
             backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--glass-border);
             padding: 0.75rem 1.5rem;
+            z-index: 1060;
+            display: flex;
+            align-items: center; /* Vertikal markazlash */
         }
 
         #sidebarToggle {
@@ -54,54 +45,36 @@
             border: 1px solid var(--glass-border); color: #fff;
             transition: 0.3s;
         }
-        #sidebarToggle:hover { background: var(--neon-primary); box-shadow: var(--neon-glow); }
 
         .search-box-neon {
             background: rgba(0, 0, 0, 0.5) !important;
             border: 1px solid var(--glass-border);
             border-radius: 50px !important;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
             transition: 0.4s;
         }
-        .search-box-neon:focus-within {
-            border-color: var(--neon-primary);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
-        }
 
-        .voice-search-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--glass-border);
-            color: #fff; transition: 0.3s;
-        }
-        .voice-search-btn:hover {
-            border-color: #ef4444; color: #ef4444;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-upload-neon {
-            background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
-            border: none; color: white; font-weight: 600;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-            transition: 0.3s;
-        }
-        .btn-upload-neon:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6); }
-
-        /* --- SIDEBAR STRUKTURASI --- */
+        /* --- SIDEBAR FIX (Tepasi navbar ostida qolmaydi) --- */
         .sidebar {
             background: var(--glass-bg);
             border-right: 1px solid var(--glass-border);
             backdrop-filter: blur(10px);
             width: 260px;
             position: fixed;
-            top: 0;
+            top: 75px; /* Navbar balandligiga mos masofa */
             bottom: 0;
             display: flex;
-            flex-direction: column; /* Elementlarni ustma-ust taxlash */
+            flex-direction: column;
+            z-index: 1040;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        .sidebar.collapsed { transform: translateX(-260px); }
+
         .nav-item {
             margin: 4px 12px; padding: 10px 16px;
             border-radius: 12px; color: #94a3b8 !important;
             font-size: 14px; font-weight: 500; transition: 0.3s;
+            display: flex; align-items: center;
         }
         .nav-item i { width: 20px; text-align: center; margin-right: 12px; font-size: 16px; }
         .nav-item:hover, .nav-item.active {
@@ -109,23 +82,25 @@
             color: #fff !important;
             box-shadow: inset 4px 0 0 var(--neon-primary);
         }
-        .sidebar-header {
-            font-size: 11px; font-weight: 700; color: #475569;
-            text-transform: uppercase; letter-spacing: 1.5px;
-            padding: 20px 28px 8px;
+
+        .main-content {
+            margin-left: 260px;
+            padding: 100px 25px 30px;
+            transition: 0.3s;
         }
+        .main-content.expanded { margin-left: 0; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar fixed-top d-flex align-items-center">
-        <div class="d-flex align-items-center gap-3">
+    <nav class="navbar fixed-top">
+        <div class="d-flex align-items-center gap-3" style="min-width: 200px;">
             <button id="sidebarToggle"><i class="fas fa-bars"></i></button>
             <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center gap-2 m-0">
                 <div style="background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: var(--neon-glow);">
                     <i class="fas fa-play text-white" style="font-size: 14px;"></i>
                 </div>
-                <span class="d-none d-lg-inline fw-bold text-white fs-4" style="letter-spacing: -1px;">Dev<span style="color: var(--neon-primary);">Tube</span></span>
+                <span class="d-none d-lg-inline fw-bold text-white fs-4">Dev<span style="color: var(--neon-primary);">Tube</span></span>
             </a>
         </div>
 
@@ -135,24 +110,23 @@
                     <input type="text" name="q" id="searchInput" class="form-control text-white border-0 bg-transparent py-2 px-4" placeholder="Loyihalarni qidirish..." autocomplete="off">
                     <button class="btn border-0 text-muted px-3" type="submit"><i class="fas fa-search"></i></button>
                 </div>
-                <button type="button" class="btn voice-search-btn rounded-circle ms-3" onclick="startVoiceSearch()" id="voiceBtn" style="width: 42px; height: 42px; flex-shrink: 0;">
+                <button type="button" class="btn voice-search-btn rounded-circle ms-3 d-flex align-items-center justify-content-center" onclick="startVoiceSearch()" id="voiceBtn" style="width: 42px; height: 42px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff;">
                     <i class="fas fa-microphone"></i>
                 </button>
             </form>
         </div>
 
-        <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-end gap-3" style="min-width: 200px;">
             {% if user.is_authenticated %}
                 <a href="{% url 'create_project' %}" class="btn btn-upload-neon btn-sm rounded-pill px-4 py-2">
-                    <i class="fas fa-plus me-2"></i> Yuklash
+                    <i class="fas fa-plus me-1"></i> <span class="d-none d-sm-inline">Yuklash</span>
                 </a>
                 <div class="dropdown">
                     <a href="#" class="dropdown-toggle text-decoration-none" data-bs-toggle="dropdown">
                         <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="rounded-circle border border-primary border-opacity-25 shadow" width="38" height="38" style="object-fit: cover;">
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end dark-dropdown border-0 shadow-lg mt-3" style="background: #0f172a; border: 1px solid var(--glass-border) !important; min-width: 200px;">
-                        <li><a class="dropdown-item py-2 text-light" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2 text-primary"></i> Profil</a></li>
-                        <li><a class="dropdown-item py-2 text-light" href="{% url 'my_videos' %}"><i class="fas fa-code me-2 text-info"></i> Loyihalarim</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end dark-dropdown mt-3 shadow-lg" style="background: #0f172a; border: 1px solid var(--glass-border);">
+                        <li><a class="dropdown-item py-2 text-light" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2"></i> Profil</a></li>
                         <li><hr class="dropdown-divider opacity-10"></li>
                         <li>
                             <form method="post" action="{% url 'account_logout' %}">
@@ -168,40 +142,28 @@
     </nav>
 
     <div class="sidebar" id="sidebar">
-        <div class="flex-grow-1 overflow-auto py-3">
+        <div class="flex-grow-1 overflow-auto py-2">
             <a href="{% url 'home' %}" class="nav-item text-decoration-none active"><i class="fas fa-home"></i> Bosh sahifa</a>
             <a href="{% url 'trending' %}" class="nav-item text-decoration-none"><i class="fas fa-fire"></i> Trenddagilar</a>
 
-            <div class="sidebar-header">Kutubxona</div>
+            <div class="sidebar-header px-4">Kutubxona</div>
             <a href="{% url 'liked_videos' %}" class="nav-item text-decoration-none"><i class="fas fa-heart text-danger"></i> Yoqqanlar</a>
             <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bookmark text-warning"></i> Saqlanganlar</a>
             <a href="{% url 'my_videos' %}" class="nav-item text-decoration-none"><i class="fas fa-folder-open"></i> Mening kodlarim</a>
 
-            <div class="sidebar-header">Asboblar</div>
+            <div class="sidebar-header px-4">Asboblar</div>
             <a href="/cpp/" class="nav-item text-decoration-none"><i class="fab fa-cuttlefish text-primary"></i> C++ Integratsiya</a>
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-terminal"></i> Online Compiler</a>
-
-            <div class="sidebar-header">Hamjamiyat</div>
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-users"></i> Dasturchilar</a>
-            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bullhorn text-success"></i> E'lonlar</a>
         </div>
 
         <div class="py-3 border-top" style="border-color: rgba(255,255,255,0.05) !important; background: rgba(15, 23, 42, 0.5);">
-            <a href="#" class="nav-item text-decoration-none d-flex align-items-center"><i class="fas fa-cog"></i> Sozlamalar</a>
-            <a href="#" class="nav-item text-decoration-none d-flex align-items-center"><i class="fas fa-question-circle"></i> Yordam</a>
-            <a href="#" class="nav-item text-decoration-none d-flex align-items-center"><i class="fas fa-headset text-info"></i> Dasturchiga murojaat</a>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-cog"></i> Sozlamalar</a>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-question-circle"></i> Yordam</a>
+            <a href="#" class="nav-item text-decoration-none"><i class="fas fa-headset text-info"></i> Murojaat</a>
             <div class="text-center mt-3 small opacity-25" style="font-size: 10px;">&copy; 2026 DevTube</div>
         </div>
     </div>
 
     <div class="main-content" id="mainContent">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 text-white shadow" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);">
-                    {{ message }}<button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
         {% block content %}{% endblock %}
     </div>
 
@@ -210,6 +172,7 @@
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
         const toggleBtn = document.getElementById('sidebarToggle');
+
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
@@ -220,15 +183,17 @@
                 const recognition = new webkitSpeechRecognition();
                 recognition.lang = 'uz-UZ';
                 const voiceBtn = document.getElementById('voiceBtn');
+
                 recognition.onstart = () => { voiceBtn.style.color = '#ef4444'; voiceBtn.classList.add('pulse'); };
                 recognition.onend = () => { voiceBtn.style.color = '#fff'; voiceBtn.classList.remove('pulse'); };
+
                 recognition.onresult = (event) => {
                     const transcript = event.results[0][0].transcript;
                     document.getElementById('searchInput').value = transcript;
                     setTimeout(() => document.getElementById('mainSearchForm').submit(), 400);
                 };
                 recognition.start();
-            } else { alert("Brauzer ovozni qo'llab-quvvatlamaydi."); }
+            } else { alert("Ovozni qo'llab-quvvatlamaydi."); }
         }
     </script>
 </body>
