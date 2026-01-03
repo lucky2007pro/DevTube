@@ -72,7 +72,8 @@ DATABASES = {
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'WHITENOISE_MANIFEST_STRICT = False  # <--- MANA SHU QATORNI QO'SHING
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+WHITENOISE_MANIFEST_STRICT = False  # <--- MANA SHU QATORNI QO'SHING
 
 # --- CLOUDINARY MEDIA STORAGE (Rasmlar uchun) ---
 # AWS/Supabase kodlari butunlay tozalandi
