@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path, include  # Importlar birlashtirildi
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
@@ -22,15 +22,24 @@ urlpatterns = [
     path('like/<int:pk>/', views.like_project, name='like_project'),
     path('buy/<int:pk>/', views.buy_project, name='buy_project'),
 
-    # --- TOOLS (YANGI) ---
+    # --- IT DUNYOSIGA XOS: SYNC TIZIMI ---
+    path('sync/<str:username>/', views.toggle_sync, name='toggle_sync'),
+
+    # --- TOOLS ---
     path('cpp/', views.cpp_test, name='cpp_test'),
 
     # --- USER PROFILI VA AUTH ---
+    # O'z profiliga kirish
     path('profile/', views.profile, name='profile'),
+    # Boshqa dasturchining profilini username orqali ko'rish
+    path('user/<str:username>/', views.profile, name='profile_by_username'),
+
     path('register/', views.register, name='register'),
-    path('signup/', views.register, name='signup'), # Yangi qo'shilgan qator
-    # Login va Logout (O'zining standart views'lari ishlatildi)
+    path('signup/', views.register, name='signup'),
+
+    # Login va Logout
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    # Django 5.0+ uchun logout POST so'rovini talab qilishi mumkin
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
     # Google orqali kirish (Allauth)

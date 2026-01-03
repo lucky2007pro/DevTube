@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 from django.conf import settings
 from django.http import JsonResponse
@@ -6,9 +7,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
+from django.contrib.auth.models import User
 
 # Modellar va Formalar
-from .models import Project, Comment, ProjectImage
+from .models import Project, Comment, ProjectImage, Sync, Profile
 from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 
 
@@ -21,7 +23,7 @@ def home_page(request):
         Q(category__icontains=q) |
         Q(title__icontains=q) |
         Q(description__icontains=q)
-    )
+    ).distinct()
 
     if category:
         projects = projects.filter(category=category)
@@ -37,7 +39,6 @@ def home_page(request):
 # 2. LOYIHA YUKLASH
 @login_required
 def create_project(request):
-    form = ProjectForm()
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
@@ -51,6 +52,8 @@ def create_project(request):
 
             messages.success(request, "Loyiha muvaffaqiyatli yuklandi!")
             return redirect('home')
+    else:
+        form = ProjectForm()
 
     return render(request, 'create_project.html', {'form': form})
 
@@ -85,7 +88,7 @@ def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
     Project.objects.filter(pk=pk).update(views=project.views + 1)
 
-    # 1. Izohlar qismi
+    # 1. Izohlar qismi (AJAX so'rovi bilan)
     if request.method == 'POST' and request.user.is_authenticated:
         form = CommentForm(request.POST)
         if form.is_valid():
@@ -101,11 +104,16 @@ def project_detail(request, pk):
                 })
             return redirect('project_detail', pk=pk)
 
-    # 2. Sotib olish va Kodni ko'rish
+    # 2. Sotib olish va Kodni ko'rish holati
     has_bought = project.price == 0 or (request.user.is_authenticated and
                                         (request.user == project.author or request.user in project.buyers.all()))
 
     code_preview, live_preview = get_code_preview(project)
+
+    # 3. Sync holati
+    is_synced = False
+    if request.user.is_authenticated:
+        is_synced = Sync.objects.filter(follower=request.user.profile, following=project.author.profile).exists()
 
     context = {
         'project': project,
@@ -113,91 +121,95 @@ def project_detail(request, pk):
         'code_preview': code_preview,
         'live_preview': live_preview,
         'has_bought': has_bought,
+        'is_synced': is_synced,
     }
     return render(request, 'project_detail.html', context)
 
-# 4. RO'YXATDAN O'TISH
+
+# 4. SYNC (SINXRONLANISH) - AJAX
+@login_required
+def toggle_sync(request, username):
+    if request.method == 'POST':
+        target_user = get_object_or_404(User, username=username)
+        target_profile = target_user.profile
+        my_profile = request.user.profile
+
+        if my_profile == target_profile:
+            return JsonResponse({'error': 'Ozingizga sinxron bo\'la olmaysiz'}, status=400)
+
+        sync_query = Sync.objects.filter(follower=my_profile, following=target_profile)
+
+        if sync_query.exists():
+            sync_query.delete()
+            is_synced = False
+        else:
+            Sync.objects.create(follower=my_profile, following=target_profile)
+            is_synced = True
+
+        return JsonResponse({
+            'is_synced': is_synced,
+            'followers_count': target_profile.followers.count()
+        })
+    return JsonResponse({'error': 'POST talab qilinadi'}, status=400)
+
+
+# 5. RO'YXATDAN O'TISH
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Siz muvaffaqiyatli ro\'yxatdan o\'tdingiz. Endi kirishingiz mumkin.')
+            messages.success(request, 'Ro\'yxatdan o\'tdingiz. Kirishingiz mumkin.')
             return redirect('login')
     else:
         form = UserRegisterForm()
     return render(request, 'signup.html', {'form': form})
 
 
-# 5. PROFIL
-@login_required
-def profile(request):
-    if request.method == 'POST':
+# 6. PROFIL (O'ziniki va Boshqalarniki)
+def profile(request, username=None):
+    if username:
+        # Boshqa dasturchining profilini ko'rish
+        target_user = get_object_or_404(User, username=username)
+        is_owner = (request.user == target_user)
+    else:
+        # O'z profilini ko'rish
+        if not request.user.is_authenticated:
+            return redirect('login')
+        target_user = request.user
+        is_owner = True
+
+    if request.method == 'POST' and is_owner:
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
-
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
-            messages.success(request, 'Profil muvaffaqiyatli yangilandi!')
-            return redirect('profile')
+            messages.success(request, 'Profil yangilandi!')
+            return redirect('profile', username=request.user.username)
     else:
-        u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileUpdateForm(instance=request.user.profile)
+        u_form = UserUpdateForm(instance=target_user)
+        p_form = ProfileUpdateForm(instance=target_user.profile)
 
-    projects = Project.objects.filter(author=request.user).order_by('-created_at')
+    projects = Project.objects.filter(author=target_user).order_by('-created_at')
+
+    # Sync holatini tekshirish
+    is_synced = False
+    if request.user.is_authenticated and not is_owner:
+        is_synced = Sync.objects.filter(follower=request.user.profile, following=target_user.profile).exists()
 
     context = {
+        'target_user': target_user,
         'u_form': u_form,
         'p_form': p_form,
-        'projects': projects
+        'projects': projects,
+        'is_owner': is_owner,
+        'is_synced': is_synced,
     }
     return render(request, 'profile.html', context)
 
 
-# 6. O'CHIRISH
-@login_required
-def delete_project(request, pk):
-    project = get_object_or_404(Project, pk=pk)
-    if request.user == project.author:
-        if request.method == 'POST':
-            project.delete()
-            return redirect('profile')
-        return render(request, 'delete.html', {'project': project})
-    return redirect('home')
-
-
-# 7. TAHRIRLASH
-@login_required
-@login_required
-def update_project(request, pk):
-    project = get_object_or_404(Project, pk=pk)
-
-    # Faqat muallif tahrirlay oladi
-    if request.user != project.author:
-        messages.error(request, "Siz faqat o'z loyihangizni tahrirlashingiz mumkin.")
-        return redirect('home')
-
-    if request.method == 'POST':
-        form = ProjectForm(request.POST, request.FILES, instance=project)
-        if form.is_valid():
-            project = form.save()
-
-            # Qo'shimcha rasmlarni yuklash
-            images = request.FILES.getlist('more_images')
-            for img in images:
-                ProjectImage.objects.create(project=project, image=img)
-
-            messages.success(request, "Loyiha muvaffaqiyatli yangilandi!")
-            # project_detail sahifasiga loyiha pk-si bilan qaytamiz
-            return redirect('project_detail', pk=project.pk)
-    else:
-        form = ProjectForm(instance=project)
-
-    # project obyektini contextga qo'shish shart! (Rasmda aynan shu yetishmayotgan edi)
-    return render(request, 'update_project.html', {'form': form, 'project': project})
-
-# 8. LIKE (AJAX)
+# 7. LIKE (AJAX)
 @login_required
 def like_project(request, pk):
     if request.method == 'POST':
@@ -216,92 +228,93 @@ def like_project(request, pk):
     return JsonResponse({'error': 'POST required'}, status=400)
 
 
-# 9. SOTIB OLISH
+# 8. SOTIB OLISH
 @login_required
 def buy_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
     if request.user in project.buyers.all() or request.user == project.author:
-        messages.info(request, "Siz bu loyihani allaqachon sotib olgansiz.")
+        messages.info(request, "Sizda ruxsat bor.")
     else:
+        # Hamyon tekshiruvi bu yerga qo'shilishi mumkin
         project.buyers.add(request.user)
-        messages.success(request, f"{project.title} loyihasi muvaffaqiyatli sotib olindi!")
+        messages.success(request, f"{project.title} sotib olindi!")
 
     return redirect('project_detail', pk=pk)
 
 
-# 10. TRENDING
+# 9. TRENDING, LIKED, MY VIDEOS
 def trending(request):
     projects = Project.objects.all().order_by('-views')
     categories = Project.CATEGORY_CHOICES
     return render(request, 'home.html', {'projects': projects, 'categories': categories})
 
 
-# 11. YOQQAN LOYIHALAR
 @login_required
 def liked_videos(request):
     projects = Project.objects.filter(likes=request.user)
-    categories = Project.CATEGORY_CHOICES
-    return render(request, 'home.html', {'projects': projects, 'categories': categories})
+    return render(request, 'home.html', {'projects': projects})
 
 
-# 12. MENING LOYIHALARIM
 @login_required
 def my_videos(request):
     projects = Project.objects.filter(author=request.user)
-    categories = Project.CATEGORY_CHOICES
-    return render(request, 'home.html', {'projects': projects, 'categories': categories})
+    return render(request, 'home.html', {'projects': projects})
 
 
-# 13. C++ INTEGRATSIYASI
-def cpp_test(request):
-    result = ""
-    code = ""
-    input_data = ""
+# 10. TAHRIRLASH VA O'CHIRISH
+@login_required
+def update_project(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    if request.user != project.author:
+        return redirect('home')
 
     if request.method == 'POST':
-        code = request.POST.get('code', '')
-        input_data = request.POST.get('input', '')
+        form = ProjectForm(request.POST, request.FILES, instance=project)
+        if form.is_valid():
+            project = form.save()
+            images = request.FILES.getlist('more_images')
+            for img in images:
+                ProjectImage.objects.create(project=project, image=img)
+            messages.success(request, "Yangilandi!")
+            return redirect('project_detail', pk=project.pk)
+    else:
+        form = ProjectForm(instance=project)
+    return render(request, 'update_project.html', {'form': form, 'project': project})
 
+
+@login_required
+def delete_project(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    if request.user == project.author:
+        if request.method == 'POST':
+            project.delete()
+            return redirect('profile', username=request.user.username)
+        return render(request, 'delete.html', {'project': project})
+    return redirect('home')
+
+
+# 11. C++ INTEGRATSIYASI (O'zgarishsiz)
+def cpp_test(request):
+    result = ""
+    code = request.POST.get('code', '') if request.method == 'POST' else ""
+    input_data = request.POST.get('input', '') if request.method == 'POST' else ""
+
+    if request.method == 'POST':
         file_path = os.path.join(settings.BASE_DIR, 'main.cpp')
-
-        if os.name == 'nt':
-            output_exe = os.path.join(settings.BASE_DIR, 'main.exe')
-        else:
-            output_exe = os.path.join(settings.BASE_DIR, 'main')
+        output_exe = os.path.join(settings.BASE_DIR, 'main.exe' if os.name == 'nt' else 'main')
 
         with open(file_path, 'w') as f:
             f.write(code)
 
         try:
-            compile_process = subprocess.run(
-                ['g++', file_path, '-o', output_exe],
-                capture_output=True,
-                text=True
-            )
-
+            compile_process = subprocess.run(['g++', file_path, '-o', output_exe], capture_output=True, text=True)
             if compile_process.returncode == 0:
-                if os.name != 'nt':
-                    subprocess.run(['chmod', '+x', output_exe])
-
-                run_process = subprocess.run(
-                    [output_exe],
-                    input=input_data,
-                    capture_output=True,
-                    text=True,
-                    timeout=5
-                )
-                result = run_process.stdout
-                if run_process.stderr:
-                    result += "\nXatoliklar:\n" + run_process.stderr
+                run_process = subprocess.run([output_exe], input=input_data, capture_output=True, text=True, timeout=5)
+                result = run_process.stdout + (run_process.stderr if run_process.stderr else "")
             else:
-                result = "Kompilyatsiya xatosi:\n" + compile_process.stderr
-
-        except FileNotFoundError:
-            result = "Serverda G++ kompilyatori o'rnatilmagan."
-        except subprocess.TimeoutExpired:
-            result = "Dastur ishlash vaqti tugadi (Infinite Loop)."
+                result = compile_process.stderr
         except Exception as e:
-            result = f"Tizim xatoligi: {str(e)}"
+            result = str(e)
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'result': result})
