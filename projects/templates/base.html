@@ -1,10 +1,10 @@
-{% load static %}
 <!DOCTYPE html>
+{% load static %}
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevTube | Professional Code Platform</title>
+    <title>DevTube | Premium Code Platform</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,161 +12,187 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
     <style>
-        /* --- PROFESSIONAL NEON EFFECTS --- */
         :root {
-            --neon-primary: #4f46e5;
-            --neon-secondary: #9333ea;
-            --glass-bg: rgba(15, 23, 42, 0.8);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --neon-primary: #6366f1;
+            --neon-secondary: #a855f7;
+            --neon-glow: 0 0 15px rgba(99, 102, 241, 0.5);
+            --glass-bg: rgba(15, 23, 42, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.08);
         }
 
-        body { background-color: #020617; color: #f8fafc; }
+        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; }
 
-        /* Navbar Glassmorphism */
+        /* --- NEON NAVBAR --- */
         .navbar {
             background: var(--glass-bg) !important;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--glass-border);
-            z-index: 1050;
+            padding: 0.75rem 1.5rem;
         }
 
-        /* Neon Search Box */
+        /* Menu Button Fix */
+        #sidebarToggle {
+            width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border); color: #fff;
+            transition: 0.3s;
+        }
+        #sidebarToggle:hover { background: var(--neon-primary); box-shadow: var(--neon-glow); }
+
+        /* Neon Search */
         .search-box-neon {
-            background: rgba(0, 0, 0, 0.4) !important;
+            background: rgba(0, 0, 0, 0.5) !important;
             border: 1px solid var(--glass-border);
             border-radius: 50px !important;
-            padding: 2px;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            transition: 0.4s;
         }
         .search-box-neon:focus-within {
             border-color: var(--neon-primary);
-            box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
-        }
-        .search-box-neon input {
-            background: transparent !important;
-            border: none !important;
-            color: white !important;
-            padding-left: 20px !important;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
         }
 
-        /* Voice Search Glow */
+        /* Voice Search Neon */
         .voice-search-btn {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             border: 1px solid var(--glass-border);
-            color: white;
-            transition: 0.3s;
+            color: #fff; transition: 0.3s;
         }
         .voice-search-btn:hover {
-            background: var(--neon-primary);
-            box-shadow: 0 0 15px var(--neon-primary);
-        }
-        .voice-active {
-            animation: pulse-red 1.5s infinite;
-            color: #ef4444 !important;
-        }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            border-color: #ef4444; color: #ef4444;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
         }
 
-        /* Sidebar Glass */
+        /* Upload Button Neon */
+        .btn-upload-neon {
+            background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+            border: none; color: white; font-weight: 600;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transition: 0.3s;
+        }
+        .btn-upload-neon:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6); }
+
+        /* --- SIDEBAR NEON --- */
         .sidebar {
             background: var(--glass-bg);
-            backdrop-filter: blur(10px);
             border-right: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            width: 260px;
         }
         .nav-item {
-            margin: 4px 12px;
-            border-radius: 12px;
-            transition: 0.2s;
+            margin: 4px 12px; padding: 10px 16px;
+            border-radius: 12px; color: #94a3b8 !important;
+            font-size: 14px; font-weight: 500; transition: 0.3s;
         }
+        .nav-item i { width: 20px; text-align: center; margin-right: 12px; font-size: 16px; }
         .nav-item:hover, .nav-item.active {
-            background: rgba(79, 70, 229, 0.15);
-            color: #818cf8 !important;
+            background: rgba(99, 102, 241, 0.1);
+            color: #fff !important;
+            box-shadow: inset 4px 0 0 var(--neon-primary);
         }
+        .sidebar-header {
+            font-size: 11px; font-weight: 700; color: #475569;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            padding: 20px 28px 8px;
+        }
+        .sidebar-divider { margin: 10px 20px; opacity: 0.05; background-color: #fff; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar fixed-top d-flex align-items-center px-3 py-2">
-        <div class="d-flex align-items-center gap-2" style="flex: 0 0 auto;">
-            <button class="btn btn-dark border-0 p-2" id="sidebarToggle">
-                <i class="fas fa-bars"></i>
-            </button>
+    <nav class="navbar fixed-top d-flex align-items-center">
+        <div class="d-flex align-items-center gap-3">
+            <button id="sidebarToggle"><i class="fas fa-bars"></i></button>
             <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center gap-2 m-0">
-                <div class="logo-icon-neon" style="background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);">
+                <div style="background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: var(--neon-glow);">
                     <i class="fas fa-play text-white" style="font-size: 14px;"></i>
                 </div>
-                <span class="d-none d-lg-inline" style="font-weight: 800; color: #fff; letter-spacing: -1px;">Dev<span style="color: var(--neon-primary);">Tube</span></span>
+                <span class="d-none d-lg-inline fw-bold text-white fs-4" style="letter-spacing: -1px;">Dev<span style="color: var(--neon-primary);">Tube</span></span>
             </a>
         </div>
 
-        <div class="search-wrapper flex-grow-1 d-flex justify-content-center px-2">
-            <form id="mainSearchForm" class="d-flex align-items-center w-100" style="max-width: 550px;" action="{% url 'home' %}" method="GET">
+        <div class="search-wrapper flex-grow-1 d-flex justify-content-center px-4">
+            <form id="mainSearchForm" class="d-flex align-items-center w-100" style="max-width: 600px;" action="{% url 'home' %}" method="GET">
                 <div class="input-group search-box-neon">
-                    <input type="text" name="q" id="searchInput" class="form-control" placeholder="Loyihalarni qidirish..." autocomplete="off">
-                    <button class="btn border-0 text-muted px-3" type="submit">
-                        <i class="fas fa-search"></i>
-                    </button>
+                    <input type="text" name="q" id="searchInput" class="form-control text-white border-0 bg-transparent py-2 px-4" placeholder="Loyihalarni qidirish..." autocomplete="off">
+                    <button class="btn border-0 text-muted px-3" type="submit"><i class="fas fa-search"></i></button>
                 </div>
-                <button type="button" class="btn voice-search-btn rounded-circle ms-2" onclick="startVoiceSearch()" id="voiceBtn" style="width: 40px; height: 40px; flex-shrink: 0;">
+                <button type="button" class="btn voice-search-btn rounded-circle ms-3" onclick="startVoiceSearch()" id="voiceBtn" style="width: 42px; height: 42px; flex-shrink: 0;">
                     <i class="fas fa-microphone"></i>
                 </button>
             </form>
         </div>
 
-        <div class="d-flex align-items-center gap-2" style="flex: 0 0 auto;">
+        <div class="d-flex align-items-center gap-3">
             {% if user.is_authenticated %}
-                <a href="{% url 'create_project' %}" class="btn btn-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-2">
-                    <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Yuklash</span>
+                <a href="{% url 'create_project' %}" class="btn btn-upload-neon btn-sm rounded-pill px-4 py-2">
+                    <i class="fas fa-plus me-2"></i> Yuklash
                 </a>
-
                 <div class="dropdown">
                     <a href="#" class="dropdown-toggle text-decoration-none" data-bs-toggle="dropdown">
-                        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="rounded-circle border border-primary border-opacity-25" width="32" height="32" style="object-fit: cover;">
+                        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="rounded-circle border border-primary border-opacity-25 shadow" width="38" height="38" style="object-fit: cover;">
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end dark-dropdown border-0 shadow-lg mt-2" style="background: #111827; border: 1px solid var(--glass-border) !important;">
-                        <li><a class="dropdown-item text-light" href="{% url 'profile' %}"><i class="fas fa-user me-2 text-primary"></i> Profil</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end dark-dropdown border-0 shadow-lg mt-3" style="background: #0f172a; border: 1px solid var(--glass-border) !important; min-width: 200px;">
+                        <li><a class="dropdown-item py-2 text-light" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2 text-primary"></i> Profil</a></li>
+                        <li><a class="dropdown-item py-2 text-light" href="{% url 'my_videos' %}"><i class="fas fa-code me-2 text-info"></i> Loyihalarim</a></li>
                         <li><hr class="dropdown-divider opacity-10"></li>
                         <li>
                             <form method="post" action="{% url 'account_logout' %}">
-                                {% csrf_token %}
-                                <button type="submit" class="dropdown-item text-danger"><i class="fas fa-sign-out-alt me-2"></i> Chiqish</button>
+                                {% csrf_token %}<button type="submit" class="dropdown-item py-2 text-danger fw-bold"><i class="fas fa-sign-out-alt me-2"></i> Chiqish</button>
                             </form>
                         </li>
                     </ul>
                 </div>
             {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">Kirish</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold">KIRISH</a>
             {% endif %}
         </div>
     </nav>
 
     <div class="sidebar" id="sidebar">
-        <div class="nav flex-column py-3">
-            <a href="{% url 'home' %}" class="nav-item p-2 text-decoration-none text-light active"><i class="fas fa-home me-3"></i> Bosh sahifa</a>
-            <a href="{% url 'trending' %}" class="nav-item p-2 text-decoration-none text-light"><i class="fas fa-fire me-3"></i> Trenddagilar</a>
-            <hr class="sidebar-divider mx-3 opacity-10">
-            <div class="sidebar-header px-4 small text-muted text-uppercase mb-2">Tools</div>
-            <a href="/cpp/" class="nav-item p-2 text-decoration-none text-light"><i class="fab fa-cuttlefish me-3 text-info"></i> C++ Integratsiya</a>
-            <a href="#" class="nav-item p-2 text-decoration-none text-light"><i class="fas fa-terminal me-3"></i> Online Compiler</a>
-            <hr class="sidebar-divider mx-3 opacity-10">
-            <div class="sidebar-header px-4 small text-muted text-uppercase mb-2">Hamjamiyat</div>
-            <a href="#" class="nav-item p-2 text-decoration-none text-light"><i class="fas fa-users me-3"></i> Dasturchilar</a>
+        <div class="nav flex-column h-100">
+            <div class="flex-grow-1 overflow-auto py-3">
+                <a href="{% url 'home' %}" class="nav-item text-decoration-none active"><i class="fas fa-home"></i> Bosh sahifa</a>
+                <a href="{% url 'trending' %}" class="nav-item text-decoration-none"><i class="fas fa-fire"></i> Trenddagilar</a>
+
+                <div class="sidebar-header">Kutubxona</div>
+                <a href="{% url 'liked_videos' %}" class="nav-item text-decoration-none"><i class="fas fa-heart text-danger"></i> Yoqqanlar</a>
+                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bookmark text-warning"></i> Saqlanganlar</a>
+                <a href="{% url 'my_videos' %}" class="nav-item text-decoration-none"><i class="fas fa-folder-open"></i> Mening kodlarim</a>
+
+                <div class="sidebar-header">Asboblar</div>
+                <a href="/cpp/" class="nav-item text-decoration-none"><i class="fab fa-cuttlefish text-primary"></i> C++ Integratsiya</a>
+                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-terminal"></i> Online Compiler</a>
+
+                <div class="sidebar-header">Hamjamiyat</div>
+                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-users"></i> Dasturchilar</a>
+                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-bullhorn text-success"></i> E'lonlar</a>
+            </div>
+
+            <div class="py-3 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-cog"></i> Sozlamalar</a>
+                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-question-circle"></i> Yordam</a>
+                <a href="#" class="nav-item text-decoration-none"><i class="fas fa-headset text-info"></i> Dasturchiga murojaat</a>
+                <div class="text-center mt-3 small opacity-25">&copy; 2026 DevTube</div>
+            </div>
         </div>
-        <div class="mt-auto p-3 text-muted small text-center">&copy; 2026 DevTube</div>
     </div>
 
     <div class="main-content" id="mainContent">
-        {% if messages %}{% for message in messages %}<div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 shadow-sm" style="background: rgba(255,255,255,0.05); color: #fff;">{{ message }}<button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button></div>{% endfor %}{% endif %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0 text-white shadow" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);">
+                    {{ message }}<button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
         {% block content %}{% endblock %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sidebar Toggle
+        // Sidebar Toggle Fix
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
         document.getElementById('sidebarToggle').addEventListener('click', () => {
@@ -174,27 +200,23 @@
             mainContent.classList.toggle('expanded');
         });
 
-        // --- OVOZLI QIDIRUV (FIXED & IMPROVED) ---
+        // Voice Search Improved
         function startVoiceSearch() {
             if ('webkitSpeechRecognition' in window) {
                 const recognition = new webkitSpeechRecognition();
                 recognition.lang = 'uz-UZ';
                 const voiceBtn = document.getElementById('voiceBtn');
-                const searchInput = document.getElementById('searchInput');
 
-                recognition.onstart = () => voiceBtn.classList.add('voice-active');
-                recognition.onend = () => voiceBtn.classList.remove('voice-active');
+                recognition.onstart = () => { voiceBtn.style.color = '#ef4444'; voiceBtn.classList.add('pulse'); };
+                recognition.onend = () => { voiceBtn.style.color = '#fff'; voiceBtn.classList.remove('pulse'); };
 
                 recognition.onresult = (event) => {
                     const transcript = event.results[0][0].transcript;
-                    searchInput.value = transcript;
-                    setTimeout(() => document.getElementById('mainSearchForm').submit(), 500);
+                    document.getElementById('searchInput').value = transcript;
+                    setTimeout(() => document.getElementById('mainSearchForm').submit(), 400);
                 };
-
                 recognition.start();
-            } else {
-                alert("Ovozli qidiruv brauzeringizda ishlamaydi.");
-            }
+            } else { alert("Brauzer ovozni qo'llab-quvvatlamaydi."); }
         }
     </script>
 </body>
