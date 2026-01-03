@@ -72,7 +72,7 @@ DATABASES = {
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 WHITENOISE_MANIFEST_STRICT = False  # <--- MANA SHU QATORNI QO'SHING
 
 # --- CLOUDINARY MEDIA STORAGE (Rasmlar uchun) ---
@@ -105,5 +105,3 @@ LOGIN_URL = 'login'
 SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_LOGIN_ON_GET = True
-
-# FIX: Whitenoise strict mode disabled
