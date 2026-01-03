@@ -171,3 +171,113 @@ body {
     .main-content { margin-left: 0; }
     .sidebar.collapsed { transform: translateX(0); } /* Mobilda teskari ishlaydi */
 }
+/* --- ULTRA-MODERN TECH MENU --- */
+
+/* 1. Koneyner (Scroll joyi) */
+.category-section {
+    position: relative; /* Fade effekti uchun */
+    margin: 20px 0;
+    padding: 0 15px;
+}
+
+.category-scroll-container {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 10px 5px; /* Ozgina joy tashlaymiz soyalar kesilmasligi uchun */
+    scroll-behavior: smooth;
+
+    /* Scrollbarni yashirish */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.category-scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* 2. PANEL DIZAYNI (Tugmalar) */
+.tech-panel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    text-decoration: none;
+    border-radius: 16px;
+    overflow: hidden; /* Ichidagi nur tashqariga chiqib ketmasligi uchun */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Yumshoq sakrash */
+
+    /* SHISHA EFFEKTI (Glassmorphism) */
+    background: rgba(255, 255, 255, 0.03); /* Juda shaffof oq */
+    backdrop-filter: blur(10px);          /* Orqa fonni xira qilish */
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Yupqa shisha ramka */
+}
+
+/* Matn va Ikonka rangi */
+.panel-icon, .panel-text {
+    position: relative;
+    z-index: 2; /* Nurdan tepada turishi kerak */
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+.panel-icon { font-size: 16px; }
+
+/* 3. HOVER (Sichqoncha borganda) */
+.tech-panel:hover {
+    transform: translateY(-3px) scale(1.02); /* Tepaga qalqib chiqish */
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5); /* Chuqur soya */
+}
+
+.tech-panel:hover .panel-text,
+.tech-panel:hover .panel-icon {
+    color: #fff; /* Oqarish */
+}
+
+/* 4. ACTIVE STATE (Tanlangan tugma - ENG MUHIM JOYI) */
+.tech-panel.active-panel {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%);
+    border: 1px solid rgba(120, 100, 255, 0.5); /* Yorqin ramka */
+    box-shadow: 0 0 25px rgba(79, 70, 229, 0.4); /* Katta neon nur */
+}
+
+.tech-panel.active-panel .panel-text,
+.tech-panel.active-panel .panel-icon {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Harflar ham porlaydi */
+}
+
+/* ACTIVE holatda ichkaridan o'tadigan nur */
+.tech-panel.active-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -50%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: skewX(-20deg);
+    animation: shine 3s infinite; /* Nur o'tib turadi */
+}
+
+@keyframes shine {
+    0% { left: -100%; }
+    20% { left: 200%; }
+    100% { left: 200%; }
+}
+
+/* 5. LIGHT MODE UCHUN ALOHIDA (Agar kunduzgi rejim yoqilsa) */
+body.light-mode .tech-panel {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+body.light-mode .active-panel {
+    background: linear-gradient(135deg, #4f46e5, #9333ea);
+    color: white !important;
+}
+body.light-mode .active-panel .panel-text,
+body.light-mode .active-panel .panel-icon {
+    color: white;
+}
