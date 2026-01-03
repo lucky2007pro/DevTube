@@ -106,4 +106,4 @@ SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
-# UPDATE TEST: Whitenoise fix
+# FIX: Whitenoise strict mode disabled
