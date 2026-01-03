@@ -18,6 +18,7 @@
             --neon-glow: 0 0 15px rgba(99, 102, 241, 0.5);
             --glass-bg: rgba(15, 23, 42, 0.9);
             --glass-border: rgba(255, 255, 255, 0.08);
+            --nav-height: 60px; /* Markazlashtirilgan balandlik */
         }
 
         body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
@@ -29,10 +30,11 @@
 
         /* --- NAVBAR --- */
         .navbar {
+            height: var(--nav-height) !important;
             background: var(--glass-bg) !important;
             backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--glass-border);
-            padding: 0.75rem 1.5rem;
+            padding: 0 1.5rem;
             z-index: 1060;
             display: flex;
             align-items: center;
@@ -46,11 +48,7 @@
             border: 1px solid var(--glass-border); color: #fff;
             transition: 0.3s;
         }
-        #sidebarToggle:hover {
-            background: var(--neon-primary);
-            box-shadow: 0 0 15px var(--neon-primary);
-            border-color: var(--neon-primary);
-        }
+        #sidebarToggle:hover { background: var(--neon-primary); box-shadow: 0 0 15px var(--neon-primary); border-color: var(--neon-primary); }
 
         /* --- SEARCH & VOICE NEON --- */
         .search-box-neon {
@@ -59,38 +57,17 @@
             border-radius: 50px !important;
             transition: all 0.4s;
         }
-        .search-box-neon:focus-within {
-            border-color: var(--neon-primary) !important;
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-        }
+        .search-box-neon:focus-within { border-color: var(--neon-primary) !important; box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
 
         .voice-search-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border) !important;
-            color: #fff;
-            width: 42px; height: 42px;
-            transition: 0.3s;
-            display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border) !important; color: #fff;
+            width: 42px; height: 42px; transition: 0.3s; display: flex; align-items: center; justify-content: center;
         }
-        .voice-search-btn:hover {
-            background: #ef4444 !important;
-            box-shadow: 0 0 15px #ef4444;
-            border-color: #ef4444 !important;
-            color: white !important;
-        }
+        .voice-search-btn:hover { background: #ef4444 !important; box-shadow: 0 0 15px #ef4444; border-color: #ef4444 !important; color: white !important; }
 
         /* --- AVATAR NEON --- */
-        .user-avatar-neon {
-            border: 2px solid transparent;
-            border-radius: 50%;
-            transition: 0.3s;
-            padding: 2px;
-            object-fit: cover;
-        }
-        .user-avatar-neon:hover {
-            border-color: var(--neon-primary);
-            box-shadow: 0 0 15px var(--neon-primary);
-        }
+        .user-avatar-neon { border: 2px solid transparent; border-radius: 50%; transition: 0.3s; padding: 2px; object-fit: cover; }
+        .user-avatar-neon:hover { border-color: var(--neon-primary); box-shadow: 0 0 15px var(--neon-primary); }
 
         /* --- YUKLASH TUGMASI --- */
         .btn-upload-neon {
@@ -98,22 +75,19 @@
             border: none; color: white !important; font-weight: 700;
             padding: 8px 22px; border-radius: 50px;
             box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-            transition: 0.3s;
-            display: flex; align-items: center; gap: 8px; text-decoration: none;
+            transition: 0.3s; display: flex; align-items: center; gap: 8px; text-decoration: none;
         }
-        .btn-upload-neon:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 25px rgba(99, 102, 241, 0.7);
-        }
+        .btn-upload-neon:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(99, 102, 241, 0.7); }
 
-        /* --- SIDEBAR --- */
+        /* --- SIDEBAR BO'SHLIQ YO'QOTISH --- */
         .sidebar {
             background: var(--glass-bg);
             border-right: 1px solid var(--glass-border);
             backdrop-filter: blur(10px);
             width: 260px;
             position: fixed;
-            top: 75px; bottom: 0;
+            top: var(--nav-height) !important; /* Qat'iy yopishtirildi */
+            bottom: 0;
             display: flex; flex-direction: column;
             z-index: 1040;
             transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -121,31 +95,28 @@
         .sidebar.collapsed { transform: translateX(-260px); }
 
         .nav-item {
-            margin: 4px 12px; padding: 10px 16px;
-            border-radius: 12px; color: #94a3b8 !important;
-            font-size: 14px; font-weight: 500; transition: 0.3s;
-            display: flex; align-items: center;
+            margin: 4px 12px; padding: 10px 16px; border-radius: 12px; color: #94a3b8 !important;
+            font-size: 14px; font-weight: 500; transition: 0.3s; display: flex; align-items: center;
         }
         .nav-item i { width: 25px; text-align: center; margin-right: 10px; font-size: 16px; }
-        .nav-item:hover, .nav-item.active {
-            background: rgba(99, 102, 241, 0.1);
-            color: #fff !important;
-            box-shadow: inset 4px 0 0 var(--neon-primary);
-        }
+        .nav-item:hover, .nav-item.active { background: rgba(99, 102, 241, 0.1); color: #fff !important; box-shadow: inset 4px 0 0 var(--neon-primary); }
 
-        .sidebar-header {
-            font-size: 11px; font-weight: 700; color: #475569;
-            text-transform: uppercase; letter-spacing: 1.5px;
-            padding: 20px 28px 8px;
-        }
+        .sidebar-header { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1.5px; padding: 20px 28px 8px; }
 
+        /* --- MAIN CONTENT & PROFIL TIKLASH --- */
         .main-content {
             margin-left: 260px;
-            padding: 100px 25px 30px;
+            padding: 80px 25px 30px; /* Navbar ostidan boshlanishini ta'minlaydi */
             min-height: 100vh;
+            display: block !important; /* Profilni majburan ko'rsatish */
             transition: 0.3s;
+            position: relative;
         }
         .main-content.expanded { margin-left: 0; }
+
+        @media (max-width: 992px) {
+            .main-content { margin-left: 0; padding-top: 80px; }
+        }
     </style>
 </head>
 <body>
