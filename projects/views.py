@@ -56,21 +56,42 @@ def create_project(request):
 
 
 # 3. LOYIHA TAFSILOTLARI (LIVE PREVIEW BILAN)
+def get_code_preview(project):
+    """Fayl mazmunini o'qish uchun yordamchi funksiya"""
+    if not project.source_code:
+        return "// Kod mavjud emas.", None
+
+    try:
+        ext = os.path.splitext(project.source_code.name)[1].lower()
+        with project.source_code.open('r') as f:
+            content = f.read()
+            full_text = content.decode('utf-8', errors='ignore') if isinstance(content, bytes) else content
+
+            # Preview uchun 15 qator
+            preview = "\n".join(full_text.splitlines()[:15])
+
+            if ext == '.html':
+                return preview, full_text  # Preview va Live natija
+            elif ext in ['.css', '.js', '.py', '.cpp', '.json', '.txt']:
+                return preview, None
+            elif ext in ['.zip', '.rar']:
+                return "// Bu arxiv fayl. Kodni ko'rish uchun yuklab oling.", None
+    except Exception as e:
+        return f"// Xatolik: {str(e)}", None
+    return "// Bu fayl formatini ko'rib bo'lmaydi.", None
+
+
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
+    Project.objects.filter(pk=pk).update(views=project.views + 1)
 
-    project.views += 1
-    project.save()
-
-    # --- IZOHLAR ---
-    if request.method == 'POST':
-        comment_form = CommentForm(request.POST)
-        if comment_form.is_valid():
-            comment = comment_form.save(commit=False)
-            comment.user = request.user
-            comment.project = project
+    # 1. Izohlar qismi
+    if request.method == 'POST' and request.user.is_authenticated:
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.user, comment.project = request.user, project
             comment.save()
-
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({
                     'username': comment.user.username,
@@ -78,83 +99,22 @@ def project_detail(request, pk):
                     'body': comment.body,
                     'created_at': "hozirgina"
                 })
-
             return redirect('project_detail', pk=pk)
-    else:
-        comment_form = CommentForm()
 
-    # --- SOTIB OLISH ---
-    has_bought = False
-    if project.price == 0:
-        has_bought = True
-    elif request.user.is_authenticated:
-        if request.user == project.author or request.user in project.buyers.all():
-            has_bought = True
+    # 2. Sotib olish va Kodni ko'rish
+    has_bought = project.price == 0 or (request.user.is_authenticated and
+                                        (request.user == project.author or request.user in project.buyers.all()))
 
-    # --- KOD VA LIVE PREVIEW LOGIKASI ---
-    code_preview = "// Kod mavjud emas."
-    live_preview = None  # <--- YANGI O'ZGARUVCHI (HTML natijasi uchun)
-
-    if project.source_code:
-        try:
-            ext = os.path.splitext(project.source_code.name)[1].lower()
-            text_extensions = ['.css', '.js', '.py', '.php', '.txt', '.cpp', '.c', '.java', '.json']
-
-            # 1. AGAR HTML BO'LSA -> JONLI NATIJA (IFRAME UCHUN)
-            if ext == '.html':
-                project.source_code.open('r')
-
-                # To'liq o'qib olamiz (Iframe uchun)
-                full_content = project.source_code.read()
-                if isinstance(full_content, bytes):
-                    live_preview = full_content.decode('utf-8', errors='ignore')
-                else:
-                    live_preview = full_content
-
-                # Kursor boshiga qaytariladi (Preview uchun 15 qator olishga)
-                project.source_code.seek(0)
-                lines = []
-                for _ in range(15):
-                    line = project.source_code.readline()
-                    if not line: break
-                    if isinstance(line, bytes):
-                        lines.append(line.decode('utf-8', errors='ignore'))
-                    else:
-                        lines.append(line)
-                code_preview = "".join(lines)
-                project.source_code.close()
-
-            # 2. BOSHQA FAYLLAR -> FAQAT KOD
-            elif ext in text_extensions:
-                project.source_code.open('r')
-                lines = []
-                for _ in range(15):
-                    line = project.source_code.readline()
-                    if not line: break
-                    if isinstance(line, bytes):
-                        lines.append(line.decode('utf-8', errors='ignore'))
-                    else:
-                        lines.append(line)
-                code_preview = "".join(lines)
-                project.source_code.close()
-
-            elif ext in ['.zip', '.rar', '.7z', '.tar', '.gz']:
-                code_preview = "// Bu arxiv fayl (ZIP/RAR).\n// Kodni ko'rish uchun loyihani xarid qiling va yuklab oling."
-            else:
-                code_preview = "// Bu fayl formatini oldindan ko'rish imkonsiz."
-
-        except Exception as e:
-            code_preview = f"// Xatolik: {str(e)}"
+    code_preview, live_preview = get_code_preview(project)
 
     context = {
         'project': project,
-        'form': comment_form,
+        'form': CommentForm(),
         'code_preview': code_preview,
-        'live_preview': live_preview,  # Shablonga yuboramiz
+        'live_preview': live_preview,
         'has_bought': has_bought,
     }
     return render(request, 'project_detail.html', context)
-
 
 # 4. RO'YXATDAN O'TISH
 def register(request):
@@ -209,26 +169,33 @@ def delete_project(request, pk):
 
 # 7. TAHRIRLASH
 @login_required
+@login_required
 def update_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
+
+    # Faqat muallif tahrirlay oladi
     if request.user != project.author:
+        messages.error(request, "Siz faqat o'z loyihangizni tahrirlashingiz mumkin.")
         return redirect('home')
 
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
             project = form.save()
+
+            # Qo'shimcha rasmlarni yuklash
             images = request.FILES.getlist('more_images')
             for img in images:
                 ProjectImage.objects.create(project=project, image=img)
 
-            messages.success(request, "Loyiha yangilandi!")
-            return redirect('project_detail', pk=pk)
+            messages.success(request, "Loyiha muvaffaqiyatli yangilandi!")
+            # project_detail sahifasiga loyiha pk-si bilan qaytamiz
+            return redirect('project_detail', pk=project.pk)
     else:
         form = ProjectForm(instance=project)
 
-    return render(request, 'update_project.html', {'form': form})
-
+    # project obyektini contextga qo'shish shart! (Rasmda aynan shu yetishmayotgan edi)
+    return render(request, 'update_project.html', {'form': form, 'project': project})
 
 # 8. LIKE (AJAX)
 @login_required

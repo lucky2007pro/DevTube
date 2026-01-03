@@ -38,6 +38,7 @@
         text-transform: uppercase;
         letter-spacing: 1px;
         margin-bottom: 8px;
+        display: block;
     }
 
     .btn-neon-save {
@@ -86,7 +87,7 @@
                                     <label class="form-label-custom">{{ field.label }}</label>
                                     {{ field }}
                                     {% if field.help_text %}
-                                        <div class="form-text text-muted small mt-1">{{ field.help_text }}</div>
+                                        <div class="form-text text-muted small mt-1" style="font-size: 11px;">{{ field.help_text }}</div>
                                     {% endif %}
                                     {% for error in field.errors %}
                                         <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
@@ -112,12 +113,17 @@
 
 <script>
     // Dinamik ravishda barcha form elementlariga neon klassini qo'shish
-    document.querySelectorAll('input, textarea, select').forEach(e => {
-        if (e.type !== 'checkbox' && e.type !== 'file') {
-            e.classList.add('neon-field', 'w-100');
-        } else if (e.type === 'file') {
-            e.classList.add('form-control', 'bg-dark', 'text-white', 'border-secondary');
-        }
-    });
+    function styleFormFields() {
+        document.querySelectorAll('input, textarea, select').forEach(e => {
+            if (e.type !== 'checkbox' && e.type !== 'file') {
+                e.classList.add('neon-field', 'w-100');
+            } else if (e.type === 'file') {
+                e.classList.add('form-control', 'bg-dark', 'text-white', 'border-secondary');
+            }
+        });
+    }
+
+    // Sahifa yuklanganda va DOM o'zgarganda ishga tushirish
+    window.onload = styleFormFields;
 </script>
 {% endblock %}
