@@ -1,5 +1,5 @@
-{% load static %}
 <!DOCTYPE html>
+{% load static %}
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
@@ -50,8 +50,7 @@
                     </ul>
                 </div>
             {% else %}
-                <a href="{% url 'account_login' %}" class="btn btn-outline-light btn-sm rounded-pill">Kirish</a>
-            {% endif %}
+                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm rounded-pill">Kirish</a>            {% endif %}
         </div>
     </nav>
 
