@@ -252,8 +252,9 @@
 
             <div class="sidebar-header px-4">Hamjamiyat</div>
             <a href="{% url 'community_chat' %}" class="nav-item {% if request.resolver_match.url_name == 'community_chat' %}active{% endif %}"><i class="fas fa-users"></i> Dasturchilar (Chat)</a>
-            <a href="#" class="nav-item"><i class="fas fa-bullhorn text-success"></i> E'lonlar</a>
-        </div>
+            <a href="{% url 'announcements' %}" class="nav-item {% if request.resolver_match.url_name == 'announcements' %}active{% endif %}">
+                <i class="fas fa-bullhorn text-danger"></i> E'lonlar
+            </a>        </div>
 
         <div class="theme-switch-container d-flex align-items-center justify-content-between">
             <span class="small text-muted" id="mode-label" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cyber Mode</span>
@@ -264,9 +265,15 @@
         </div>
 
         <div class="py-3 border-top" style="border-color: rgba(255,255,255,0.05) !important; background: rgba(15, 23, 42, 0.5);">
-            <a href="#" class="nav-item"><i class="fas fa-cog text-secondary"></i> Sozlamalar</a>
-            <a href="#" class="nav-item"><i class="fas fa-question-circle text-secondary"></i> Yordam</a>
-            <a href="#" class="nav-item"><i class="fas fa-headset text-info"></i> Murojaat</a>
+            <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <i class="fas fa-cog text-secondary"></i> Sozlamalar
+            </a>
+            <a href="{% url 'help' %}" class="nav-item {% if request.resolver_match.url_name == 'help' %}active{% endif %}">
+                <i class="fas fa-question-circle text-success"></i> Yordam
+            </a>
+            <a href="{% url 'contact' %}" class="nav-item {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">
+                <i class="fas fa-headset text-primary"></i> Murojaat
+            </a>
             <div class="text-center mt-3 small opacity-25" style="font-size: 10px;">&copy; 2026 DevTube</div>
         </div>
     </div>

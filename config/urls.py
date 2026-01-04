@@ -55,6 +55,10 @@ urlpatterns = [
 
     # Google orqali kirish (Allauth)
     path('accounts/', include('allauth.urls')),
+
+    path('news/', views.announcements, name='announcements'),
+    path('help/', views.help_page, name='help'),
+    path('contact/', views.contact_page, name='contact'),
 ]
 
 # Media fayllar (Rasm/Video) ishlashi uchun:

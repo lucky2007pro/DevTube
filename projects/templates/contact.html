@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-dark text-white border-secondary shadow-lg">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4"><i class="fas fa-envelope text-primary me-2"></i> Biz bilan bog'laning</h2>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Mavzu</label>
+                            <input type="text" name="subject" class="form-control bg-black text-white border-secondary" placeholder="Hamkorlik yoki taklif..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Xabar matni</label>
+                            <textarea name="message" class="form-control bg-black text-white border-secondary" rows="5" placeholder="Fikringizni yozing..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Yuborish</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

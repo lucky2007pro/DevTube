@@ -457,3 +457,18 @@ int main() {
             return JsonResponse({'result': result})
 
     return render(request, 'cpp_test.html', {'code': code, 'input': input_data, 'result': result})
+
+# --- 18. QO'SHIMCHA SAHIFALAR (E'lon, Yordam, Murojaat) ---
+def announcements(request):
+    # Bu yerda kelajakda Admin panelidan yangiliklarni chiqarish mumkin
+    return render(request, 'announcements.html')
+
+def help_page(request):
+    return render(request, 'help.html')
+
+def contact_page(request):
+    if request.method == 'POST':
+        # Bu yerda xabarni Telegramga yoki Emailga yuborish kodi bo'lishi mumkin
+        messages.success(request, "Xabaringiz qabul qilindi! Tez orada aloqaga chiqamiz.")
+        return redirect('contact')
+    return render(request, 'contact.html')
