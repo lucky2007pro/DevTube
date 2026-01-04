@@ -21,7 +21,7 @@
             --nav-height: 60px;
         }
 
-        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0; transition: background 0.3s; }
 
         /* --- NEON SCROLLBAR --- */
         ::-webkit-scrollbar { width: 6px; }
@@ -125,6 +125,32 @@
         }
         .main-content.expanded { margin-left: 0; }
 
+        /* --- THEME TOGGLE STYLE --- */
+        .theme-switch-container {
+            padding: 15px 24px;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid var(--glass-border);
+        }
+        .theme-switch { display: inline-block; height: 20px; position: relative; width: 40px; }
+        .theme-switch input { display:none; }
+        .slider { background-color: #334155; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 34px; }
+        .slider:before { background-color: white; bottom: 3px; content: ""; height: 14px; left: 4px; position: absolute; transition: .4s; width: 14px; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--neon-primary); }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        /* Minimal Mode qoidalari */
+        body.minimal-mode { --neon-glow: none; }
+        body.minimal-mode .project-card,
+        body.minimal-mode .tech-panel,
+        body.minimal-mode #sidebarToggle:hover {
+            box-shadow: none !important;
+            border-color: rgba(255,255,255,0.1) !important;
+        }
+        body.minimal-mode .panel-glow,
+        body.minimal-mode .price-badge-neon {
+            display: none !important;
+        }
+
         @media (max-width: 992px) {
             .main-content { margin-left: 0; padding-top: 80px; }
             .sidebar { transform: translateX(-260px); }
@@ -215,8 +241,16 @@
             <a href="#" class="nav-item"><i class="fas fa-terminal text-info"></i> Online Compiler</a>
 
             <div class="sidebar-header px-4">Hamjamiyat</div>
-            <a href="#" class="nav-item"><i class="fas fa-users"></i> Dasturchilar</a>
+            <a href="{% url 'community_chat' %}" class="nav-item {% if request.resolver_match.url_name == 'community_chat' %}active{% endif %}"><i class="fas fa-users"></i> Dasturchilar (Chat)</a>
             <a href="#" class="nav-item"><i class="fas fa-bullhorn text-success"></i> E'lonlar</a>
+        </div>
+
+        <div class="theme-switch-container d-flex align-items-center justify-content-between">
+            <span class="small text-muted" id="mode-label" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cyber Mode</span>
+            <label class="theme-switch" for="theme-checkbox">
+                <input type="checkbox" id="theme-checkbox" />
+                <div class="slider round"></div>
+            </label>
         </div>
 
         <div class="py-3 border-top" style="border-color: rgba(255,255,255,0.05) !important; background: rgba(15, 23, 42, 0.5);">
@@ -240,6 +274,33 @@
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
             mainContent.classList.toggle('expanded');
+        });
+
+        // THEME TOGGLE LOGIC
+        const themeToggle = document.querySelector('#theme-checkbox');
+        const modeLabel = document.querySelector('#mode-label');
+        const currentTheme = localStorage.getItem('theme');
+
+        if (currentTheme === 'cyber') {
+            document.body.classList.remove('minimal-mode');
+            themeToggle.checked = true;
+            modeLabel.innerText = 'Cyber Mode';
+        } else {
+            document.body.classList.add('minimal-mode');
+            themeToggle.checked = false;
+            modeLabel.innerText = 'Minimal Mode';
+        }
+
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.body.classList.remove('minimal-mode');
+                modeLabel.innerText = 'Cyber Mode';
+                localStorage.setItem('theme', 'cyber');
+            } else {
+                document.body.classList.add('minimal-mode');
+                modeLabel.innerText = 'Minimal Mode';
+                localStorage.setItem('theme', 'minimal');
+            }
         });
 
         function startVoiceSearch() {
