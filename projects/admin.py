@@ -12,6 +12,17 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'balance', 'avatar_preview')
     search_fields = ('user__username', 'bio')
 
+    # 1. YANGI TUGMA (Action)
+    actions = ['reset_balance_to_zero']
+
+    def reset_balance_to_zero(self, request, queryset):
+        # Tanlanganlarning balansini 0 ga tushiradi
+        updated_count = queryset.update(balance=0)
+        self.message_user(request, f"{updated_count} ta foydalanuvchi balansi 0 ga tushirildi.", messages.SUCCESS)
+
+    reset_balance_to_zero.short_description = "💰 Balansni 0 qilish (Reset)"
+
+    # 2. ESKI FUNKSIYANGIZ (Avatar bor/yo'qligini ko'rsatish)
     def avatar_preview(self, obj):
         if obj.avatar:
             return "Rasm bor"
