@@ -52,6 +52,8 @@ class Project(models.Model):
 
     views = models.IntegerField(default=0)
     likes = models.ManyToManyField(User, related_name='project_likes', blank=True)
+    # Project modeli ichida:
+    saved_by = models.ManyToManyField(User, related_name='saved_projects', blank=True)
     buyers = models.ManyToManyField(User, related_name='bought_projects', blank=True)
 
     @property

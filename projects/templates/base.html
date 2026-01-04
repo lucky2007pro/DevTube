@@ -222,7 +222,9 @@
 
             <div class="sidebar-header px-4">Kutubxona</div>
             <a href="{% url 'liked_videos' %}" class="nav-item {% if request.resolver_match.url_name == 'liked_videos' %}active{% endif %}"><i class="fas fa-heart text-danger"></i> Yoqqanlar</a>
-            <a href="#" class="nav-item"><i class="fas fa-bookmark text-warning"></i> Saqlanganlar</a>
+            <a href="{% url 'saved_projects' %}" class="nav-item {% if request.resolver_match.url_name == 'saved_projects' %}active{% endif %}">
+                    <i class="fas fa-bookmark text-warning"></i> Saqlanganlar
+            </a>
             <a href="{% url 'my_videos' %}" class="nav-item {% if request.resolver_match.url_name == 'my_videos' %}active{% endif %}"><i class="fas fa-folder-open"></i> Mening kodlarim</a>
 
             {% if user.is_authenticated %}

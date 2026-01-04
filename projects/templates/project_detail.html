@@ -246,10 +246,17 @@
                     </button>
                 {% endif %}
 
-                <button id="like-btn" data-url="{% url 'like_project' project.pk %}" class="btn btn-outline-light w-100 mt-2 rounded-pill border-opacity-25 py-2">
-                    <i id="like-icon" class="{% if request.user in project.likes.all %}fas text-danger{% else %}far{% endif %} fa-heart me-2"></i>
-                    <span id="like-count" class="fw-bold">{{ project.likes.count }}</span> Like
-                </button>
+                <div class="d-flex gap-2 mt-2">
+                    <button id="like-btn" data-url="{% url 'like_project' project.pk %}" class="btn btn-outline-light flex-grow-1 rounded-pill border-opacity-25 py-2">
+                        <i id="like-icon" class="{% if request.user in project.likes.all %}fas text-danger{% else %}far{% endif %} fa-heart me-2"></i>
+                        <span id="like-count" class="fw-bold">{{ project.likes.count }}</span> Like
+                    </button>
+
+                    <button id="save-btn" onclick="toggleSave({{ project.pk }})" class="btn btn-outline-light rounded-pill px-3 py-2 border-opacity-25" title="Saqlash">
+                        <i id="save-icon" class="{% if request.user in project.saved_by.all %}fas text-warning{% else %}far{% endif %} fa-bookmark"></i>
+                    </button>
+                </div>
+
             </div>
 
             <div class="neon-author-card">
@@ -367,5 +374,43 @@
             });
         });
     }
+</script>
+<script>
+function toggleSave(id) {
+    const btn = document.getElementById('save-btn');
+    const icon = document.getElementById('save-icon');
+
+    // Tugmani vaqtincha bosilmaydigan qilish (spam oldini olish)
+    btn.disabled = true;
+
+    fetch(`/project/${id}/save/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.is_saved) {
+            // Saqlandi (Sariq to'la belgi)
+            icon.classList.remove('far', 'text-muted');
+            icon.classList.add('fas', 'text-warning');
+
+            // Opsional: Kichik animatsiya
+            icon.style.transform = 'scale(1.2)';
+            setTimeout(() => icon.style.transform = 'scale(1)', 200);
+        } else {
+            // Olib tashlandi (Kulrang bo'sh belgi)
+            icon.classList.remove('fas', 'text-warning');
+            icon.classList.add('far', 'text-muted');
+        }
+        btn.disabled = false;
+    })
+    .catch(error => {
+        console.error('Xatolik:', error);
+        btn.disabled = false;
+    });
+}
 </script>
 {% endblock %}

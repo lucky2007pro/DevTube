@@ -11,8 +11,12 @@ urlpatterns = [
     # --- ASOSIY SAHIFALAR ---
     path('', views.home_page, name='home'),
     path('trending/', views.trending, name='trending'),
-    path('syncing/', views.syncing_projects, name='syncing'), # Mana shu qatorni qo'shing
+    path('syncing/', views.syncing_projects, name='syncing'),
     path('liked/', views.liked_videos, name='liked_videos'),
+
+    # --- YANGI QO'SHILDI: SAQLANGANLAR SAHIFASI ---
+    path('saved/', views.saved_projects, name='saved_projects'),
+
     path('my-videos/', views.my_videos, name='my_videos'),
 
     # --- LOYIHA AMALLARI ---
@@ -21,6 +25,10 @@ urlpatterns = [
     path('update/<int:pk>/', views.update_project, name='update_project'),
     path('delete/<int:pk>/', views.delete_project, name='delete_project'),
     path('like/<int:pk>/', views.like_project, name='like_project'),
+
+    # --- YANGI QO'SHILDI: SAQLASH FUNKSIYASI (AJAX) ---
+    path('project/<int:pk>/save/', views.save_project, name='save_project'),
+
     path('buy/<int:pk>/', views.buy_project, name='buy_project'),
 
     # --- IT DUNYOSIGA XOS: SYNC TIZIMI ---
@@ -29,6 +37,7 @@ urlpatterns = [
     # --- TOOLS ---
     path('cpp/', views.cpp_test, name='cpp_test'),
     path('community-chat/', views.community_chat, name='community_chat'),
+
     # --- USER PROFILI VA AUTH ---
     # O'z profiliga kirish
     path('profile/', views.profile, name='profile'),
@@ -40,7 +49,6 @@ urlpatterns = [
 
     # Login va Logout
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    # Django 5.0+ uchun logout POST so'rovini talab qilishi mumkin
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
     # Google orqali kirish (Allauth)

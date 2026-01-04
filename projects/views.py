@@ -362,3 +362,29 @@ def community_chat(request):
         return JsonResponse({'html': html})
 
     return render(request, 'community_chat.html', {'chat_messages': chat_messages})
+
+# --- SAQLANGANLAR (BOOKMARK) ---
+@login_required
+def save_project(request, pk):
+    if request.method == 'POST':
+        project = get_object_or_404(Project, pk=pk)
+        if request.user in project.saved_by.all():
+            project.saved_by.remove(request.user)
+            is_saved = False
+        else:
+            project.saved_by.add(request.user)
+            is_saved = True
+
+        return JsonResponse({'is_saved': is_saved})
+    return JsonResponse({'error': 'POST required'}, status=400)
+
+@login_required
+def saved_projects(request):
+    # Foydalanuvchi saqlagan barcha loyihalar
+    projects = request.user.saved_projects.all().order_by('-created_at')
+    context = {
+        'projects': projects,
+        'categories': Project.CATEGORY_CHOICES,
+        'page_title': 'Saqlangan Loyihalar' # Sahifa sarlavhasi uchun
+    }
+    return render(request, 'home.html', context)
