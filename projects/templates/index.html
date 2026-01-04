@@ -22,7 +22,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            cursor: none; /* Sichqonchani yashiramiz, o'zimiznikini qo'yamiz */
+            cursor: none; /* Sichqonchani yashiramiz */
         }
 
         body {
@@ -234,6 +234,7 @@
             h1 { font-size: 3rem; }
             nav { padding: 20px; }
             .nav-links { display: none; }
+            .hero-image-container { display: none; } /* Mobil telefonda rasmni yashirish */
         }
 
         /* Loading Screen */
@@ -266,7 +267,7 @@
     <div id="canvas-container"></div>
 
     <nav>
-        <div class="logo">Hojiakbar<span style="color:var(--primary)">  Hayrullayev</span>.</div>
+        <div class="logo">Hojiakbar<span style="color:var(--primary)"> Hayrullayev</span>.</div>
         <div class="nav-links">
             <a href="#home">Bosh sahifa</a>
             <a href="#about">Haqimda</a>
@@ -277,13 +278,16 @@
 
     <section id="home">
         <div class="hero-content">
-            <span class="subtitle">Full Stack Developer & Designer</span>
+            <span class="subtitle">AI & Full Stack Developer & Designer</span>
             <h1 class="animate-text">Kelajakni <br> Kod orqali <br> Yaratamiz</h1>
             <p class="animate-text">Men veb-saytlarni shunchaki yaratmayman, men ularni san'at asariga aylantiraman. 3D modellar, zamonaviy animatsiyalar va mukammal UX/UI.</p>
             <a href="#contact" class="btn animate-text">Meni yollash</a>
         </div>
+
         <div style="position: absolute; right: 10%; top: 20%; width: 400px; height: 500px; z-index: 1;" class="hero-image-container">
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px; opacity: 0.8; mask-image: linear-gradient(black 80%, transparent);">
+            <img src="https://i.ibb.co/9M395DT/test-tasm.jpg"
+                 alt="Hojiakbar Hayrullayev"
+                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px; opacity: 0.9; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); border: 1px solid var(--glass-border);">
         </div>
     </section>
 
@@ -339,14 +343,13 @@
             cursorDot.style.left = e.clientX + 'px';
             cursorDot.style.top = e.clientY + 'px';
 
-            // Cursor biroz kechikib yursin (smooth effect)
             cursor.animate({
                 left: e.clientX + 'px',
                 top: e.clientY + 'px'
             }, { duration: 500, fill: "forwards" });
         });
 
-        // --- 2. THREE.JS 3D BACKGROUND (Procedural Particles) ---
+        // --- 2. THREE.JS 3D BACKGROUND ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -354,22 +357,19 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        // Geometriya yaratish (Yulduzlar/Zarrachalar)
         const geometry = new THREE.BufferGeometry();
-        const particlesCount = 2000; // Zarrachalar soni
+        const particlesCount = 2000;
         const posArray = new Float32Array(particlesCount * 3);
 
         for(let i = 0; i < particlesCount * 3; i++) {
-            // Tasodifiy joylashuv
-            posArray[i] = (Math.random() - 0.5) * 10; // Kenglik bo'yicha tarqalish
+            posArray[i] = (Math.random() - 0.5) * 10;
         }
 
         geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
-        // Material (Zarracha ko'rinishi)
         const material = new THREE.PointsMaterial({
             size: 0.015,
-            color: 0x00f2ff, // Neon ko'k
+            color: 0x00f2ff,
             transparent: true,
             opacity: 0.8,
         });
@@ -379,7 +379,6 @@
 
         camera.position.z = 2;
 
-        // Sichqoncha harakatiga reaktsiya
         let mouseX = 0;
         let mouseY = 0;
 
@@ -388,43 +387,36 @@
             mouseY = event.clientY / window.innerHeight - 0.5;
         });
 
-        // Animatsiya Loop
         const clock = new THREE.Clock();
 
         function animate() {
             const elapsedTime = clock.getElapsedTime();
-
-            // Zarrachalarni aylantirish
             particlesMesh.rotation.y = elapsedTime * 0.05;
             particlesMesh.rotation.x = mouseY * 0.5;
             particlesMesh.rotation.y += mouseX * 0.5;
-
             renderer.render(scene, camera);
             requestAnimationFrame(animate);
         }
         animate();
 
-        // Oyna o'lchami o'zgarganda
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // --- 3. GSAP ANIMATIONS (Professional Scroll) ---
+        // --- 3. GSAP ANIMATIONS ---
         gsap.registerPlugin(ScrollTrigger);
 
-        // Bosh sahifa matnlari
         gsap.from(".animate-text", {
             y: 100,
             opacity: 0,
             duration: 1.5,
             stagger: 0.3,
             ease: "power4.out",
-            delay: 2.5 // Loader tugagandan keyin
+            delay: 2.5
         });
 
-        // Rasm animatsiyasi
         gsap.from(".hero-image-container", {
             x: 100,
             opacity: 0,
@@ -433,7 +425,6 @@
             delay: 3
         });
 
-        // Kartalar animatsiyasi (Scroll qilganda chiqadi)
         gsap.utils.toArray('.card').forEach(card => {
             gsap.from(card, {
                 scrollTrigger: {
@@ -454,7 +445,6 @@
             glare: true,
             "max-glare": 0.2,
         });
-
     </script>
 </body>
 </html>

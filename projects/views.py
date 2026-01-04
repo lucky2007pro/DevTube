@@ -481,3 +481,7 @@ def contact_page(request):
             return redirect('contact')
 
     return render(request, 'contact.html')
+
+# --- PORTFOLIO SAHIFASI ---
+def portfolio_page(request):
+    return render(request, 'index.html')

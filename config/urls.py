@@ -59,6 +59,7 @@ urlpatterns = [
     path('news/', views.announcements, name='announcements'),
     path('help/', views.help_page, name='help'),
     path('contact/', views.contact_page, name='contact'),
+    path('portfolio/', views.portfolio_page, name='portfolio'),  # <-- SHU
 ]
 
 # Media fayllar (Rasm/Video) ishlashi uchun:
