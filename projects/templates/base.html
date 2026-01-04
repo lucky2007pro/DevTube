@@ -243,7 +243,9 @@
 
             <div class="sidebar-header px-4">Asboblar</div>
             <a href="{% url 'cpp_test' %}" class="nav-item {% if request.resolver_match.url_name == 'cpp_test' %}active{% endif %}"><i class="fab fa-cuttlefish text-primary"></i> C++ Integratsiya</a>
-            <a href="#" class="nav-item"><i class="fas fa-terminal text-info"></i> Online Compiler</a>
+            <a href="{% url 'compiler' %}" class="nav-item {% if request.resolver_match.url_name == 'compiler' %}active{% endif %}">
+                <i class="fas fa-terminal text-info"></i> Online Compiler
+            </a>
 
             <div class="sidebar-header px-4">Hamjamiyat</div>
             <a href="{% url 'community_chat' %}" class="nav-item {% if request.resolver_match.url_name == 'community_chat' %}active{% endif %}"><i class="fas fa-users"></i> Dasturchilar (Chat)</a>

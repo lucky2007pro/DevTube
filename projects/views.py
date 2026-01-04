@@ -1,6 +1,6 @@
 import os
 import re
-import subprocess
+import requests  # <-- MUHIM: API ishlashi uchun
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -8,11 +8,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from django.contrib.auth.models import User
-# --- MUHIM: Chat ishlashi uchun kerakli import ---
 from django.template.loader import render_to_string
 
 # Modellar va Formalar
-# --- MUHIM: CommunityMessage modelini importga qo'shdik ---
 from .models import Project, Comment, ProjectImage, Sync, Profile, CommunityMessage
 from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 
@@ -296,33 +294,64 @@ def delete_project(request, pk):
     return redirect('home')
 
 
-# 11. C++ INTEGRATSIYASI (O'zgarishsiz)
-def cpp_test(request):
+# 11. UNIVERSAL ONLINE COMPILER (Piston API)
+def online_compiler(request):
     result = ""
-    code = request.POST.get('code', '') if request.method == 'POST' else ""
-    input_data = request.POST.get('input', '') if request.method == 'POST' else ""
+    code = ""
+    input_data = ""
+    language = "python"  # Default til
+
+    # Piston API tillari xaritasi
+    LANGUAGES = [
+        ('python', 'Python 3'),
+        ('javascript', 'Node.js (JS)'),
+        ('cpp', 'C++'),
+        ('java', 'Java'),
+        ('go', 'Go'),
+        ('php', 'PHP'),
+        ('csharp', 'C#'),
+        ('ruby', 'Ruby'),
+    ]
 
     if request.method == 'POST':
-        file_path = os.path.join(settings.BASE_DIR, 'main.cpp')
-        output_exe = os.path.join(settings.BASE_DIR, 'main.exe' if os.name == 'nt' else 'main')
+        code = request.POST.get('code', '')
+        input_data = request.POST.get('input', '')
+        language = request.POST.get('language', 'python')
 
-        with open(file_path, 'w') as f:
-            f.write(code)
+        # API ga so'rov yuborish (Piston API)
+        url = "https://emkc.org/api/v2/piston/execute"
+        payload = {
+            "language": language,
+            "version": "*",
+            "files": [{"content": code}],
+            "stdin": input_data
+        }
 
         try:
-            compile_process = subprocess.run(['g++', file_path, '-o', output_exe], capture_output=True, text=True)
-            if compile_process.returncode == 0:
-                run_process = subprocess.run([output_exe], input=input_data, capture_output=True, text=True, timeout=5)
-                result = run_process.stdout + (run_process.stderr if run_process.stderr else "")
+            response = requests.post(url, json=payload, timeout=10)
+            data = response.json()
+
+            if 'run' in data:
+                output = data['run'].get('stdout', '')
+                error = data['run'].get('stderr', '')
+                result = output + "\n" + error
             else:
-                result = compile_process.stderr
+                result = "Xatolik: API javob bermadi."
+
         except Exception as e:
-            result = str(e)
+            result = f"Ulanish xatosi: {str(e)}"
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'result': result})
 
-    return render(request, 'cpp_test.html', {'code': code, 'input': input_data, 'result': result})
+    context = {
+        'code': code,
+        'input': input_data,
+        'result': result,
+        'languages': LANGUAGES,
+        'current_lang': language
+    }
+    return render(request, 'compiler.html', context)
 
 
 # 14. SINXRONLARIM (SUBSCRIPTIONS)
@@ -363,7 +392,8 @@ def community_chat(request):
 
     return render(request, 'community_chat.html', {'chat_messages': chat_messages})
 
-# --- SAQLANGANLAR (BOOKMARK) ---
+
+# 16. SAQLANGANLAR (BOOKMARK)
 @login_required
 def save_project(request, pk):
     if request.method == 'POST':
@@ -378,6 +408,7 @@ def save_project(request, pk):
         return JsonResponse({'is_saved': is_saved})
     return JsonResponse({'error': 'POST required'}, status=400)
 
+
 @login_required
 def saved_projects(request):
     # Foydalanuvchi saqlagan barcha loyihalar
@@ -385,6 +416,6 @@ def saved_projects(request):
     context = {
         'projects': projects,
         'categories': Project.CATEGORY_CHOICES,
-        'page_title': 'Saqlangan Loyihalar' # Sahifa sarlavhasi uchun
+        'page_title': 'Saqlangan Loyihalar'
     }
     return render(request, 'home.html', context)

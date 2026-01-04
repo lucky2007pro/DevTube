@@ -35,7 +35,9 @@ urlpatterns = [
     path('sync/<str:username>/', views.toggle_sync, name='toggle_sync'),
 
     # --- TOOLS ---
-    path('cpp/', views.cpp_test, name='cpp_test'),
+    # ESKI: path('cpp/', views.cpp_test, name='cpp_test'),
+    # YANGI:
+    path('compiler/', views.online_compiler, name='compiler'),
     path('community-chat/', views.community_chat, name='community_chat'),
 
     # --- USER PROFILI VA AUTH ---
