@@ -10,7 +10,7 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
-    'jazzmin',
+    'jazzmin',  # <--- JAZZMIN ENG TEPADA TURISHI SHART!
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -28,7 +28,7 @@ INSTALLED_APPS = [
 
     # PROVAYDERLAR
     'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.github',  # <--- MANA BU QATOR QO'SHILDI ✅
+    'allauth.socialaccount.providers.github',
 ]
 
 MIDDLEWARE = [
@@ -104,7 +104,7 @@ SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
-# --- SOCIAL ACCOUNT PROVIDERS (YANGI QO'SHILDI) ---
+# --- SOCIAL ACCOUNT PROVIDERS ---
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': [
@@ -119,7 +119,69 @@ SOCIALACCOUNT_PROVIDERS = {
         'SCOPE': [
             'user',
             'read:user',
-            'user:email',  # Emailni olish uchun muhim
+            'user:email',
         ],
+    }
+}
+
+# ==========================================
+# 🎨 JAZZMIN ADMIN PANEL SOZLAMALARI (YANGI)
+# ==========================================
+JAZZMIN_SETTINGS = {
+    # Sayt sarlavhasi
+    "site_title": "DevTube Admin",
+    "site_header": "DevTube",
+    "site_brand": "DevTube Boshqaruv",
+    "welcome_sign": "Boshqaruv paneliga xush kelibsiz",
+    "copyright": "DevTube Ltd",
+    "search_model": "auth.User",
+
+    # Menyu ikonkalari (FontAwesome)
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+
+        "projects.Project": "fas fa-video",  # Loyihalar (Video belgisi)
+        "projects.Profile": "fas fa-id-card",  # Profillar
+        "projects.Deposit": "fas fa-arrow-circle-down",  # Pul kirishi (Yashil strelka mantiqan)
+        "projects.Withdrawal": "fas fa-arrow-circle-up",  # Pul chiqishi (Qizil strelka mantiqan)
+        "projects.Transaction": "fas fa-history",  # Tarix
+        "projects.Comment": "fas fa-comments",  # Izohlar
+        "projects.Contact": "fas fa-envelope",  # Xabarlar
+        "projects.Sync": "fas fa-sync",  # Sinxronlar
+        "projects.CommunityMessage": "fas fa-users",  # Chat
+    },
+
+    # Yon menyu (Sidebar) sozlamalari
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "order_with_respect_to": ["projects", "auth"],  # Proyektlar tepada turadi
+}
+
+# 🌑 DIZAYN (DARK MODE - Youtube Studio Style)
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-dark",
+    "accent": "accent-primary",
+    "navbar": "navbar-dark",
+    "no_navbar_border": False,
+    "navbar_fixed": False,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "theme": "darkly",  # <-- Eng muhim joyi: Qorong'u mavzu
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
     }
 }
