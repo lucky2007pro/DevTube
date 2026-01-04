@@ -216,6 +216,9 @@
             </button>
 
             {% if user.is_authenticated %}
+                <a href="{% url 'add_funds' %}" class="btn btn-sm text-success fw-bold me-2 d-none d-lg-flex align-items-center gap-2" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 50px; padding: 6px 15px;">
+                    <i class="fas fa-wallet"></i> ${{ user.profile.balance }} <span style="font-size: 10px;">+</span>
+                </a>
                 <a href="{% url 'create_project' %}" class="btn-upload-neon">
                     <i class="fas fa-plus"></i> <span class="d-none d-lg-inline">Yuklash</span>
                 </a>

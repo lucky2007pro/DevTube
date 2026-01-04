@@ -60,6 +60,9 @@ urlpatterns = [
     path('help/', views.help_page, name='help'),
     path('contact/', views.contact_page, name='contact'),
     path('portfolio/', views.portfolio_page, name='portfolio'),  # <-- SHU
+    # urls.py ichiga urlpatterns ro'yxatiga qo'shing:
+    path('add-funds/', views.add_funds, name='add_funds'),
+    path('withdraw/', views.withdraw_money, name='withdraw_money'), # Pul yechish uchun ham
 ]
 
 # Media fayllar (Rasm/Video) ishlashi uchun:
