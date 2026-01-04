@@ -10,22 +10,27 @@
                     
                     <div class="alert alert-primary bg-opacity-25 border-primary text-center">
                         <p class="mb-1 text-white-50">Quyidagi kartaga to'lov qiling:</p>
-                        <h4 class="text-white fw-bold copy-text" style="cursor: pointer;">8600 1234 5678 9012</h4>
+                        <h4 class="text-white fw-bold copy-text" style="cursor: pointer;">9860 3501 4254 7545</h4>
                         <p class="mb-0 small text-info">(Hojiakbar H.)</p>
                     </div>
 
-                    <form method="post">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Qancha tashladingiz? ($)</label>
                             <input type="number" name="amount" class="form-control bg-black text-white border-secondary" placeholder="Masalan: 50" required>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Chek rasmi yoki vaqti</label>
-                            <input type="text" name="transaction_id" class="form-control bg-black text-white border-secondary" placeholder="Masalan: 14:30 da, Click orqali" required>
-                            <small class="text-muted">To'lovni tezroq topishimiz uchun yozing</small>
+                            <label class="form-label">Chek rasmi (Skrinshot)</label>
+                            <input type="file" name="receipt" class="form-control bg-black text-white border-secondary" accept="image/*" required>
+                            <small class="text-muted">To'lov chekini yuklash majburiy</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Izoh (ixtiyoriy)</label>
+                            <input type="text" name="message" class="form-control bg-black text-white border-secondary" placeholder="Masalan: Soat 14:30 da, Click orqali">
                         </div>
 
                         <button type="submit" class="btn btn-success w-100 fw-bold">

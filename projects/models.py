@@ -174,6 +174,8 @@ class Withdrawal(models.Model):
 
 
 # --- 10. DEPOZIT (PUL KIRITISH - Manual) ---
+# projects/models.py ichidagi Deposit modelini topib, shunday o'zgartiring:
+
 class Deposit(models.Model):
     PENDING = 'pending'
     APPROVED = 'approved'
@@ -187,7 +189,11 @@ class Deposit(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    transaction_id = models.CharField(max_length=100, blank=True, help_text="Chek raqami yoki to'lov vaqti")
+
+    # YANGI QO'SHILGAN QATORLAR:
+    receipt = models.ImageField(upload_to='deposit_receipts/', blank=True, null=True)
+    message = models.CharField(max_length=255, blank=True, null=True)  # Izoh uchun
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -229,25 +229,28 @@ def buy_project(request, pk):
 
 # B) HISOBNI TO'LDIRISH (Manual Deposit)
 @login_required
+@login_required
 def add_funds(request):
     if request.method == 'POST':
         try:
             amount = Decimal(request.POST.get('amount'))
-            transaction_id = request.POST.get('transaction_id')  # Chek raqami
+            message = request.POST.get('message')
+            receipt = request.FILES.get('receipt')  # Rasmni olish
 
             if amount > 0:
                 Deposit.objects.create(
                     user=request.user,
                     amount=amount,
-                    transaction_id=transaction_id,
+                    message=message,
+                    receipt=receipt,  # Bazaga yozish
                     status=Deposit.PENDING
                 )
-                messages.success(request, "So'rov yuborildi! Admin tasdiqlagach balans to'ldiriladi.")
+                messages.success(request, "Chek yuborildi! Admin tekshirib balansni to'ldiradi.")
                 return redirect('profile', username=request.user.username)
             else:
                 messages.error(request, "Summa noto'g'ri.")
-        except:
-            messages.error(request, "Xatolik yuz berdi.")
+        except Exception as e:
+            messages.error(request, f"Xatolik: {e}")
 
     return render(request, 'add_funds.html')
 
