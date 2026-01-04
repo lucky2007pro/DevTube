@@ -303,6 +303,7 @@ def online_compiler(request):
 
     # Piston API tillari xaritasi
     LANGUAGES = [
+        ('html', 'HTML5 (Web)'),
         ('python', 'Python 3'),
         ('javascript', 'Node.js (JS)'),
         ('cpp', 'C++'),

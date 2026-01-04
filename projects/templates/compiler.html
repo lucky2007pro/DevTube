@@ -16,15 +16,23 @@
         border: none;
         resize: none;
     }
-    .code-editor:focus {
-        box-shadow: none;
-        background: rgba(0, 0, 0, 0.4) !important;
-    }
+    .code-editor:focus { box-shadow: none; background: rgba(0, 0, 0, 0.4) !important; }
+
+    /* Output stillari */
     .output-area {
         font-family: 'Consolas', monospace;
         background: #0f172a;
         color: #10b981;
         border-radius: 0 0 10px 0;
+        min-height: 100px;
+    }
+    /* HTML Preview uchun oyna */
+    .html-preview-frame {
+        width: 100%;
+        height: 100%;
+        background: white;
+        border: none;
+        display: none; /* Boshida yashirin */
     }
 </style>
 
@@ -33,10 +41,9 @@
         <div class="col-lg-11">
 
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-white fw-bold"><i class="fas fa-terminal text-warning me-2"></i> Online Compiler</h2>
+                <h2 class="text-white fw-bold"><i class="fas fa-laptop-code text-warning me-2"></i> Universal Compiler</h2>
                 <div class="d-flex gap-2">
                     <span class="badge bg-primary bg-opacity-25 text-primary px-3 py-2 rounded-pill">Multi-Language</span>
-                    <span class="badge bg-success bg-opacity-25 text-success px-3 py-2 rounded-pill">Cloud API</span>
                 </div>
             </div>
 
@@ -45,14 +52,14 @@
                     {% csrf_token %}
 
                     <div class="p-3 border-bottom border-secondary d-flex gap-3 align-items-center flex-wrap" style="background: rgba(255,255,255,0.02);">
-                        <select name="language" id="langSelect" class="form-select bg-dark text-white border-secondary" style="width: 200px;" onchange="fillExample()">
+                        <select name="language" id="langSelect" class="form-select bg-dark text-white border-secondary" style="width: 200px;" onchange="handleLangChange()">
                             {% for lang_code, lang_name in languages %}
                                 <option value="{{ lang_code }}" {% if current_lang == lang_code %}selected{% endif %}>{{ lang_name }}</option>
                             {% endfor %}
                         </select>
 
                         <button type="button" class="btn btn-sm btn-outline-light" onclick="fillExample()">
-                            <i class="fas fa-magic me-1"></i> Kod Namunasini Yuklash
+                            <i class="fas fa-magic me-1"></i> Namuna
                         </button>
 
                         <button type="submit" class="btn btn-primary px-4 ms-auto fw-bold shadow-lg" id="runBtn">
@@ -61,24 +68,30 @@
                     </div>
 
                     <div class="row g-0">
-                        <div class="col-md-8 border-end border-secondary">
+                        <div class="col-md-7 border-end border-secondary">
                             <textarea name="code" id="codeInput" class="form-control code-editor p-4"
                                 style="height: 550px;"
                                 placeholder="// Kodingizni shu yerga yozing..." spellcheck="false">{{ code }}</textarea>
                         </div>
 
-                        <div class="col-md-4 d-flex flex-column">
-                            <div class="p-2 border-bottom border-secondary bg-dark bg-opacity-50 text-muted small fw-bold text-uppercase px-3">
-                                <i class="fas fa-keyboard me-2"></i> Input (Kiruvchi ma'lumot)
+                        <div class="col-md-5 d-flex flex-column">
+                            <div id="inputSection">
+                                <div class="p-2 border-bottom border-secondary bg-dark bg-opacity-50 text-muted small fw-bold text-uppercase px-3">
+                                    <i class="fas fa-keyboard me-2"></i> Input
+                                </div>
+                                <textarea name="input" class="form-control bg-transparent text-white border-0 p-3"
+                                    style="height: 100px; font-family: monospace; resize: none; border-bottom: 1px solid rgba(255,255,255,0.1) !important;"
+                                    placeholder="Masalan: 10 20">{{ input }}</textarea>
                             </div>
-                            <textarea name="input" class="form-control bg-transparent text-white border-0 p-3"
-                                style="height: 150px; font-family: monospace; resize: none; border-bottom: 1px solid rgba(255,255,255,0.1) !important;"
-                                placeholder="Masalan: 10 20">{{ input }}</textarea>
 
-                            <div class="p-2 border-bottom border-secondary bg-dark bg-opacity-50 text-muted small fw-bold text-uppercase px-3">
-                                <i class="fas fa-desktop me-2"></i> Output (Natija)
+                            <div class="p-2 border-bottom border-secondary bg-dark bg-opacity-50 text-muted small fw-bold text-uppercase px-3 d-flex justify-content-between">
+                                <span><i class="fas fa-desktop me-2"></i> Output / Preview</span>
+                                <span id="statusText" class="text-warning small" style="display:none;">Ishlamoqda...</span>
                             </div>
+
                             <pre id="outputArea" class="p-3 mb-0 flex-grow-1 output-area" style="overflow: auto; white-space: pre-wrap;">{{ result }}</pre>
+
+                            <iframe id="htmlPreview" class="html-preview-frame"></iframe>
                         </div>
                     </div>
                 </form>
@@ -89,18 +102,53 @@
 </div>
 
 <script>
-    // 1. AJAX So'rov (Sahifa yangilanmasligi uchun)
+    const langSelect = document.getElementById('langSelect');
+    const inputSection = document.getElementById('inputSection');
+    const outputArea = document.getElementById('outputArea');
+    const htmlPreview = document.getElementById('htmlPreview');
+    const codeInput = document.getElementById('codeInput');
+
+    // Tillar o'zgarganda UI ni moslash
+    function handleLangChange() {
+        const lang = langSelect.value;
+        fillExample();
+
+        if (lang === 'html') {
+            // HTML bo'lsa Inputni yashiramiz va Previewni ko'rsatamiz
+            inputSection.style.display = 'none';
+            outputArea.style.display = 'none';
+            htmlPreview.style.display = 'block';
+        } else {
+            // Boshqa tillar bo'lsa Input va Text Outputni ko'rsatamiz
+            inputSection.style.display = 'block';
+            outputArea.style.display = 'block';
+            htmlPreview.style.display = 'none';
+        }
+    }
+
+    // RUN tugmasini bosish
     document.getElementById('compiler-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const btn = document.getElementById('runBtn');
-        const output = document.getElementById('outputArea');
-        const originalText = btn.innerHTML;
+        const lang = langSelect.value;
 
-        // Yuklash holati
+        // Agar HTML bo'lsa, Serverga so'rov yubormaymiz!
+        if (lang === 'html') {
+            const code = codeInput.value;
+            // Iframe ichiga kodni yozamiz
+            const doc = htmlPreview.contentWindow.document;
+            doc.open();
+            doc.write(code);
+            doc.close();
+            return; // Shu yerda to'xtaymiz
+        }
+
+        // Boshqa tillar uchun AJAX (Serverga)
+        const originalText = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Compiling...';
-        output.innerText = 'Serverga ulanmoqda...';
-        output.style.color = '#94a3b8';
+        outputArea.innerText = 'Serverga ulanmoqda...';
+        outputArea.style.color = '#94a3b8';
 
         const formData = new FormData(this);
 
@@ -111,28 +159,25 @@
         })
         .then(res => res.json())
         .then(data => {
-            output.innerText = data.result;
-
-            // Xatolik bo'lsa qizil rang, bo'lmasa yashil
-            if (data.result.toLowerCase().includes('error') || data.result.toLowerCase().includes('traceback') || data.result.toLowerCase().includes('exception')) {
-                output.style.color = '#ef4444'; // Qizil
+            outputArea.innerText = data.result;
+            if (data.result.toLowerCase().includes('error') || data.result.toLowerCase().includes('traceback')) {
+                outputArea.style.color = '#ef4444';
             } else {
-                output.style.color = '#10b981'; // Yashil
+                outputArea.style.color = '#10b981';
             }
-
             btn.disabled = false;
             btn.innerHTML = originalText;
         })
         .catch(err => {
-            output.innerText = "Internet bilan aloqa yo'q yoki Server xatosi.";
-            output.style.color = '#ef4444';
+            outputArea.innerText = "Xatolik yuz berdi.";
+            outputArea.style.color = '#ef4444';
             btn.disabled = false;
             btn.innerHTML = originalText;
         });
     });
 
-    // 2. Tab tugmasini bosganda 4 ta probel tashlash
-    document.getElementById('codeInput').addEventListener('keydown', function(e) {
+    // Tab tugmasi
+    codeInput.addEventListener('keydown', function(e) {
         if (e.key == 'Tab') {
             e.preventDefault();
             var start = this.selectionStart;
@@ -142,34 +187,31 @@
         }
     });
 
-    // 3. Tillar uchun tayyor namunalar
+    // Namunalar
     const examples = {
-        'python': 'print("Salom, DevTube!")\n\n# Massiv bilan ishlash\nnumbers = [1, 2, 3, 4, 5]\nkvadratlar = [n**2 for n in numbers]\nprint(f"Kvadratlar: {kvadratlar}")',
-        'javascript': 'console.log("Salom, JavaScript!");\n\nconst users = [\n  { name: "Ali", age: 25 },\n  { name: "Vali", age: 30 }\n];\n\nusers.forEach(user => {\n  console.log(`${user.name} - ${user.age} yosh`);\n});',
-        'cpp': '#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    cout << "Salom, C++!" << endl;\n    \n    vector<int> nums = {10, 20, 30};\n    for(int n : nums) {\n        cout << n << " ";\n    }\n    return 0;\n}',
-        'java': 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Salom, Java!");\n        \n        for(int i=1; i<=5; i++) {\n            System.out.println("Sanoq: " + i);\n        }\n    }\n}',
-        'go': 'package main\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Salom, Go Lang!")\n    \n    arr := []int{2, 4, 6, 8}\n    fmt.Println(arr)\n}',
-        'php': '<?php\necho "Salom, PHP!\\n";\n\n$colors = ["Red", "Green", "Blue"];\nforeach ($colors as $color) {\n    echo "$color\\n";\n}\n?>',
-        'csharp': 'using System;\n\npublic class Program\n{\n    public static void Main()\n    {\n        Console.WriteLine("Salom, C#!");\n    }\n}',
-        'ruby': 'puts "Salom, Ruby!"\n\n5.times do |i|\n  puts "Sanoq: #{i}"\nend'
+        'html': '<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: sans-serif; text-align: center; color: #333; }\n    h1 { color: #6366f1; }\n    button { padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 5px; cursor: pointer; }\n  </style>\n</head>\n<body>\n\n  <h1>Salom, DevTube!</h1>\n  <p>Bu HTML Preview oynasi.</p>\n  <button onclick="alert(\'Ishladi!\')">Meni bos</button>\n\n  <script>\n    console.log("JavaScript ham ishlaydi!");\n  <\/script>\n</body>\n</html>',
+        'python': 'print("Salom, DevTube!")\nnumbers = [1, 2, 3, 4, 5]\nprint(f"Kvadratlar: {[n**2 for n in numbers]}")',
+        'javascript': 'console.log("Salom, JS!");\n[1, 2, 3].forEach(n => console.log(n * 2));',
+        'cpp': '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "Salom, C++!" << endl;\n    return 0;\n}',
+        'java': 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Salom, Java!");\n    }\n}',
+        'go': 'package main\nimport "fmt"\nfunc main() {\n    fmt.Println("Salom, Go!")\n}',
+        'php': '<?php\necho "Salom, PHP!";\n?>',
+        'csharp': 'using System;\npublic class Program {\n    public static void Main() {\n        Console.WriteLine("Salom, C#!");\n    }\n}',
+        'ruby': 'puts "Salom, Ruby!"'
     };
 
     function fillExample() {
-        const lang = document.getElementById('langSelect').value;
-        const editor = document.getElementById('codeInput');
-
+        const lang = langSelect.value;
         if (examples[lang]) {
-            editor.value = examples[lang];
+            codeInput.value = examples[lang];
         } else {
-            editor.value = '// Bu til uchun namuna hozircha mavjud emas';
+            codeInput.value = '';
         }
     }
 
-    // Sahifa yuklanganda birinchi marta Python namunasini qo'yish
+    // Sahifa yuklanganda tekshirish
     window.onload = function() {
-        if(document.getElementById('codeInput').value.trim() === "") {
-            fillExample();
-        }
+        handleLangChange();
     };
 </script>
 {% endblock %}
