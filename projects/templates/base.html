@@ -160,53 +160,56 @@
 </head>
 <body>
 
-    <nav class="navbar fixed-top">
-        <div class="d-flex align-items-center gap-3" style="min-width: 250px;">
-            <button id="sidebarToggle"><i class="fas fa-bars"></i></button>
-            <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center gap-2 m-0">
-                <div style="background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: var(--neon-glow);">
-                    <i class="fas fa-play text-white" style="font-size: 14px;"></i>
-                </div>
-                <span class="d-none d-lg-inline fw-bold text-white fs-4">Dev<span style="color: var(--neon-primary);">Tube</span></span>
+    <nav class="navbar fixed-top flex-nowrap"> <div class="d-flex align-items-center gap-3 px-2">
+        <button id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center gap-2 m-0">
+            <div style="background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: var(--neon-glow);">
+                <i class="fas fa-play text-white" style="font-size: 14px;"></i>
+            </div>
+            <span class="d-none d-md-inline fw-bold text-white fs-4">Dev<span style="color: var(--neon-primary);">Tube</span></span>
+        </a>
+    </div>
+
+    <div class="search-wrapper flex-grow-1 d-none d-md-flex justify-content-center px-2">
+        <form id="mainSearchForm" class="d-flex align-items-center w-100" style="max-width: 600px;" action="{% url 'home' %}" method="GET">
+            <div class="input-group search-box-neon">
+                <input type="text" name="q" id="searchInput" class="form-control text-white border-0 bg-transparent py-2 px-4" placeholder="Loyihalarni qidirish..." autocomplete="off">
+                <button class="btn border-0 text-muted px-3" type="submit"><i class="fas fa-search"></i></button>
+            </div>
+            <button type="button" class="btn voice-search-btn rounded-circle ms-3" onclick="startVoiceSearch()" id="voiceBtn">
+                <i class="fas fa-microphone"></i>
+            </button>
+        </form>
+    </div>
+
+    <div class="d-md-none ms-auto me-2">
+        <button class="btn text-white" type="button"><i class="fas fa-search"></i></button>
+    </div>
+
+    <div class="d-flex align-items-center justify-content-end gap-2 px-2">
+        {% if user.is_authenticated %}
+            <a href="{% url 'create_project' %}" class="btn-upload-neon">
+                <i class="fas fa-plus"></i> <span class="d-none d-lg-inline">Yuklash</span>
             </a>
-        </div>
-
-        <div class="search-wrapper flex-grow-1 d-flex justify-content-center px-4">
-            <form id="mainSearchForm" class="d-flex align-items-center w-100" style="max-width: 600px;" action="{% url 'home' %}" method="GET">
-                <div class="input-group search-box-neon">
-                    <input type="text" name="q" id="searchInput" class="form-control text-white border-0 bg-transparent py-2 px-4" placeholder="Loyihalarni qidirish..." autocomplete="off">
-                    <button class="btn border-0 text-muted px-3" type="submit"><i class="fas fa-search"></i></button>
-                </div>
-                <button type="button" class="btn voice-search-btn rounded-circle ms-3" onclick="startVoiceSearch()" id="voiceBtn">
-                    <i class="fas fa-microphone"></i>
-                </button>
-            </form>
-        </div>
-
-        <div class="d-flex align-items-center justify-content-end gap-3" style="min-width: 250px;">
-            {% if user.is_authenticated %}
-                <a href="{% url 'create_project' %}" class="btn-upload-neon">
-                    <i class="fas fa-plus"></i> <span class="d-none d-sm-inline">Yuklash</span>
+            <div class="dropdown">
+                <a href="#" class="dropdown-toggle text-decoration-none d-flex align-items-center" data-bs-toggle="dropdown">
+                    <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="user-avatar-neon shadow" width="38" height="38">
                 </a>
-                <div class="dropdown">
-                    <a href="#" class="dropdown-toggle text-decoration-none d-flex align-items-center" data-bs-toggle="dropdown">
-                        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="user-avatar-neon shadow" width="38" height="38">
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end mt-3 shadow-lg" style="background: #0f172a; border: 1px solid var(--glass-border);">
-                        <li><a class="dropdown-item py-2 text-light" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2 text-primary"></i> Profil</a></li>
-                        <li><hr class="dropdown-divider opacity-10"></li>
-                        <li>
-                            <form method="post" action="{% url 'logout' %}">
-                                {% csrf_token %}<button type="submit" class="dropdown-item py-2 text-danger fw-bold"><i class="fas fa-sign-out-alt me-2"></i> Chiqish</button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
-            {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">KIRISH</a>
-            {% endif %}
-        </div>
-    </nav>
+                <ul class="dropdown-menu dropdown-menu-end mt-3 shadow-lg" style="background: #0f172a; border: 1px solid var(--glass-border);">
+                    <li><a class="dropdown-item py-2 text-light" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2 text-primary"></i> Profil</a></li>
+                    <li><hr class="dropdown-divider opacity-10"></li>
+                    <li>
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}<button type="submit" class="dropdown-item py-2 text-danger fw-bold"><i class="fas fa-sign-out-alt me-2"></i> Chiqish</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        {% else %}
+            <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">KIRISH</a>
+        {% endif %}
+    </div>
+</nav>
 
     <div class="sidebar" id="sidebar">
         <div class="flex-grow-1 overflow-auto py-2">

@@ -28,7 +28,7 @@ urlpatterns = [
 
     # --- TOOLS ---
     path('cpp/', views.cpp_test, name='cpp_test'),
-
+    path('community-chat/', views.community_chat, name='community_chat'),
     # --- USER PROFILI VA AUTH ---
     # O'z profiliga kirish
     path('profile/', views.profile, name='profile'),
