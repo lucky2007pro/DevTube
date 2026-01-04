@@ -25,18 +25,18 @@ class Project(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
 
-    # Asosiy rasm (Thumbnail) - Bu oddiy rasm
+    # Asosiy rasm (Thumbnail)
     image = models.ImageField(upload_to='project_thumbnails/')
 
     # YouTube link
     youtube_link = models.URLField(max_length=200, help_text="YouTube video ssilkasini qo'ying (Majburiy)")
 
-    # --- O'ZGARISH SHU YERDA (ZIP FAYL UCHUN) ---
+    # ZIP fayl manbasi
     source_code = models.FileField(
         upload_to='project_code/',
         blank=True,
         null=True,
-        storage=RawMediaCloudinaryStorage()  # <--- ZIP fayl xatosini shu tuzatadi
+        storage=RawMediaCloudinaryStorage()
     )
 
     CATEGORY_CHOICES = [
@@ -54,15 +54,12 @@ class Project(models.Model):
     likes = models.ManyToManyField(User, related_name='project_likes', blank=True)
     buyers = models.ManyToManyField(User, related_name='bought_projects', blank=True)
 
-    # --- YOUTUBE ID AJRATIB OLISH ---
     @property
     def get_youtube_id(self):
         if not self.youtube_link:
             return None
-
         regex = r'(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})'
         match = re.search(regex, self.youtube_link)
-
         if match:
             return match.group(1)
         return None
@@ -89,6 +86,35 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.project.title}"
+
+
+# --- 5. SYNC (OBUNALAR/FOLLOWERS TIZIMI) ---
+# Xatolik aynan shu klass yo'qligi uchun chiqqan edi
+class Sync(models.Model):
+    follower = models.ForeignKey(Profile, related_name='following', on_delete=models.CASCADE)
+    following = models.ForeignKey(Profile, related_name='followers', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'following')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.follower.user.username} -> {self.following.user.username}"
+
+
+# --- 6. HAMJAMIYAT CHATI (LIVE CHAT) ---
+# Chat ishlashi uchun bu ham kerak
+class CommunityMessage(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.user.username}: {self.body[:20]}"
 
 
 # --- SIGNALS (Avtomatik profil yaratish) ---
