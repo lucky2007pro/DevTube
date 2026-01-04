@@ -4,16 +4,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-# --- MUHIM: ZIP fayllar uchun maxsus saqlash turi ---
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
+
 
 # --- 1. PROFILE (Foydalanuvchi ma'lumotlari + HAMYON) ---
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     avatar = models.ImageField(upload_to='avatars/', default='default.jpg')
     bio = models.TextField(blank=True)
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=100.00)
+
+    # Real tizimda boshlang'ich balans 0 bo'lishi kerak
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
         return f"{self.user.username} profili"
@@ -24,14 +25,9 @@ class Project(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField()
-
-    # Asosiy rasm (Thumbnail)
     image = models.ImageField(upload_to='project_thumbnails/')
-
-    # YouTube link
     youtube_link = models.URLField(max_length=200, help_text="YouTube video ssilkasini qo'ying (Majburiy)")
 
-    # ZIP fayl manbasi
     source_code = models.FileField(
         upload_to='project_code/',
         blank=True,
@@ -49,10 +45,9 @@ class Project(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='web')
     price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
-
     views = models.IntegerField(default=0)
+
     likes = models.ManyToManyField(User, related_name='project_likes', blank=True)
-    # Project modeli ichida:
     saved_by = models.ManyToManyField(User, related_name='saved_projects', blank=True)
     buyers = models.ManyToManyField(User, related_name='bought_projects', blank=True)
 
@@ -90,8 +85,7 @@ class Comment(models.Model):
         return f"{self.user.username} - {self.project.title}"
 
 
-# --- 5. SYNC (OBUNALAR/FOLLOWERS TIZIMI) ---
-# Xatolik aynan shu klass yo'qligi uchun chiqqan edi
+# --- 5. OBUNALAR (FOLLOWING) ---
 class Sync(models.Model):
     follower = models.ForeignKey(Profile, related_name='following', on_delete=models.CASCADE)
     following = models.ForeignKey(Profile, related_name='followers', on_delete=models.CASCADE)
@@ -105,8 +99,7 @@ class Sync(models.Model):
         return f"{self.follower.user.username} -> {self.following.user.username}"
 
 
-# --- 6. HAMJAMIYAT CHATI (LIVE CHAT) ---
-# Chat ishlashi uchun bu ham kerak
+# --- 6. CHAT ---
 class CommunityMessage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.TextField()
@@ -119,18 +112,7 @@ class CommunityMessage(models.Model):
         return f"{self.user.username}: {self.body[:20]}"
 
 
-# --- SIGNALS (Avtomatik profil yaratish) ---
-@receiver(post_save, sender=User)
-def create_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-
-@receiver(post_save, sender=User)
-def save_profile(sender, instance, **kwargs):
-    instance.profile.save()
-
-
-# --- Murojaatlar Modeli ---
+# --- 7. ALOQA (CONTACT) ---
 class Contact(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contacts')
     subject = models.CharField(max_length=200)
@@ -139,3 +121,87 @@ class Contact(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.subject}"
+
+
+# ==========================================
+# YANGI MOLIYAVIY MODELLAR (PUL TIZIMI)
+# ==========================================
+
+# --- 8. TRANZAKSIYALAR (CLICK/PAYME UCHUN) ---
+class Transaction(models.Model):
+    PROCESSING = 'processing'
+    COMPLETED = 'completed'
+    CANCELED = 'canceled'
+
+    STATUS_CHOICES = [
+        (PROCESSING, 'Jarayonda'),
+        (COMPLETED, 'Muvaffaqiyatli'),
+        (CANCELED, 'Bekor qilingan'),
+    ]
+
+    click_trans_id = models.CharField(max_length=255, blank=True, null=True)
+    merchant_trans_id = models.CharField(max_length=255)  # Order ID
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PROCESSING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Order {self.merchant_trans_id} - {self.status}"
+
+
+# --- 9. PUL YECHISH (WITHDRAWAL) ---
+class Withdrawal(models.Model):
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    REJECTED = 'rejected'
+
+    STATUS_CHOICES = [
+        (PENDING, 'Kutilmoqda'),
+        (APPROVED, 'To\'lab berildi'),
+        (REJECTED, 'Rad etildi'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    card_number = models.CharField(max_length=16, help_text="Karta raqami (16 ta raqam)")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.amount} ({self.status})"
+
+
+# --- 10. DEPOZIT (PUL KIRITISH - Manual) ---
+class Deposit(models.Model):
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    REJECTED = 'rejected'
+
+    STATUS_CHOICES = [
+        (PENDING, 'Kutilmoqda'),
+        (APPROVED, 'Tasdiqlandi'),
+        (REJECTED, 'Rad etildi'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_id = models.CharField(max_length=100, blank=True, help_text="Chek raqami yoki to'lov vaqti")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.amount}"
+
+
+# --- SIGNALS (PROFIL YARATISH) ---
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_profile(sender, instance, **kwargs):
+    instance.profile.save()

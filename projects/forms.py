@@ -1,12 +1,12 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Project, Profile, Comment
+# ProjectImage ni import qilishni unutmang!
+from .models import Project, Profile, Comment, ProjectImage
 
 
 # --- YANGI: BIR NECHTA RASM YUKLASH UCHUN YORDAMCHI KLASSLAR ---
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
-
 
 class MultipleFileField(forms.FileField):
     def __init__(self, *args, **kwargs):
@@ -24,7 +24,6 @@ class MultipleFileField(forms.FileField):
 
 # ----------------------------------------------------------------
 
-
 # 1. LOYIHA YUKLASH FORMASI
 class ProjectForm(forms.ModelForm):
     # Qo'shimcha rasmlar maydoni (Gallery)
@@ -36,7 +35,6 @@ class ProjectForm(forms.ModelForm):
 
     class Meta:
         model = Project
-        # 'video_file' olib tashlandi
         fields = ['title', 'description', 'image', 'source_code', 'price', 'category', 'youtube_link']
 
         widgets = {
@@ -45,17 +43,21 @@ class ProjectForm(forms.ModelForm):
                 attrs={'class': 'form-control', 'placeholder': 'Loyiha haqida batafsil...', 'rows': 4}),
             'category': forms.Select(attrs={'class': 'form-select'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Narxi (0 = Tekin)'}),
-
-            # YouTube Link endi majburiyroq ko'rinishda
             'youtube_link': forms.URLInput(
                 attrs={'class': 'form-control', 'placeholder': 'https://youtube.com/watch?v=... (Majburiy)'}),
-
             'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'source_code': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
 
-# 2. IZOH YOZISH FORMASI
+# 2. QO'SHIMCHA RASMLAR FORMASI (Yangi qo'shildi)
+class ProjectImageForm(forms.ModelForm):
+    class Meta:
+        model = ProjectImage
+        fields = ['image']
+
+
+# 3. IZOH YOZISH FORMASI
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
@@ -65,7 +67,7 @@ class CommentForm(forms.ModelForm):
         }
 
 
-# 3. RO'YXATDAN O'TISH FORMASI
+# 4. RO'YXATDAN O'TISH FORMASI
 class UserRegisterForm(forms.ModelForm):
     email = forms.EmailField(required=True,
                              widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
@@ -86,7 +88,7 @@ class UserRegisterForm(forms.ModelForm):
         return user
 
 
-# 4. USER MA'LUMOTLARINI YANGILASH
+# 5. USER MA'LUMOTLARINI YANGILASH
 class UserUpdateForm(forms.ModelForm):
     email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
 
@@ -98,7 +100,7 @@ class UserUpdateForm(forms.ModelForm):
         }
 
 
-# 5. PROFIL (RASM) YANGILASH
+# 6. PROFIL (RASM) YANGILASH
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
