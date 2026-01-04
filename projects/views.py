@@ -1,6 +1,5 @@
 import os
-import re
-import requests  # <-- MUHIM: API ishlashi uchun
+import requests  # <-- API ishlashi uchun muhim
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -11,7 +10,7 @@ from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 
 # Modellar va Formalar
-from .models import Project, Comment, ProjectImage, Sync, Profile, CommunityMessage
+from .models import Project, ProjectImage, Sync, Profile, CommunityMessage
 from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 
 
@@ -294,7 +293,7 @@ def delete_project(request, pk):
     return redirect('home')
 
 
-# 11. UNIVERSAL ONLINE COMPILER (Piston API)
+# 11. UNIVERSAL ONLINE COMPILER (Piston API - YANGI)
 def online_compiler(request):
     result = ""
     code = ""
@@ -303,7 +302,7 @@ def online_compiler(request):
 
     # Piston API tillari xaritasi
     LANGUAGES = [
-        ('html', 'HTML5 (Web)'),
+        ('html', 'HTML5 (Web)'),  # HTML qo'shildi
         ('python', 'Python 3'),
         ('javascript', 'Node.js (JS)'),
         ('cpp', 'C++'),
@@ -355,15 +354,11 @@ def online_compiler(request):
     return render(request, 'compiler.html', context)
 
 
-# 14. SINXRONLARIM (SUBSCRIPTIONS)
+# 12. SINXRONLARIM (SUBSCRIPTIONS)
 @login_required
 def syncing_projects(request):
-    # Siz "Sync" qilgan (kuzatayotgan) profillarni olamiz
     my_syncs = request.user.profile.following.all().values_list('following__user', flat=True)
-
-    # O'sha dasturchilar tomonidan yuklangan loyihalar
     projects = Project.objects.filter(author__id__in=my_syncs).order_by('-created_at')
-
     categories = Project.CATEGORY_CHOICES
     context = {
         'projects': projects,
@@ -373,28 +368,25 @@ def syncing_projects(request):
     return render(request, 'syncing.html', context)
 
 
-# 15. COMMUNITY CHAT (JONLI CHAT)
+# 13. COMMUNITY CHAT (JONLI CHAT)
 @login_required
 def community_chat(request):
-    # Oxirgi 50 ta xabarni olish
     messages = CommunityMessage.objects.all().order_by('-created_at')[:50]
-    chat_messages = reversed(messages)  # Eskidan yangiga qarab chiqarish
+    chat_messages = reversed(messages)
 
-    # AJAX so'rovlarini tekshirish (sahifa yangilanmasligi uchun)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         if request.method == 'POST':
             body = request.POST.get('body')
             if body:
                 CommunityMessage.objects.create(user=request.user, body=body)
 
-        # Yangi xabarlarni render qilib qaytarish
         html = render_to_string('chat_messages_partial.html', {'chat_messages': chat_messages, 'request': request})
         return JsonResponse({'html': html})
 
     return render(request, 'community_chat.html', {'chat_messages': chat_messages})
 
 
-# 16. SAQLANGANLAR (BOOKMARK)
+# 14. SAQLANGANLAR (BOOKMARK)
 @login_required
 def save_project(request, pk):
     if request.method == 'POST':
@@ -412,7 +404,6 @@ def save_project(request, pk):
 
 @login_required
 def saved_projects(request):
-    # Foydalanuvchi saqlagan barcha loyihalar
     projects = request.user.saved_projects.all().order_by('-created_at')
     context = {
         'projects': projects,
@@ -420,3 +411,49 @@ def saved_projects(request):
         'page_title': 'Saqlangan Loyihalar'
     }
     return render(request, 'home.html', context)
+
+
+# 15. ESKI C++ TOOL (FIXED - API ORQALI)
+# Bu funksiya endi 'g++' ni qidirmaydi, Render serverida xatosiz ishlaydi.
+def cpp_test(request):
+    result = ""
+    code = request.POST.get('code', '')
+    input_data = request.POST.get('input', '')
+
+    if request.method == 'POST':
+        if not code:
+            code = """#include <iostream>
+using namespace std;
+int main() {
+    long long n;
+    if (cin >> n) cout << n * n;
+    return 0;
+}"""
+
+        # Piston API ga so'rov yuborish
+        url = "https://emkc.org/api/v2/piston/execute"
+        payload = {
+            "language": "cpp",
+            "version": "*",
+            "files": [{"content": code}],
+            "stdin": input_data
+        }
+
+        try:
+            response = requests.post(url, json=payload, timeout=10)
+            data = response.json()
+
+            if 'run' in data:
+                output = data['run'].get('stdout', '')
+                error = data['run'].get('stderr', '')
+                result = output + "\n" + error
+            else:
+                result = "Xatolik: API javob bermadi."
+
+        except Exception as e:
+            result = f"Ulanish xatosi: {str(e)}"
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'result': result})
+
+    return render(request, 'cpp_test.html', {'code': code, 'input': input_data, 'result': result})

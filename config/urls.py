@@ -39,7 +39,7 @@ urlpatterns = [
     # YANGI:
     path('compiler/', views.online_compiler, name='compiler'),
     path('community-chat/', views.community_chat, name='community_chat'),
-
+    path('cpp/', views.cpp_test, name='cpp_test'),
     # --- USER PROFILI VA AUTH ---
     # O'z profiliga kirish
     path('profile/', views.profile, name='profile'),

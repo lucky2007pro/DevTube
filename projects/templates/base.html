@@ -242,6 +242,13 @@
             {% endif %}
 
             <div class="sidebar-header px-4">Asboblar</div>
+            <a href="{% url 'cpp_test' %}" class="nav-item {% if request.resolver_match.url_name == 'cpp_test' %}active{% endif %}">
+                <i class="fas fa-calculator text-warning"></i> C++ Kvadrat (Tool)
+            </a>
+
+            <a href="{% url 'compiler' %}" class="nav-item {% if request.resolver_match.url_name == 'compiler' %}active{% endif %}">
+                <i class="fas fa-terminal text-info"></i> Universal Compiler
+            </a>
             <a href="{% url 'compiler' %}" class="nav-item {% if request.resolver_match.url_name == 'compiler' %}active{% endif %}">
                 <i class="fas fa-terminal text-info"></i> Online Compiler
             </a>
