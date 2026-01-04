@@ -258,20 +258,6 @@
             </a>
             <a href="{% url 'my_videos' %}" class="nav-item {% if request.resolver_match.url_name == 'my_videos' %}active{% endif %}"><i class="fas fa-folder-open"></i> Mening kodlarim</a>
 
-            {% if user.is_authenticated %}
-                <div class="sidebar-header px-4">Sinxronlar</div>
-                <div class="synced-users-list">
-                    {% for sync in user.profile.following.all|slice:":8" %}
-                        <a href="{% url 'profile_by_username' sync.following.user.username %}" class="synced-user-item">
-                            <img src="{{ sync.following.avatar.url }}" class="synced-avatar">
-                            <span class="small opacity-75">{{ sync.following.user.username }}</span>
-                        </a>
-                    {% empty %}
-                        <div class="px-4 py-2 small text-muted opacity-50">Hali hech kim yo'q</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
             <div class="sidebar-header px-4">Asboblar</div>
             <a href="{% url 'cpp_test' %}" class="nav-item {% if request.resolver_match.url_name == 'cpp_test' %}active{% endif %}">
                 <i class="fas fa-calculator text-warning"></i> C++ Kvadrat (Tool)

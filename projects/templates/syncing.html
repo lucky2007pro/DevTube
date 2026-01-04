@@ -2,60 +2,152 @@
 {% load static %}
 
 {% block content %}
-<div class="container-fluid px-4 py-4">
-    <div class="d-flex align-items-center gap-3 mb-5">
-        <div class="sync-icon-glow">
-            <i class="fas fa-sync-alt fa-2x text-primary"></i>
-        </div>
-        <div>
-            <h2 class="text-white fw-bold m-0">Sinxronlarim</h2>
-            <p class="text-muted small">Siz kuzatib borayotgan dasturchilarning yangi loyihalari</p>
-        </div>
-    </div>
-
-    {% if projects %}
-        <div class="video-grid">
-            {% for project in projects %}
-                <a href="{% url 'project_detail' project.pk %}" class="project-card-wrapper text-decoration-none">
-                    <div class="project-card">
-                        <div class="thumbnail-container">
-                            <img src="{{ project.image.url }}" class="thumbnail-img">
-                            <div class="price-badge {% if project.price == 0 %}free{% endif %}">
-                                {% if project.price > 0 %}${{ project.price }}{% else %}Free{% endif %}
-                            </div>
-                        </div>
-                        <div class="card-info p-3 d-flex gap-3">
-                            <img src="{{ project.author.profile.avatar.url }}" class="rounded-circle" width="40" height="40">
-                            <div class="info-text">
-                                <h3 class="project-title text-white fs-6 fw-bold">{{ project.title }}</h3>
-                                <div class="meta-data text-muted small">
-                                    {{ project.author.username }} <br>
-                                    {{ project.views }} ko'rish • {{ project.created_at|timesince }} oldin
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-user-friends fa-4 shadow-sm opacity-25 mb-3" style="font-size: 5rem; color: var(--neon-primary);"></i>
-            <h4 class="text-white">Hali hech kimga sinxronlanmagansiz</h4>
-            <p class="text-muted">Dasturchilarni toping va ularning yangiliklaridan xabardor bo'lish uchun "Sync" tugmasini bosing.</p>
-            <a href="{% url 'home' %}" class="btn-sync-neon mt-3 text-decoration-none d-inline-block">Dasturchilarni qidirish</a>
-        </div>
-    {% endif %}
-</div>
-
 <style>
-    .sync-icon-glow {
-        width: 60px; height: 60px;
-        background: rgba(99, 102, 241, 0.1);
-        border-radius: 15px;
-        display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
-        border: 1px solid rgba(99, 102, 241, 0.3);
+    /* --- KANALLAR RO'YXATI (Stories Style) --- */
+    .channels-wrapper {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+        -webkit-overflow-scrolling: touch; /* Telefonda silliq yurishi uchun */
+    }
+
+    .channels-wrapper::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .channel-circle {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        margin-right: 25px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+    .channel-circle:hover .avatar-ring {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px var(--neon-primary);
+    }
+
+    .avatar-ring {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        padding: 3px;
+        background: linear-gradient(45deg, var(--neon-primary), var(--neon-secondary));
+        margin-bottom: 10px;
+        transition: 0.3s;
+    }
+
+    .channel-img {
+        width: 100%; height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #0f172a; /* Orqa fon rangi bilan bir xil */
+    }
+
+    .channel-name {
+        color: #cbd5e1;
+        font-size: 13px;
+        font-weight: 600;
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* --- LOYIHALAR GRID --- */
+    .feed-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 25px;
+    }
+
+    .feed-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: 0.3s;
+    }
+    .feed-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--neon-primary);
+    }
+
+    .feed-header {
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
     }
 </style>
+
+<div class="container-fluid px-2">
+
+    <h5 class="text-white mb-4 fw-bold"><i class="fas fa-users text-primary me-2"></i> Obuna bo'lgan kanallaringiz</h5>
+
+    <div class="channels-wrapper">
+        {% for sync in synced_profiles %}
+            <a href="{% url 'profile_by_username' sync.following.user.username %}" class="channel-circle">
+                <div class="avatar-ring">
+                    <img src="{% if sync.following.avatar %}{{ sync.following.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ sync.following.user.username }}{% endif %}" class="channel-img">
+                </div>
+                <span class="channel-name">{{ sync.following.user.username }}</span>
+            </a>
+        {% empty %}
+            <div class="text-muted small ms-2">Hali hech kimga obuna bo'lmagansiz.</div>
+        {% endfor %}
+    </div>
+
+    <hr class="border-secondary opacity-25 my-4">
+
+    <h5 class="text-white mb-4 fw-bold"><i class="fas fa-rss text-warning me-2"></i> So'nggi yangiliklar</h5>
+
+    <div class="feed-grid">
+        {% for project in projects %}
+            <div class="feed-card">
+                <div class="feed-header">
+                    <img src="{% if project.author.profile.avatar %}{{ project.author.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ project.author.username }}{% endif %}"
+                         style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;">
+                    <div>
+                        <a href="{% url 'profile_by_username' project.author.username %}" class="text-white text-decoration-none fw-bold small d-block">
+                            {{ project.author.username }}
+                        </a>
+                        <span class="text-muted d-block" style="font-size: 11px;">{{ project.created_at|timesince }} oldin</span>
+                    </div>
+                </div>
+
+                <div style="aspect-ratio: 16/9; background: #000; position: relative;">
+                    {% if project.image %}
+                        <img src="{{ project.image.url }}" style="width:100%; height:100%; object-fit:cover;">
+                    {% endif %}
+                    <div class="position-absolute top-0 end-0 p-2">
+                        <span class="badge {% if project.price > 0 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                            {% if project.price > 0 %}${{ project.price }}{% else %}Free{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-3">
+                    <h5 class="text-white fw-bold mb-2">{{ project.title }}</h5>
+                    <p class="text-muted small text-truncate">{{ project.description }}</p>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <a href="{% url 'project_detail' project.pk %}" class="btn btn-sm btn-outline-primary rounded-pill w-100">
+                            <i class="fas fa-play me-1"></i> Ko'rish
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="fas fa-ghost fa-3x mb-3 opacity-50"></i>
+                <p>Hozircha yangiliklar yo'q. Ko'proq dasturchilarga obuna bo'ling!</p>
+                <a href="{% url 'trending' %}" class="btn btn-outline-light btn-sm mt-2">Trenddagilarni ko'rish</a>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
 {% endblock %}
