@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
+from .models import Contact  # Agar Contact import qilinmagan bo'lsa
 
 # Modellar va Formalar
 from .models import Project, ProjectImage, Sync, Profile, CommunityMessage
@@ -466,9 +467,17 @@ def announcements(request):
 def help_page(request):
     return render(request, 'help.html')
 
+
+@login_required
 def contact_page(request):
     if request.method == 'POST':
-        # Bu yerda xabarni Telegramga yoki Emailga yuborish kodi bo'lishi mumkin
-        messages.success(request, "Xabaringiz qabul qilindi! Tez orada aloqaga chiqamiz.")
-        return redirect('contact')
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+
+        # Bazaga saqlash
+        if subject and message:
+            Contact.objects.create(user=request.user, subject=subject, message=message)
+            messages.success(request, "Xabaringiz Admin panelga yuborildi! Tez orada javob beramiz.")
+            return redirect('contact')
+
     return render(request, 'contact.html')

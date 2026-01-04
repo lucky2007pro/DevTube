@@ -128,3 +128,14 @@ def create_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_profile(sender, instance, **kwargs):
     instance.profile.save()
+
+
+# --- Murojaatlar Modeli ---
+class Contact(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contacts')
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.subject}"
