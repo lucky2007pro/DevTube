@@ -255,6 +255,133 @@
         @keyframes fadeOut {
             to { opacity: 0; visibility: hidden; }
         }
+        /* --- HERO IMAGE EFFECTS --- */
+.hero-wrapper {
+    position: absolute;
+    right: 10%;
+    top: 20%;
+    width: 400px;
+    height: 500px;
+    z-index: 1;
+    perspective: 1000px;
+}
+
+.hero-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.1s;
+}
+
+/* Asosiy Rasm */
+.hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    /* Rasm ustiga yengil filtr */
+    filter: brightness(0.9) contrast(1.1);
+    /* Shisha ramka */
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    box-shadow: 0 0 40px rgba(0, 242, 255, 0.1);
+}
+
+/* Skanerlash Chizig'i (Scan Line) */
+.scan-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.5), transparent);
+    background-size: 100% 3px;
+    background-repeat: no-repeat;
+    animation: scan 4s linear infinite;
+    pointer-events: none;
+    z-index: 5;
+    border-radius: 20px;
+    opacity: 0.3;
+}
+
+@keyframes scan {
+    0% { background-position: 0 -100%; }
+    100% { background-position: 0 200%; }
+}
+
+/* Orqa fondagi aylanuvchi halqa (Reactor) */
+.tech-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateZ(-50px); /* Rasm orqasida */
+    width: 450px;
+    height: 450px;
+    border: 2px dashed rgba(189, 0, 255, 0.3);
+    border-radius: 50%;
+    animation: rotateRing 20s linear infinite;
+    z-index: -1;
+}
+
+.tech-ring::before {
+    content: '';
+    position: absolute;
+    top: -20px; left: -20px; right: -20px; bottom: -20px;
+    border: 1px solid rgba(0, 242, 255, 0.2);
+    border-radius: 50%;
+    border-left-color: transparent;
+    border-right-color: transparent;
+    animation: rotateRing 10s linear infinite reverse;
+}
+
+@keyframes rotateRing {
+    0% { transform: translate(-50%, -50%) translateZ(-50px) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) translateZ(-50px) rotate(360deg); }
+}
+
+/* Burchaklardagi Dekoratsiyalar (HUD Corners) */
+.corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 2px solid var(--primary);
+    z-index: 10;
+    transition: 0.3s;
+}
+.tl { top: -10px; left: -10px; border-right: none; border-bottom: none; border-radius: 10px 0 0 0; }
+.tr { top: -10px; right: -10px; border-left: none; border-bottom: none; border-radius: 0 10px 0 0; }
+.bl { bottom: -10px; left: -10px; border-right: none; border-top: none; border-radius: 0 0 0 10px; }
+.br { bottom: -10px; right: -10px; border-left: none; border-top: none; border-radius: 0 0 10px 0; }
+
+.hero-card:hover .corner {
+    width: 40px; height: 40px;
+    box-shadow: 0 0 15px var(--primary);
+}
+
+/* Suzib yuruvchi Badge (Yorliq) */
+.floating-badge {
+    position: absolute;
+    bottom: 30px;
+    right: -20px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--secondary);
+    padding: 10px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateZ(30px); /* 3D effekt uchun oldinga chiqadi */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.floating-badge i { color: var(--secondary); }
+.floating-badge span { font-size: 0.9rem; font-weight: 600; color: #fff; }
+
+/* Mobil telefonda yashirish */
+@media (max-width: 768px) {
+    .hero-wrapper { display: none; }
+}
     </style>
 </head>
 <body>
@@ -284,11 +411,32 @@
             <a href="#contact" class="btn animate-text">Meni yollash</a>
         </div>
 
-        <div style="position: absolute; right: 10%; top: 20%; width: 400px; height: 500px; z-index: 1;" class="hero-image-container">
-            <img src="https://i.ibb.co/9M395DT/test-tasm.jpg"
-                 alt="Hojiakbar Hayrullayev"
-                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px; opacity: 0.9; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); border: 1px solid var(--glass-border);">
+        <div class="hero-wrapper">
+    <div class="hero-card" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+
+        <div class="scan-line"></div>
+
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+
+        <img src="https://i.ibb.co/9M395DT/test-tasm.jpg" alt="Hojiakbar Hayrullayev" class="hero-img">
+
+        <div class="tech-ring"></div>
+
+        <div class="floating-badge">
+            <i class="fas fa-check-circle"></i>
+            <span>Open to Work</span>
         </div>
+
+        <div class="floating-badge" style="bottom: auto; top: 40px; right: auto; left: -30px; border-color: var(--primary);">
+            <i class="fab fa-python" style="color: var(--primary);"></i>
+            <span>Python Dev</span>
+        </div>
+
+    </div>
+</div>
     </section>
 
     <section id="about">
