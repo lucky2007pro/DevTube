@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card bg-dark text-white border-secondary shadow-lg">
+                <div class="card-body p-5">
+                    
+                    <h3 class="text-center mb-4"><i class="fas fa-wallet text-success me-2"></i> Hisobni to'ldirish</h3>
+                    
+                    <div class="alert alert-primary bg-opacity-25 border-primary text-center">
+                        <p class="mb-1 text-white-50">Quyidagi kartaga to'lov qiling:</p>
+                        <h4 class="text-white fw-bold copy-text" style="cursor: pointer;">9860 3501 4254 7545</h4>
+                        <p class="mb-0 small text-info">(Hojiakbar H.)</p>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Qancha tashladingiz? ($)</label>
+                            <input type="number" name="amount" class="form-control bg-black text-white border-secondary" placeholder="Masalan: 50" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Chek rasmi (Skrinshot)</label>
+                            <input type="file" name="receipt" class="form-control bg-black text-white border-secondary" accept="image/*" required>
+                            <small class="text-muted">To'lov chekini yuklash majburiy</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Izoh (ixtiyoriy)</label>
+                            <input type="text" name="message" class="form-control bg-black text-white border-secondary" placeholder="Masalan: Soat 14:30 da, Click orqali">
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 fw-bold">
+                            <i class="fas fa-check-circle me-2"></i> To'lov qildim
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

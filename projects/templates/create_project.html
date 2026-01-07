@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* --- NEON GLASSMORPHISM CARD --- */
+    .neon-upload-card {
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 28px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        margin-top: 30px;
+    }
+
+    /* --- ANTIQA VA NEON INPUTLAR --- */
+    .neon-field {
+        background: rgba(15, 23, 42, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 14px;
+        color: #fff !important;
+        padding: 15px 20px;
+        font-size: 16px;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 100%;
+        outline: none;
+    }
+
+    .neon-field:focus {
+        border-color: #4f46e5 !important;
+        box-shadow: 0 0 20px rgba(79, 70, 229, 0.2) !important;
+        transform: scale(1.01); /* Ozgina kengayish effekti */
+    }
+
+    .form-label-custom {
+        color: #818cf8;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    /* --- PROFESSIONAL MEDIA QISMI --- */
+    .youtube-neon-section {
+        background: rgba(220, 53, 69, 0.03);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+
+    .custom-file-zone {
+        position: relative;
+        background: rgba(0, 0, 0, 0.2);
+        border: 2px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+
+    .custom-file-zone:hover {
+        border-color: #4f46e5;
+        background: rgba(79, 70, 229, 0.05);
+    }
+
+    .custom-file-zone input[type="file"] {
+        position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer;
+    }
+
+    .section-header {
+        font-size: 0.9rem; text-transform: uppercase; letter-spacing: 3px;
+        color: rgba(255, 255, 255, 0.4); margin: 40px 0 20px;
+        display: flex; align-items: center; gap: 15px;
+    }
+    .section-header::after { content: ""; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.05); }
+
+    .btn-neon-upload {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        border: none; border-radius: 50px;
+        color: white; font-weight: 800; padding: 18px;
+        box-shadow: 0 10px 30px rgba(79, 70, 229, 0.4);
+        transition: 0.3s;
+    }
+
+    .btn-neon-upload:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 40px rgba(124, 58, 237, 0.6);
+    }
+</style>
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="neon-upload-card">
+
+                <div class="p-4 border-bottom border-secondary border-opacity-10" style="background: rgba(255,255,255,0.01);">
+                    <h3 class="mb-0 text-white fw-bold"><i class="fas fa-rocket text-primary me-2"></i> Yangi Loyiha</h3>
+                    <p class="text-muted small mb-0 mt-1">Loyihangizni dunyoga taniting va hamjamiyatga qo'shiling.</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form id="upload-form" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="section-header">1. Umumiy Ma'lumotlar</div>
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-4">
+                                <label class="form-label-custom">Loyiha Nomi</label>
+                                {{ form.title }}
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label-custom">Kategoriya</label>
+                                {{ form.category }}
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label-custom">Narxi ($)</label>
+                                {{ form.price }}
+                                <div class="form-text text-muted small opacity-50">Bepul bo'lsa 0 kiriting.</div>
+                            </div>
+                            <div class="col-md-12 mb-4">
+                                <label class="form-label-custom">Loyiha Haqida (Tavsif)</label>
+                                {{ form.description }}
+                            </div>
+                        </div>
+
+                        <div class="section-header">2. Media Fayllar</div>
+
+                        <div class="youtube-neon-section">
+                            <label class="text-danger fw-bold small mb-2 d-flex align-items-center gap-2">
+                                <i class="fab fa-youtube fa-lg"></i> YOUTUBE VIDEO LINKI (MAJBURIY)
+                            </label>
+                            {{ form.youtube_link }}
+                            <p class="small text-muted mt-2 mb-0 opacity-75">
+                                <i class="fas fa-lightbulb text-warning me-1"></i> Video ssilkasini joylash server tezligini oshiradi.
+                            </p>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label-custom">Asosiy Muqova</label>
+                                <div class="custom-file-zone">
+                                    <i class="fas fa-image fa-3x text-primary mb-3"></i>
+                                    <div class="text-white fw-bold small">Muqova rasmini tanlang</div>
+                                    {{ form.image }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label-custom">Skrinshotlar (Gallery)</label>
+                                <div class="custom-file-zone" style="border-color: rgba(13, 202, 240, 0.2);">
+                                    <i class="fas fa-images fa-3x text-info mb-3"></i>
+                                    <div class="text-white fw-bold small">Bir nechta rasm tanlang</div>
+                                    <input type="file" name="more_images" id="id_more_images" multiple accept="image/*">
+                                </div>
+                                <div id="gallery-count" class="text-info small mt-2 fw-bold text-center"></div>
+                            </div>
+                        </div>
+
+                        <div class="section-header">3. Texnik Qism</div>
+                        <div class="mb-5">
+                            <label class="form-label-custom">Manba Kodi (Zip/Rar)</label>
+                            <div class="custom-file-zone" style="border-color: rgba(34, 197, 94, 0.2);">
+                                <i class="fas fa-file-archive fa-3x text-success mb-3"></i>
+                                <div class="text-white fw-bold small">Arxiv faylni yuklang</div>
+                                {{ form.source_code }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="submit-btn" class="btn btn-neon-upload">
+                                <i class="fas fa-cloud-upload-alt me-2"></i> LOYIHANI TASDIQLASH
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="progress-container" class="d-none mt-5">
+                        <div class="progress" style="height: 12px; background-color: rgba(255,255,255,0.05); border-radius: 20px;">
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;"></div>
+                        </div>
+                        <p id="progress-text" class="text-center text-muted small mt-2">Yuklanmoqda: 0%</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Inputlarni stilizatsiya qilish
+        document.querySelectorAll('input, textarea, select').forEach(e => {
+            if (e.type !== 'checkbox' && e.type !== 'file') {
+                e.classList.add('neon-field');
+            }
+        });
+
+        // Multiple gallery fayllarini boshqarish
+        const galleryInput = document.getElementById('id_more_images');
+        const galleryCountText = document.getElementById('gallery-count');
+
+        galleryInput.addEventListener('change', function() {
+            if(this.files.length > 0) {
+                galleryCountText.innerText = `✅ ${this.files.length} ta fayl tayyor`;
+                this.parentElement.style.borderColor = "#0dcaf0";
+            }
+        });
+
+        // Boshqa fayl inputlari uchun
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            if(input.id !== 'id_more_images') {
+                input.addEventListener('change', function() {
+                    const fileName = this.files[0] ? this.files[0].name : "Rasm tanlang";
+                    this.parentElement.querySelector('.text-white').innerText = fileName;
+                    this.parentElement.style.borderColor = "#4f46e5";
+                });
+            }
+        });
+    });
+
+    // AJAX form submission
+    const form = document.getElementById('upload-form');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submit-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+
+        const formData = new FormData(this);
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', e => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressContainer.classList.remove('d-none');
+                submitBtn.classList.add('d-none');
+                progressBar.style.width = percent + '%';
+                progressText.innerText = `Yuklanmoqda: ${percent}%`;
+            }
+        });
+
+        xhr.open('POST', window.location.href);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        xhr.onload = () => {
+            if (xhr.status === 200) window.location.href = "/";
+            else alert("Xatolik yuz berdi!");
+        };
+        xhr.send(formData);
+    });
+</script>
+{% endblock %}

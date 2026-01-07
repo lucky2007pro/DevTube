@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Portfolio | Hayrullayev Hojiakbar</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-color: #ffffff;
+            --primary: #00f2ff;
+            --secondary: #bd00ff;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none; /* Sichqonchani yashiramiz */
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s;
+            mix-blend-mode: difference;
+        }
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--secondary);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* --- 3D BACKGROUND --- */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links a {
+            color: #ccc;
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 400;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* --- HERO SECTION --- */
+        section {
+            min-height: 100vh;
+            padding: 100px 10%;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 600px;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 5rem;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 30px;
+            display: block;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #888;
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.4s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: var(--primary);
+            transition: 0.4s;
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            left: 0;
+        }
+
+        .btn:hover {
+            color: #000;
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        /* --- SKILLS & CARDS (Glassmorphism) --- */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            transition: transform 0.3s;
+            transform-style: preserve-3d;
+            transform: perspective(1000px);
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .card:hover {
+            border-color: var(--secondary);
+            box-shadow: 0 0 30px rgba(189, 0, 255, 0.2);
+        }
+
+        /* --- CONTACT --- */
+        .contact-form {
+            width: 100%;
+            max-width: 600px;
+            background: var(--glass);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            h1 { font-size: 3rem; }
+            nav { padding: 20px; }
+            .nav-links { display: none; }
+            .hero-image-container { display: none; } /* Mobil telefonda rasmni yashirish */
+        }
+
+        /* Loading Screen */
+        .loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: var(--primary);
+            letter-spacing: 5px;
+            animation: fadeOut 1s ease-in-out 2s forwards;
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; visibility: hidden; }
+        }
+        /* --- HERO IMAGE EFFECTS --- */
+.hero-wrapper {
+    position: absolute;
+    right: 10%;
+    top: 20%;
+    width: 400px;
+    height: 500px;
+    z-index: 1;
+    perspective: 1000px;
+}
+
+.hero-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.1s;
+}
+
+/* Asosiy Rasm */
+.hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    /* Rasm ustiga yengil filtr */
+    filter: brightness(0.9) contrast(1.1);
+    /* Shisha ramka */
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    box-shadow: 0 0 40px rgba(0, 242, 255, 0.1);
+}
+
+/* Skanerlash Chizig'i (Scan Line) */
+.scan-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.5), transparent);
+    background-size: 100% 3px;
+    background-repeat: no-repeat;
+    animation: scan 4s linear infinite;
+    pointer-events: none;
+    z-index: 5;
+    border-radius: 20px;
+    opacity: 0.3;
+}
+
+@keyframes scan {
+    0% { background-position: 0 -100%; }
+    100% { background-position: 0 200%; }
+}
+
+/* Orqa fondagi aylanuvchi halqa (Reactor) */
+.tech-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateZ(-50px); /* Rasm orqasida */
+    width: 450px;
+    height: 450px;
+    border: 2px dashed rgba(189, 0, 255, 0.3);
+    border-radius: 50%;
+    animation: rotateRing 20s linear infinite;
+    z-index: -1;
+}
+
+.tech-ring::before {
+    content: '';
+    position: absolute;
+    top: -20px; left: -20px; right: -20px; bottom: -20px;
+    border: 1px solid rgba(0, 242, 255, 0.2);
+    border-radius: 50%;
+    border-left-color: transparent;
+    border-right-color: transparent;
+    animation: rotateRing 10s linear infinite reverse;
+}
+
+@keyframes rotateRing {
+    0% { transform: translate(-50%, -50%) translateZ(-50px) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) translateZ(-50px) rotate(360deg); }
+}
+
+/* Burchaklardagi Dekoratsiyalar (HUD Corners) */
+.corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 2px solid var(--primary);
+    z-index: 10;
+    transition: 0.3s;
+}
+.tl { top: -10px; left: -10px; border-right: none; border-bottom: none; border-radius: 10px 0 0 0; }
+.tr { top: -10px; right: -10px; border-left: none; border-bottom: none; border-radius: 0 10px 0 0; }
+.bl { bottom: -10px; left: -10px; border-right: none; border-top: none; border-radius: 0 0 0 10px; }
+.br { bottom: -10px; right: -10px; border-left: none; border-top: none; border-radius: 0 0 10px 0; }
+
+.hero-card:hover .corner {
+    width: 40px; height: 40px;
+    box-shadow: 0 0 15px var(--primary);
+}
+
+/* Suzib yuruvchi Badge (Yorliq) */
+.floating-badge {
+    position: absolute;
+    bottom: 30px;
+    right: -20px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--secondary);
+    padding: 10px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateZ(30px); /* 3D effekt uchun oldinga chiqadi */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.floating-badge i { color: var(--secondary); }
+.floating-badge span { font-size: 0.9rem; font-weight: 600; color: #fff; }
+
+/* Mobil telefonda yashirish */
+@media (max-width: 768px) {
+    .hero-wrapper { display: none; }
+}
+    </style>
+</head>
+<body>
+
+<div class="loader">YUKLANMOQDA...</div>
+
+<div class="cursor"></div>
+<div class="cursor-dot"></div>
+
+<div id="canvas-container"></div>
+
+<nav>
+    <div class="logo">Hojiakbar<span style="color:var(--primary)"> Hayrullayev</span>.</div>
+    <div class="nav-links">
+        <a href="#home">Bosh sahifa</a>
+        <a href="#about">Haqimda</a>
+        <a href="#work">Loyihalar</a>
+        <a href="#contact">Aloqa</a>
+    </div>
+</nav>
+
+<section id="home">
+    <div class="hero-content">
+        <span class="subtitle">AI & Full Stack Developer & Designer</span>
+        <h1 class="animate-text">Kelajakni <br> Kod orqali <br> Yaratamiz</h1>
+        <p class="animate-text">Men veb-saytlarni shunchaki yaratmayman, men ularni san'at asariga aylantiraman. 3D
+            modellar, zamonaviy animatsiyalar va mukammal UX/UI.</p>
+        <a class="btn animate-text" href="#contact">Meni yollash</a>
+    </div>
+
+    <div class="hero-wrapper">
+        <div class="hero-card" data-tilt data-tilt-glare data-tilt-max="10" data-tilt-max-glare="0.2"
+             data-tilt-speed="400">
+
+            <div class="scan-line"></div>
+
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+
+            <img alt="Hojiakbar Hayrullayev" class="hero-img" src="https://i.ibb.co/9M395DT/test-tasm.jpg">
+
+            <div class="tech-ring"></div>
+
+            <div class="floating-badge">
+                <i class="fas fa-check-circle"></i>
+                <span>Open to Work</span>
+            </div>
+
+            <div class="floating-badge"
+                 style="bottom: auto; top: 40px; right: auto; left: -30px; border-color: var(--primary);">
+                <i class="fab fa-python" style="color: var(--primary);"></i>
+                <span>Python Dev</span>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section id="about">
+    <div style="width: 100%;">
+        <h2 style="font-size: 3rem; margin-bottom: 50px;"><span style="color:var(--secondary)">Mening</span>
+            Qobiliyatlarim</h2>
+        <div class="skills-grid">
+            <div class="card" data-tilt>
+                <i class="fas fa-code fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
+                <h3>Web Development</h3>
+                <p>HTML5, CSS3, JavaScript, React va VueJS orqali mukammal frontend yechimlar.</p>
+            </div>
+            <div class="card" data-tilt>
+                <i class="fas fa-cube fa-3x" style="color: var(--secondary); margin-bottom: 20px;"></i>
+                <h3>3D & WebGL</h3>
+                <p>Three.js va Blender yordamida saytingizga hayot baxsh etuvchi 3D modellar.</p>
+            </div>
+            <div class="card" data-tilt>
+                <i class="fas fa-mobile-alt fa-3x" style="color: #ff0055; margin-bottom: 20px;"></i>
+                <h3>Responsive Design</h3>
+                <p>Har qanday qurilma uchun moslashuvchan va chiroyli dizaynlar.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="contact">
+    <div style="display: flex; gap: 50px; width: 100%; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+        <div style="max-width: 500px;">
+            <h2 style="font-size: 4rem; line-height: 1;">Birga <br> Ishlaymizmi?</h2>
+            <p style="margin-top: 20px;">Loyihangiz bormi? Menga yozing va biz uni amalga oshiramiz.</p>
+        </div>
+        <form class="contact-form" data-tilt>
+            <input placeholder="Ismingiz" type="text">
+            <input placeholder="Emailingiz" type="email">
+            <textarea placeholder="Loyihangiz haqida..." rows="5"></textarea>
+            <button class="btn" style="width: 100%;" type="submit">Yuborish</button>
+        </form>
+    </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+
+<script>
+    // --- 1. MOUSE CURSOR EFFECT ---
+    const cursor = document.querySelector('.cursor');
+    const cursorDot = document.querySelector('.cursor-dot');
+
+    document.addEventListener('mousemove', (e) => {
+        cursorDot.style.left = e.clientX + 'px';
+        cursorDot.style.top = e.clientY + 'px';
+
+        cursor.animate({
+            left: e.clientX + 'px',
+            top: e.clientY + 'px'
+        }, { duration: 500, fill: "forwards" });
+    });
+
+    // --- 2. THREE.JS 3D BACKGROUND ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    const geometry = new THREE.BufferGeometry();
+    const particlesCount = 2000;
+    const posArray = new Float32Array(particlesCount * 3);
+
+    for(let i = 0; i < particlesCount * 3; i++) {
+        posArray[i] = (Math.random() - 0.5) * 10;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+    const material = new THREE.PointsMaterial({
+        size: 0.015,
+        color: 0x00f2ff,
+        transparent: true,
+        opacity: 0.8,
+    });
+
+    const particlesMesh = new THREE.Points(geometry, material);
+    scene.add(particlesMesh);
+
+    camera.position.z = 2;
+
+    let mouseX = 0;
+    let mouseY = 0;
+
+    document.addEventListener('mousemove', (event) => {
+        mouseX = event.clientX / window.innerWidth - 0.5;
+        mouseY = event.clientY / window.innerHeight - 0.5;
+    });
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+        const elapsedTime = clock.getElapsedTime();
+        particlesMesh.rotation.y = elapsedTime * 0.05;
+        particlesMesh.rotation.x = mouseY * 0.5;
+        particlesMesh.rotation.y += mouseX * 0.5;
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // --- 3. GSAP ANIMATIONS ---
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.from(".animate-text", {
+        y: 100,
+        opacity: 0,
+        duration: 1.5,
+        stagger: 0.3,
+        ease: "power4.out",
+        delay: 2.5
+    });
+
+    gsap.from(".hero-image-container", {
+        x: 100,
+        opacity: 0,
+        duration: 2,
+        ease: "power2.out",
+        delay: 3
+    });
+
+    gsap.utils.toArray('.card').forEach(card => {
+        gsap.from(card, {
+            scrollTrigger: {
+                trigger: card,
+                start: "top 85%",
+            },
+            y: 50,
+            opacity: 0,
+            duration: 1,
+            ease: "back.out(1.7)"
+        });
+    });
+
+    // --- 4. VANILLA TILT INIT ---
+    VanillaTilt.init(document.querySelectorAll(".card, .contact-form"), {
+        max: 15,
+        speed: 400,
+        glare: true,
+        "max-glare": 0.2,
+    });
+</script>
+</body>
+</html>

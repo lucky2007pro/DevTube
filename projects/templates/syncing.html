@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* --- KANALLAR RO'YXATI (Stories Style) --- */
+    .channels-wrapper {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+        -webkit-overflow-scrolling: touch; /* Telefonda silliq yurishi uchun */
+    }
+
+    .channels-wrapper::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .channel-circle {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        margin-right: 25px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+    .channel-circle:hover .avatar-ring {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px var(--neon-primary);
+    }
+
+    .avatar-ring {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        padding: 3px;
+        background: linear-gradient(45deg, var(--neon-primary), var(--neon-secondary));
+        margin-bottom: 10px;
+        transition: 0.3s;
+    }
+
+    .channel-img {
+        width: 100%; height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #0f172a; /* Orqa fon rangi bilan bir xil */
+    }
+
+    .channel-name {
+        color: #cbd5e1;
+        font-size: 13px;
+        font-weight: 600;
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* --- LOYIHALAR GRID --- */
+    .feed-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 25px;
+    }
+
+    .feed-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: 0.3s;
+    }
+    .feed-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--neon-primary);
+    }
+
+    .feed-header {
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+</style>
+
+<div class="container-fluid px-2">
+
+    <h5 class="text-white mb-4 fw-bold"><i class="fas fa-users text-primary me-2"></i> Obuna bo'lgan kanallaringiz</h5>
+
+    <div class="channels-wrapper">
+        {% for sync in synced_profiles %}
+            <a href="{% url 'profile_by_username' sync.following.user.username %}" class="channel-circle">
+                <div class="avatar-ring">
+                    <img src="{% if sync.following.avatar %}{{ sync.following.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ sync.following.user.username }}{% endif %}" class="channel-img">
+                </div>
+                <span class="channel-name">{{ sync.following.user.username }}</span>
+            </a>
+        {% empty %}
+            <div class="text-muted small ms-2">Hali hech kimga obuna bo'lmagansiz.</div>
+        {% endfor %}
+    </div>
+
+    <hr class="border-secondary opacity-25 my-4">
+
+    <h5 class="text-white mb-4 fw-bold"><i class="fas fa-rss text-warning me-2"></i> So'nggi yangiliklar</h5>
+
+    <div class="feed-grid">
+        {% for project in projects %}
+            <div class="feed-card">
+                <div class="feed-header">
+                    <img src="{% if project.author.profile.avatar %}{{ project.author.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ project.author.username }}{% endif %}"
+                         style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;">
+                    <div>
+                        <a href="{% url 'profile_by_username' project.author.username %}" class="text-white text-decoration-none fw-bold small d-block">
+                            {{ project.author.username }}
+                        </a>
+                        <span class="text-muted d-block" style="font-size: 11px;">{{ project.created_at|timesince }} oldin</span>
+                    </div>
+                </div>
+
+                <div style="aspect-ratio: 16/9; background: #000; position: relative;">
+                    {% if project.image %}
+                        <img src="{{ project.image.url }}" style="width:100%; height:100%; object-fit:cover;">
+                    {% endif %}
+                    <div class="position-absolute top-0 end-0 p-2">
+                        <span class="badge {% if project.price > 0 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                            {% if project.price > 0 %}${{ project.price }}{% else %}Free{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-3">
+                    <h5 class="text-white fw-bold mb-2">{{ project.title }}</h5>
+                    <p class="text-muted small text-truncate">{{ project.description }}</p>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <a href="{% url 'project_detail' project.pk %}" class="btn btn-sm btn-outline-primary rounded-pill w-100">
+                            <i class="fas fa-play me-1"></i> Ko'rish
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="fas fa-ghost fa-3x mb-3 opacity-50"></i>
+                <p>Hozircha yangiliklar yo'q. Ko'proq dasturchilarga obuna bo'ling!</p>
+                <a href="{% url 'trending' %}" class="btn btn-outline-light btn-sm mt-2">Trenddagilarni ko'rish</a>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

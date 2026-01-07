@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            
+            <div class="card border-0 shadow-lg text-white" 
+                 style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;">
+                
+                <div class="card-body p-5">
+                    
+                    <div class="text-center mb-4">
+                        <div style="width: 70px; height: 70px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                            <i class="fas fa-money-bill-wave text-danger fa-2x"></i>
+                        </div>
+                        <h3 class="fw-bold mt-3">Pul yechib olish</h3>
+                        <p class="text-muted small">Mablag' kartangizga 24 soat ichida tushadi.</p>
+                    </div>
+
+                    <div class="alert alert-dark border border-secondary d-flex justify-content-between align-items-center mb-4">
+                        <span class="text-muted">Joriy balans:</span>
+                        <span class="h5 fw-bold text-success m-0">${{ user.profile.balance }}</span>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold">QANCHA YECHMOQCHISIZ? ($)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-secondary text-white">$</span>
+                                <input type="number" name="amount" step="0.01" class="form-control bg-transparent text-white border-secondary" placeholder="Masalan: 10" required>
+                            </div>
+                            <div class="form-text text-white-50" style="font-size: 11px;">Minimal summa: $5.00</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold">KARTA RAQAMINGIZ (UZCARD/HUMO)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-secondary text-white"><i class="far fa-credit-card"></i></span>
+                                <input type="text" name="card_number" class="form-control bg-transparent text-white border-secondary" placeholder="8600 0000 0000 0000" maxlength="16" minlength="16" required>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger py-2 fw-bold" style="border-radius: 50px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">
+                                <i class="fas fa-paper-plane me-2"></i> So'rov yuborish
+                            </button>
+                            <a href="{% url 'profile' %}" class="btn btn-outline-secondary py-2 fw-bold" style="border-radius: 50px;">
+                                Bekor qilish
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
