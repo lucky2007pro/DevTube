@@ -32,28 +32,75 @@
 
         body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
 
-        /* --- LIGHT MODE VARIABLES --- */
+        /* --- LIGHT MODE (YANGILANGAN & TOZA DIZAYN) --- */
         body.light-mode {
-            background: #f0f2f5 !important;
-            color: #1f2937 !important;
+            background-color: #f1f5f9 !important; /* Yumshoq kulrang fon */
+            color: #334155 !important; /* To'q kulrang matn */
             --glass-bg: rgba(255, 255, 255, 0.95) !important;
-            --glass-border: rgba(0, 0, 0, 0.1) !important;
-            --neon-primary: #4f46e5 !important;
+            --glass-border: rgba(0, 0, 0, 0.05) !important;
+            --neon-primary: #6366f1 !important;
+            --neon-glow: none !important; /* Yorug' rejimda neon glow o'chiriladi */
         }
+
+        /* Navbar va Sidebar oq rangda */
         body.light-mode .navbar,
-        body.light-mode .sidebar,
+        body.light-mode .sidebar {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Sidebar elementlari */
+        body.light-mode .nav-item {
+            color: #64748b !important;
+        }
+        body.light-mode .nav-item:hover,
+        body.light-mode .nav-item.active {
+            background: #e0e7ff !important; /* Och binafsha fon */
+            color: #4338ca !important; /* To'q binafsha yozuv */
+            box-shadow: none !important;
+        }
+
+        /* Qidiruv va Inputlar */
+        body.light-mode .search-box-neon,
+        body.light-mode .voice-search-btn,
+        body.light-mode input,
+        body.light-mode textarea,
+        body.light-mode select {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+            box-shadow: none !important;
+        }
+        body.light-mode #searchInput::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        /* Kartochkalar (Card) */
+        body.light-mode .card,
+        body.light-mode .project-card,
+        body.light-mode .news-card,
+        body.light-mode .accordion-item,
         body.light-mode .dropdown-menu {
             background: #ffffff !important;
-            border-color: #e5e7eb !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+            color: #1e293b !important;
         }
-        body.light-mode .text-white { color: #1f2937 !important; }
-        body.light-mode .text-muted { color: #6b7280 !important; }
-        body.light-mode .nav-item:hover, body.light-mode .nav-item.active {
-            background: #e0e7ff !important; color: #4f46e5 !important;
+
+        /* Matnlar rangi (Sarlavhalar va oddiy matn) */
+        body.light-mode h1, body.light-mode h2, body.light-mode h3,
+        body.light-mode h4, body.light-mode h5, body.light-mode strong,
+        body.light-mode .text-white, body.light-mode .dropdown-item {
+            color: #0f172a !important;
         }
-        body.light-mode input, body.light-mode textarea {
-            background: #f9fafb !important; color: #1f2937 !important; border: 1px solid #d1d5db !important;
+        body.light-mode p, body.light-mode .text-muted, body.light-mode small {
+            color: #64748b !important;
+        }
+
+        /* Tugmalar */
+        body.light-mode .btn-upload-neon {
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3) !important;
         }
 
         /* --- NEON SCROLLBAR --- */
