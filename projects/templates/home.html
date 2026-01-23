@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* --- KATEGORIYA PANELLARI --- */
+    .category-scroll-container {
+        overflow-x: auto;
+        white-space: nowrap;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .category-scroll-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tech-panel {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--glass-border);
+        border-radius: 50px;
+        padding: 8px 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.3s;
+        text-decoration: none;
+        color: #94a3b8;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .tech-panel:hover, .tech-panel.active-panel {
+        background: var(--neon-primary);
+        border-color: var(--neon-primary);
+        color: #fff;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    }
+
+    /* --- LOYIHA KARTASI STYLE --- */
+    .project-card {
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    .project-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--neon-primary);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .thumbnail-container {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%;
+        overflow: hidden;
+        background: #0f172a;
+    }
+    .thumbnail-img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: 0.3s;
+    }
+    .project-card:hover .thumbnail-img {
+        transform: scale(1.05);
+    }
+
+    .price-badge-neon {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        backdrop-filter: blur(4px);
+        z-index: 2;
+    }
+    .price-badge-neon.free { background: rgba(34, 197, 94, 0.9); color: #fff; }
+    .price-badge-neon.premium { background: rgba(99, 102, 241, 0.9); color: #fff; }
+
+    /* --- DROPDOWN STYLE (YANGI) --- */
+    .card-options {
+        position: relative;
+        z-index: 10;
+    }
+    .btn-options {
+        color: #94a3b8;
+        opacity: 0.6;
+        transition: 0.3s;
+        padding: 5px;
+        border: none;
+        background: transparent;
+        line-height: 1;
+    }
+    .project-card:hover .btn-options { opacity: 1; }
+
+    .dropdown-menu-dark {
+        background: #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .dropdown-item {
+        color: #94a3b8 !important;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+        transition: 0.2s;
+    }
+    .dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #fff !important;
+    }
+    .dropdown-divider { border-top: 1px solid rgba(255, 255, 255, 0.05); }
+</style>
+
+<div class="container-fluid px-4 mb-4">
+    <div class="category-scroll-container d-flex gap-2 py-2">
+        <a href="{% url 'home' %}" class="tech-panel {% if not request.GET.category %}active-panel{% endif %}">
+            <i class="fas fa-th-large"></i> Barchasi
+        </a>
+        {% for code, name in categories %}
+            <a href="?category={{ code }}" class="tech-panel {% if request.GET.category == code %}active-panel{% endif %}">
+                {% if code == 'web' %}<i class="fas fa-globe"></i>
+                {% elif code == 'mobile' %}<i class="fas fa-mobile-alt"></i>
+                {% elif code == 'ai' %}<i class="fas fa-brain"></i>
+                {% elif code == 'game' %}<i class="fas fa-gamepad"></i>
+                {% elif code == 'desktop' %}<i class="fas fa-desktop"></i>
+                {% else %}<i class="fas fa-code"></i>{% endif %}
+                {{ name }}
+            </a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="container-fluid px-4">
+    <div class="row g-4">
+        {% for project in projects %}
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                <div class="project-card">
+                    <a href="{% url 'project_detail' project.pk %}" class="text-decoration-none">
+                        <div class="thumbnail-container">
+                            {% if project.image %}
+                                 <img src="{{ project.image.url }}" alt="{{ project.title }}" class="thumbnail-img">
+                            {% else %}
+                                <div class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center text-muted">
+                                    <i class="fas fa-code fa-3x opacity-25"></i>
+                                </div>
+                            {% endif %}
+                            <div class="price-badge-neon {% if project.price == 0 %}free{% else %}premium{% endif %}">
+                                {% if project.price > 0 %}${{ project.price }}{% else %}Free{% endif %}
+                            </div>
+                        </div>
+                    </a>
+
+                    <div class="card-body p-3 d-flex gap-3">
+                        <a href="{% url 'profile_by_username' project.author.username %}" class="author-avatar flex-shrink-0">
+                            <img src="{% if project.author.profile.avatar %}{{ project.author.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ project.author.username }}{% endif %}"
+                                 class="rounded-circle border border-secondary border-opacity-25" width="36" height="36" style="object-fit: cover;">
+                        </a>
+
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <a href="{% url 'project_detail' project.pk %}" class="text-decoration-none overflow-hidden">
+                                    <h3 class="text-white fs-6 fw-bold mb-1 text-truncate" title="{{ project.title }}">{{ project.title }}</h3>
+                                </a>
+
+                                <div class="dropdown card-options">
+                                    <button class="btn-options" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg">
+                                        <li>
+                                            <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                                                <i class="fas fa-flag text-warning"></i> Shikoyat qilish
+                                            </a>
+                                        </li>
+                                        {% if request.user == project.author %}
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center gap-2 text-info" href="{% url 'update_project' project.pk %}">
+                                                    <i class="fas fa-edit"></i> Tahrirlash
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'delete_project' project.pk %}">
+                                                    <i class="fas fa-trash-alt"></i> O'chirish
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <a href="{% url 'profile_by_username' project.author.username %}" class="text-decoration-none d-block">
+                                <span class="text-muted small">{{ project.author.username }}</span>
+                            </a>
+
+                            <div class="d-flex align-items-center text-muted small gap-2 mt-1">
+                                <span><i class="fas fa-eye me-1"></i> {{ project.views }}</span>
+                                <span class="ms-auto">{{ project.created_at|timesince }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
+                <p>Hozircha bu bo'limda loyihalar yo'q.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

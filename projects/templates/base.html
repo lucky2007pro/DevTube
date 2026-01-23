@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="uz">
+<head>
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("{% static 'js/sw.js' %}");
+            });
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevTube | Premium Code Platform</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --neon-primary: #6366f1;
+            --neon-secondary: #a855f7;
+            --neon-glow: 0 0 15px rgba(99, 102, 241, 0.5);
+            --glass-bg: rgba(15, 23, 42, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --nav-height: 60px;
+        }
+
+        body { background-color: #020617; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
+
+        /* --- LIGHT MODE VARIABLES --- */
+        body.light-mode {
+            background: #f0f2f5 !important;
+            color: #1f2937 !important;
+            --glass-bg: rgba(255, 255, 255, 0.95) !important;
+            --glass-border: rgba(0, 0, 0, 0.1) !important;
+            --neon-primary: #4f46e5 !important;
+        }
+        body.light-mode .navbar,
+        body.light-mode .sidebar,
+        body.light-mode .dropdown-menu {
+            background: #ffffff !important;
+            border-color: #e5e7eb !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode .text-white { color: #1f2937 !important; }
+        body.light-mode .text-muted { color: #6b7280 !important; }
+        body.light-mode .nav-item:hover, body.light-mode .nav-item.active {
+            background: #e0e7ff !important; color: #4f46e5 !important;
+        }
+        body.light-mode input, body.light-mode textarea {
+            background: #f9fafb !important; color: #1f2937 !important; border: 1px solid #d1d5db !important;
+        }
+
+        /* --- NEON SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        ::-webkit-scrollbar-thumb { background: var(--neon-primary); border-radius: 10px; box-shadow: 0 0 10px var(--neon-primary); }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            height: var(--nav-height) !important;
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0 1.5rem;
+            z-index: 1060;
+            display: flex;
+            align-items: center;
+        }
+
+        /* --- NOTIFICATION STYLES (YANGI QO'SHILDI) --- */
+        .noti-btn {
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; color: #94a3b8; transition: 0.3s; position: relative;
+        }
+        .noti-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .noti-badge {
+            position: absolute; top: 4px; right: 4px; width: 16px; height: 16px;
+            background: #ef4444; border-radius: 50%; font-size: 9px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; color: white;
+            box-shadow: 0 0 8px #ef4444;
+        }
+        .noti-dropdown { width: 320px; max-height: 450px; overflow-y: auto; padding: 0; }
+        .noti-item { transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .noti-item:hover { background: rgba(255,255,255,0.03); }
+        .noti-item:last-child { border-bottom: none; }
+
+        /* --- MENU TOGGLE NEON --- */
+        #sidebarToggle {
+            width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border); color: #fff;
+            transition: 0.3s;
+        }
+        #sidebarToggle:hover { background: var(--neon-primary); box-shadow: 0 0 15px var(--neon-primary); border-color: var(--neon-primary); }
+
+        /* --- SEARCH & VOICE NEON --- */
+        .search-box-neon {
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: 50px !important;
+            transition: all 0.4s;
+        }
+        .search-box-neon:focus-within { border-color: var(--neon-primary) !important; box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
+
+        .voice-search-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border) !important; color: #fff;
+            width: 42px; height: 42px; transition: 0.3s; display: flex; align-items: center; justify-content: center;
+        }
+        .voice-search-btn:hover { background: #ef4444 !important; box-shadow: 0 0 15px #ef4444; border-color: #ef4444 !important; color: white !important; }
+
+        /* --- AVATAR NEON --- */
+        .user-avatar-neon { border: 2px solid transparent; border-radius: 50%; transition: 0.3s; padding: 2px; object-fit: cover; }
+        .user-avatar-neon:hover { border-color: var(--neon-primary); box-shadow: 0 0 15px var(--neon-primary); }
+
+        /* --- YUKLASH TUGMASI --- */
+        .btn-upload-neon {
+            background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+            border: none; color: white !important; font-weight: 700;
+            padding: 8px 22px; border-radius: 50px;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+            transition: 0.3s; display: flex; align-items: center; gap: 8px; text-decoration: none;
+        }
+        .btn-upload-neon:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(99, 102, 241, 0.7); }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            background: var(--glass-bg);
+            border-right: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            width: 260px;
+            position: fixed;
+            top: var(--nav-height) !important;
+            bottom: 0;
+            display: flex; flex-direction: column;
+            z-index: 1040;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar.collapsed { transform: translateX(-260px); }
+
+        .nav-item {
+            margin: 4px 12px; padding: 10px 16px; border-radius: 12px; color: #94a3b8 !important;
+            font-size: 14px; font-weight: 500; transition: 0.3s; display: flex; align-items: center;
+            text-decoration: none;
+        }
+        .nav-item i { width: 25px; text-align: center; margin-right: 10px; font-size: 16px; }
+        .nav-item:hover, .nav-item.active { background: rgba(99, 102, 241, 0.1); color: #fff !important; }
+        .nav-item.active { box-shadow: inset 4px 0 0 var(--neon-primary); color: #fff !important; }
+
+        .sidebar-header { font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1.5px; padding: 20px 28px 8px; }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            margin-left: 260px;
+            padding: 80px 25px 30px;
+            min-height: 100vh;
+            display: block !important;
+            transition: 0.3s;
+            position: relative;
+        }
+        .main-content.expanded { margin-left: 0; }
+
+        /* --- THEME TOGGLE STYLE --- */
+        .theme-switch-container {
+            padding: 15px 24px;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid var(--glass-border);
+        }
+        .theme-switch { display: inline-block; height: 20px; position: relative; width: 40px; }
+        .theme-switch input { display:none; }
+        .slider { background-color: #334155; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 34px; }
+        .slider:before { background-color: white; bottom: 3px; content: ""; height: 14px; left: 4px; position: absolute; transition: .4s; width: 14px; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--neon-primary); }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        /* Minimal Mode qoidalari */
+        body.minimal-mode { --neon-glow: none; }
+        body.minimal-mode .project-card,
+        body.minimal-mode .tech-panel,
+        body.minimal-mode #sidebarToggle:hover {
+            box-shadow: none !important;
+            border-color: rgba(255,255,255,0.1) !important;
+        }
+        body.minimal-mode .panel-glow,
+        body.minimal-mode .price-badge-neon {
+            display: none !important;
+        }
+
+        @media (max-width: 992px) {
+            .main-content { margin-left: 0; padding-top: 80px; }
+
+            .sidebar {
+                transform: translateX(-100%); /* -260px o'rniga -100% ishonchliroq */
+                width: 260px; /* Kenglikni aniq belgilash */
+                height: 100vh;
+                top: var(--nav-height) !important;
+                left: 0;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+                box-shadow: 10px 0 30px rgba(0,0,0,0.5); /* Ochilganda soya berish */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar fixed-top flex-nowrap">
+        <div class="d-flex align-items-center gap-3 px-2">
+            <button id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            <a href="{% url 'home' %}" class="navbar-brand d-flex align-items-center gap-2 m-0">
+                <div style="background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: var(--neon-glow);">
+                    <i class="fas fa-play text-white" style="font-size: 14px;"></i>
+                </div>
+                <span class="d-none d-md-inline fw-bold text-white fs-4">Dev<span style="color: var(--neon-primary);">Tube</span></span>
+            </a>
+        </div>
+
+        <div class="search-wrapper flex-grow-1 d-none d-md-flex justify-content-center px-2">
+            <form id="mainSearchForm" class="d-flex align-items-center w-100" style="max-width: 600px;" action="{% url 'home' %}" method="GET">
+                <div class="input-group search-box-neon">
+                    <input type="text" name="q" id="searchInput" class="form-control text-white border-0 bg-transparent py-2 px-4" placeholder="Loyihalarni qidirish..." autocomplete="off">
+                    <button class="btn border-0 text-muted px-3" type="submit"><i class="fas fa-search"></i></button>
+                </div>
+                <button type="button" class="btn voice-search-btn rounded-circle ms-3" onclick="startVoiceSearch()" id="voiceBtn">
+                    <i class="fas fa-microphone"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="d-md-none ms-auto me-2">
+            <button class="btn text-white" type="button"><i class="fas fa-search"></i></button>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-2 px-2">
+
+            <button id="light-dark-toggle" class="btn btn-link nav-link text-white me-2" style="font-size: 1.2rem;">
+                <i class="fas fa-moon"></i>
+            </button>
+
+            {% if user.is_authenticated %}
+                <div class="dropdown me-2">
+                    <a href="#" class="noti-btn text-decoration-none" data-bs-toggle="dropdown">
+                        <i class="fas fa-bell fs-5"></i>
+                        {% if user.notifications.unread.count > 0 %}
+                            <span class="noti-badge">{{ user.notifications.unread.count }}</span>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg noti-dropdown" style="background: #0f172a; border: 1px solid var(--glass-border);">
+                        <li class="d-flex justify-content-between align-items-center p-3 border-bottom border-secondary border-opacity-25">
+                            <span class="fw-bold text-white small text-uppercase">Bildirishnomalar</span>
+                            <a href="{% url 'my_notifications' %}" class="small text-primary text-decoration-none">Barchasi</a>
+                        </li>
+
+                        {% for notice in user.notifications.unread|slice:":5" %}
+                        <li>
+                            <a href="{% url 'my_notifications' %}" class="dropdown-item noti-item py-3">
+                                <div class="d-flex align-items-start gap-2">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; flex-shrink: 0;">
+                                        <i class="fas fa-info"></i>
+                                    </div>
+                                    <div style="line-height: 1.3;">
+                                        <div class="small text-white text-wrap mb-1">{{ notice.verb }}</div>
+                                        <div class="text-muted" style="font-size: 10px;">{{ notice.timesince }} oldin</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li class="p-4 text-center text-muted small">
+                            <i class="far fa-bell-slash fa-2x mb-2 opacity-50"></i>
+                            <p class="m-0">Yangi xabarlar yo'q</p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <a href="{% url 'add_funds' %}" class="btn btn-sm text-success fw-bold me-2 d-none d-lg-flex align-items-center gap-2" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 50px; padding: 6px 15px;">
+                    <i class="fas fa-wallet"></i> ${{ user.profile.balance }} <span style="font-size: 10px;">+</span>
+                </a>
+                <a href="{% url 'create_project' %}" class="btn-upload-neon">
+                    <i class="fas fa-plus"></i> <span class="d-none d-lg-inline">Yuklash</span>
+                </a>
+                <div class="dropdown">
+                    <a href="#" class="dropdown-toggle text-decoration-none d-flex align-items-center" data-bs-toggle="dropdown">
+                        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="user-avatar-neon shadow" width="38" height="38">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end mt-3 shadow-lg" style="background: #0f172a; border: 1px solid var(--glass-border);">
+                        <li><a class="dropdown-item py-2 text-light" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2 text-primary"></i> Profil</a></li>
+                        <li><hr class="dropdown-divider opacity-10"></li>
+                        <li>
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}<button type="submit" class="dropdown-item py-2 text-danger fw-bold"><i class="fas fa-sign-out-alt me-2"></i> Chiqish</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">KIRISH</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="sidebar" id="sidebar">
+        <div class="flex-grow-1 overflow-auto py-2">
+            <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}"><i class="fas fa-home"></i> Bosh sahifa</a>
+            <a href="{% url 'trending' %}" class="nav-item {% if request.resolver_match.url_name == 'trending' %}active{% endif %}"><i class="fas fa-fire"></i> Trenddagilar</a>
+
+            <a href="{% url 'syncing' %}" class="nav-item {% if request.resolver_match.url_name == 'syncing' %}active{% endif %}">
+                <i class="fas fa-sync-alt"></i> Sinxronlarim
+            </a>
+
+            <div class="sidebar-header px-4">Kutubxona</div>
+            <a href="{% url 'liked_videos' %}" class="nav-item {% if request.resolver_match.url_name == 'liked_videos' %}active{% endif %}"><i class="fas fa-heart text-danger"></i> Yoqqanlar</a>
+            <a href="{% url 'saved_projects' %}" class="nav-item {% if request.resolver_match.url_name == 'saved_projects' %}active{% endif %}">
+                    <i class="fas fa-bookmark text-warning"></i> Saqlanganlar
+            </a>
+            <a href="{% url 'my_videos' %}" class="nav-item {% if request.resolver_match.url_name == 'my_videos' %}active{% endif %}"><i class="fas fa-folder-open"></i> Mening kodlarim</a>
+
+            <div class="sidebar-header px-4">Asboblar</div>
+            <a href="{% url 'cpp_test' %}" class="nav-item {% if request.resolver_match.url_name == 'cpp_test' %}active{% endif %}">
+                <i class="fas fa-calculator text-warning"></i> C++ Kvadrat (Tool)
+            </a>
+
+            <a href="{% url 'compiler' %}" class="nav-item {% if request.resolver_match.url_name == 'compiler' %}active{% endif %}">
+                <i class="fas fa-terminal text-info"></i> Universal Compiler
+            </a>
+
+            <div class="sidebar-header px-4">Hamjamiyat</div>
+            <a href="{% url 'community_chat' %}" class="nav-item {% if request.resolver_match.url_name == 'community_chat' %}active{% endif %}"><i class="fas fa-users"></i> Dasturchilar (Chat)</a>
+            <a href="{% url 'announcements' %}" class="nav-item {% if request.resolver_match.url_name == 'announcements' %}active{% endif %}">
+                <i class="fas fa-bullhorn text-danger"></i> E'lonlar
+            </a>        </div>
+
+        <div class="theme-switch-container d-flex align-items-center justify-content-between">
+            <span class="small text-muted" id="mode-label" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cyber Mode</span>
+            <label class="theme-switch" for="theme-checkbox">
+                <input type="checkbox" id="theme-checkbox" />
+                <div class="slider round"></div>
+            </label>
+        </div>
+
+        <div class="py-3 border-top" style="border-color: rgba(255,255,255,0.05) !important; background: rgba(15, 23, 42, 0.5);">
+            <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <i class="fas fa-cog text-secondary"></i> Sozlamalar
+            </a>
+            <a href="{% url 'help' %}" class="nav-item {% if request.resolver_match.url_name == 'help' %}active{% endif %}">
+                <i class="fas fa-question-circle text-success"></i> Yordam
+            </a>
+            <a href="{% url 'contact' %}" class="nav-item {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">
+                <i class="fas fa-headset text-primary"></i> Murojaat
+            </a>
+            <a href="{% url 'portfolio' %}" target="_blank" class="nav-item">
+                <i class="fas fa-id-card text-warning"></i> Mening Portfoliom
+            </a>
+            <div class="text-center mt-3 small opacity-25" style="font-size: 10px;">&copy; 2026 DevTube</div>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleBtn = document.getElementById('sidebarToggle');
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Tugma bosilganda boshqa hodisalarni to'xtatish
+
+            // Agar ekran kichik bo'lsa (Mobile/Tablet)
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle('active');
+            }
+            // Agar ekran katta bo'lsa (Desktop)
+            else {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+            }
+        });
+
+        // Qo'shimcha: Mobil menyu ochilganda, ekranning boshqa joyi bosilsa menyuni yopish
+        document.addEventListener('click', (e) => {
+             if (window.innerWidth <= 992) {
+                if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target) && sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
+
+        // 1. MINIMAL MODE (Sidebar dagi switch)
+        const themeToggle = document.querySelector('#theme-checkbox');
+        const modeLabel = document.querySelector('#mode-label');
+        const currentMinimal = localStorage.getItem('theme');
+
+        if (currentMinimal === 'cyber') {
+            document.body.classList.remove('minimal-mode');
+            themeToggle.checked = true;
+            modeLabel.innerText = 'Cyber Mode';
+        } else {
+            document.body.classList.add('minimal-mode');
+            themeToggle.checked = false;
+            modeLabel.innerText = 'Minimal Mode';
+        }
+
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.body.classList.remove('minimal-mode');
+                modeLabel.innerText = 'Cyber Mode';
+                localStorage.setItem('theme', 'cyber');
+            } else {
+                document.body.classList.add('minimal-mode');
+                modeLabel.innerText = 'Minimal Mode';
+                localStorage.setItem('theme', 'minimal');
+            }
+        });
+
+        // 2. LIGHT/DARK MODE (Tepadagi oy/quyosh tugmasi)
+        const lightToggleBtn = document.getElementById('light-dark-toggle');
+        const lightIcon = lightToggleBtn.querySelector('i');
+        const currentLight = localStorage.getItem('light-theme');
+
+        // Sahifa yuklanganda tekshirish
+        if (currentLight === 'active') {
+            document.body.classList.add('light-mode');
+            lightIcon.classList.remove('fa-moon');
+            lightIcon.classList.add('fa-sun');
+            lightIcon.classList.add('text-warning');
+        }
+
+        lightToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+
+            if (document.body.classList.contains('light-mode')) {
+                // Yorug' rejim yoqildi
+                lightIcon.classList.remove('fa-moon');
+                lightIcon.classList.add('fa-sun');
+                lightIcon.classList.add('text-warning');
+                localStorage.setItem('light-theme', 'active');
+            } else {
+                // Qorong'u rejim (Default)
+                lightIcon.classList.add('fa-moon');
+                lightIcon.classList.remove('fa-sun');
+                lightIcon.classList.remove('text-warning');
+                localStorage.setItem('light-theme', 'inactive');
+            }
+        });
+
+        function startVoiceSearch() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.lang = 'uz-UZ';
+                recognition.onresult = (e) => {
+                    document.getElementById('searchInput').value = e.results[0][0].transcript;
+                    setTimeout(() => document.getElementById('mainSearchForm').submit(), 400);
+                };
+                recognition.start();
+            }
+        }
+    </script>
+</body>
+</html>

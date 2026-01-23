@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .delete-wrapper {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .neon-delete-card {
+        width: 100%;
+        max-width: 450px;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(220, 53, 69, 0.2); /* Qizilish chegara */
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        text-align: center;
+        animation: shake 0.5s ease-in-out;
+    }
+
+    /* Diqqatni tortuvchi tebranish animatsiyasi */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    .warning-icon-box {
+        width: 80px;
+        height: 80px;
+        background: rgba(220, 53, 69, 0.1);
+        border: 2px solid rgba(220, 53, 69, 0.5);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        color: #ff4d4d;
+        font-size: 35px;
+        box-shadow: 0 0 20px rgba(220, 53, 69, 0.2);
+    }
+
+    .delete-title {
+        color: #fff;
+        font-weight: 800;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .project-name-display {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px 15px;
+        border-radius: 10px;
+        color: #ffc107; /* Diqqatni qaratish uchun sariq rang */
+        font-family: 'Consolas', monospace;
+        display: inline-block;
+        margin-bottom: 25px;
+    }
+
+    .btn-group-custom {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .btn-neon-cancel {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+
+    .btn-neon-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .btn-neon-delete {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #dc3545, #ff4d4d);
+        border: none;
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .btn-neon-delete:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.6);
+    }
+</style>
+
+<div class="delete-wrapper">
+    <div class="neon-delete-card">
+        <div class="warning-icon-box">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+        <h3 class="delete-title">Loyihani o'chirish</h3>
+
+        <p class="text-muted small mb-2">Ushbu amalni ortga qaytarib bo'lmaydi:</p>
+        <div class="project-name-display">
+            "{{ project.title }}"
+        </div>
+
+        <form method="post" class="btn-group-custom">
+            {% csrf_token %}
+            <a href="{% url 'profile' %}" class="btn-neon-cancel">
+                Bekor qilish
+            </a>
+            <button type="submit" class="btn-neon-delete">
+                Ha, o'chirilsin
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <div class="card mb-0 shadow-lg" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-bottom: none; border-radius: 15px 15px 0 0;">
+                <div class="card-body d-flex align-items-center justify-content-between py-3">
+                    <h5 class="m-0 text-white"><i class="fas fa-comments text-primary me-2"></i> Dasturchilar Chati</h5>
+                    <span class="badge bg-success bg-opacity-25 text-success rounded-pill px-3">● Online</span>
+                </div>
+            </div>
+
+            <div id="chat-window" class="p-4" style="height: 65vh; overflow-y: auto; background: rgba(0,0,0,0.3); border-left: 1px solid var(--glass-border); border-right: 1px solid var(--glass-border); scroll-behavior: smooth;">
+                {% include 'chat_messages_partial.html' %}
+            </div>
+
+            <div class="card mt-0 shadow-lg" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-top: none; border-radius: 0 0 15px 15px;">
+                <div class="card-body py-3">
+                    <form id="chat-form" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <input type="text" id="msg-body" class="form-control text-white border-0" placeholder="Xabar yozing..." style="background: rgba(255,255,255,0.05);" autocomplete="off">
+                        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatWindow = document.getElementById('chat-window');
+    const chatForm = document.getElementById('chat-form');
+    const msgInput = document.getElementById('msg-body');
+
+    // Sahifa ochilganda pastga tushirish
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+
+    // 1. Xabar yuborish
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const body = msgInput.value.trim();
+        if (!body) return;
+
+        const formData = new FormData();
+        formData.append('body', body);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'community_chat' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.html) {
+                chatWindow.innerHTML = data.html; // Yangilash
+                chatWindow.scrollTop = chatWindow.scrollHeight; // Pastga tushirish
+                msgInput.value = ''; // Tozalash
+            }
+        });
+    });
+
+    // 2. Real vaqt rejimida yangilash (Har 3 soniyada)
+    setInterval(() => {
+        fetch("{% url 'community_chat' %}", {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.html) {
+                // Agar yangi xabar bo'lsa yoki shunchaki yangilaymiz
+                // (Murakkabroq usulda scroll pozitsiyasini tekshirish mumkin)
+                const isScrolledToBottom = chatWindow.scrollHeight - chatWindow.clientHeight <= chatWindow.scrollTop + 100;
+                
+                chatWindow.innerHTML = data.html;
+                
+                if(isScrolledToBottom) {
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
+            }
+        });
+    }, 3000);
+</script>
+{% endblock %}

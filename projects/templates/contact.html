@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* --- ORQA FON EFFEKTLARI (Jonli shakllar) --- */
+    .contact-wrapper {
+        position: relative;
+        overflow: hidden;
+        padding: 80px 0;
+        /* Orqa fon biroz yoritiladi */
+        background: radial-gradient(circle at top right, rgba(30, 41, 59, 0.5), rgba(2, 6, 23, 1));
+    }
+    /* Suzib yuruvchi rangli sharlar */
+    .bg-shape {
+        position: absolute;
+        filter: blur(100px);
+        z-index: 0;
+        opacity: 0.5;
+        animation: floatShape 10s infinite alternate ease-in-out;
+    }
+    .shape-1 {
+        top: -10%; right: -10%;
+        width: 400px; height: 400px;
+        background: linear-gradient(to right, #ff00cc, #333399);
+    }
+    .shape-2 {
+        bottom: -10%; left: -10%;
+        width: 500px; height: 500px;
+        background: linear-gradient(to right, #00c6ff, #0072ff);
+        animation-delay: -5s;
+    }
+
+    @keyframes floatShape {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        100% { transform: translate(50px, 50px) rotate(20deg); }
+    }
+
+    /* --- PREMIUM GLASS CARD (Oyna effekti) --- */
+    .glass-card-premium {
+        /* Shaffoflik va Blur */
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(30px); /* Kuchli xiralashtirish */
+        -webkit-backdrop-filter: blur(30px);
+
+        /* Chegaralar va Soya */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: 1px solid rgba(255, 255, 255, 0.3); /* Tepa qismi yorqinroq */
+        border-radius: 30px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        position: relative;
+        z-index: 1; /* Shakllar ustida turishi uchun */
+        overflow: hidden;
+    }
+    /* Kartaning yaltirashi */
+    .glass-card-premium::before {
+        content: '';
+        position: absolute;
+        top: 0; left: -50%; width: 100%; height: 100%;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+        transform: skewX(-25deg);
+        transition: 0.7s;
+    }
+    .glass-card-premium:hover::before {
+        left: 150%;
+    }
+
+    /* --- ZAMONAVIY INPUTLAR --- */
+    .input-group-text {
+        background: rgba(255, 255, 255, 0.05);
+        border: none;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        color: var(--primary-color, #0d6efd);
+    }
+    .modern-input {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: none !important;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 0 !important;
+        color: #fff !important;
+        padding: 15px;
+        transition: 0.3s;
+    }
+    /* Input tanlanganda */
+    .modern-input:focus {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-bottom-color: var(--primary-color, #0d6efd) !important;
+        box-shadow: none !important;
+    }
+    .input-group:focus-within .input-group-text {
+         border-bottom-color: var(--primary-color, #0d6efd) !important;
+         color: #fff;
+    }
+    .form-label {
+        font-weight: 600;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* --- GRADIENT TUGMA --- */
+    .btn-gradient {
+        background: linear-gradient(45deg, #00c6ff, #0072ff);
+        border: none;
+        padding: 12px;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+        transition: 0.4s;
+    }
+    .btn-gradient::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(45deg, #ff00cc, #333399);
+        z-index: -1;
+        opacity: 0;
+        transition: 0.4s;
+    }
+    .btn-gradient:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0, 114, 255, 0.4);
+    }
+    .btn-gradient:hover::before {
+        opacity: 1;
+    }
+</style>
+
+<div class="contact-wrapper">
+    <div class="bg-shape shape-1 rounded-circle"></div>
+    <div class="bg-shape shape-2 rounded-circle"></div>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-7">
+
+                <div class="glass-card-premium p-5">
+                    <div class="text-center mb-5">
+                        <i class="fas fa-paper-plane fa-3x mb-3" style="background: linear-gradient(45deg, #00c6ff, #0072ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                        <h2 class="fw-bold text-white display-6">Biz bilan bog'laning</h2>
+                        <p class="text-white-50 mb-0">Takliflaringiz yoki savollaringiz bormi? Yozib qoldiring!</p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label ps-2">MAVZU</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                                <input type="text" name="subject" class="form-control modern-input" placeholder="Hamkorlik yoki taklif..." required>
+                            </div>
+                        </div>
+
+                        <div class="mb-5">
+                            <label class="form-label ps-2">XABAR MATNI</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-comment-alt"></i></span>
+                                <textarea name="message" class="form-control modern-input" rows="5" placeholder="Fikringizni batafsil yozing..." required></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-gradient w-100 rounded-pill fw-bold text-white">
+                            YUBORISH <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

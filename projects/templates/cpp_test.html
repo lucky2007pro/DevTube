@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* --- ASOSIY KONTEYNER --- */
+    .cpp-container {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    /* NEON GLASS CARD */
+    .neon-glass-card {
+        width: 100%;
+        max-width: 650px;
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 30px;
+        padding: 45px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        text-align: center;
+    }
+
+    /* MICROCHIP ICON (BLUE GLOW) */
+    .neon-icon-wrapper {
+        width: 80px; height: 80px;
+        background: rgba(0, 123, 255, 0.1);
+        border: 2px solid #007bff;
+        border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 25px;
+        font-size: 35px; color: #007bff;
+        box-shadow: 0 0 30px rgba(0, 123, 255, 0.3);
+        animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 20px rgba(0, 123, 255, 0.3); }
+        50% { box-shadow: 0 0 40px rgba(0, 123, 255, 0.5); }
+        100% { box-shadow: 0 0 20px rgba(0, 123, 255, 0.3); }
+    }
+
+    .neon-h2 {
+        font-weight: 800; color: #fff; letter-spacing: -1px; margin-bottom: 12px;
+    }
+
+    /* INPUT GROUP STYLE */
+    .calc-input-group {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px;
+        display: flex;
+        padding: 6px 6px 6px 20px;
+        margin: 35px 0;
+        transition: 0.3s;
+    }
+    .calc-input-group:focus-within {
+        border-color: #007bff;
+        box-shadow: 0 0 20px rgba(0, 123, 255, 0.2);
+    }
+
+    .calc-input {
+        background: transparent; border: none; color: #fff;
+        width: 100%; outline: none; font-weight: 600;
+    }
+
+    .btn-calc-neon {
+        background: linear-gradient(135deg, #007bff, #6610f2);
+        border: none; border-radius: 50px;
+        color: white; font-weight: 800;
+        padding: 12px 30px; transition: 0.3s;
+        box-shadow: 0 8px 15px rgba(0, 123, 255, 0.3);
+    }
+    .btn-calc-neon:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 25px rgba(0, 123, 255, 0.5);
+    }
+
+    /* TERMINAL OUTPUT (VS CODE STYLE) */
+    #resultBox {
+        display: none;
+        background: #010409;
+        border: 1px solid #30363d;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: left;
+        font-family: 'Fira Code', 'Consolas', monospace;
+        position: relative;
+        overflow: hidden;
+    }
+    #resultBox::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+        width: 4px; background: #238636;
+    }
+
+    .terminal-header {
+        font-size: 11px; color: #8b949e;
+        text-transform: uppercase; margin-bottom: 12px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    #outputText { color: #d1d5db; line-height: 1.6; white-space: pre-wrap; font-size: 14px; }
+</style>
+
+<div class="cpp-container">
+    <div class="neon-glass-card">
+        <div class="neon-icon-wrapper">
+            <i class="fas fa-microchip"></i>
+        </div>
+
+        <h2 class="neon-h2">C++ Integratsiyasi</h2>
+        <p class="text-muted small">C++ kompilyatori yordamida matematik hisob-kitoblarni amalga oshiring.</p>
+
+        <form id="calcForm" class="calc-input-group">
+            {% csrf_token %}
+            <input type="number" id="numberInput" name="input" class="calc-input" placeholder="Son kiriting (masalan: 12)" required>
+            <button type="submit" id="submitBtn" class="btn-calc-neon">
+                Hisoblash
+            </button>
+        </form>
+
+        <div id="resultBox">
+            <div class="terminal-header">
+                <i class="fas fa-terminal"></i> Terminal Output
+            </div>
+            <div id="outputText"></div>
+        </div>
+
+        <div class="mt-5">
+            <a href="{% url 'home' %}" class="text-muted text-decoration-none small hover-white">
+                <i class="fas fa-long-arrow-alt-left me-1"></i> Bosh sahifaga qaytish
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('calcForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        const resultBox = document.getElementById('resultBox');
+        const outputText = document.getElementById('outputText');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        const cppCode = `#include <iostream>
+using namespace std;
+int main() {
+    long long n;
+    if (cin >> n) {
+        cout << ">>> Kirish ma'lumoti: " << n << endl;
+        cout << ">>> Natija (kvadrati): " << n * n << endl;
+        cout << "--------------------------------" << endl;
+        cout << "Muvaffaqiyatli bajarildi." << endl;
+    }
+    return 0;
+}`;
+
+        const formData = new FormData();
+        formData.append('code', cppCode);
+        formData.append('input', document.getElementById('numberInput').value);
+
+        fetch("{% url 'cpp_test' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+        })
+        .then(res => res.json())
+        .then(data => {
+            resultBox.style.display = 'block';
+            outputText.innerText = data.result;
+        })
+        .catch(() => {
+            resultBox.style.display = 'block';
+            outputText.innerText = "Xatolik: Server bilan aloqa yo'q.";
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = 'Hisoblash';
+        });
+    });
+</script>
+{% endblock %}

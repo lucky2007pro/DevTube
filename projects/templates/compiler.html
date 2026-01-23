@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .compiler-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+    }
+    .code-editor {
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        background: rgba(0, 0, 0, 0.3) !important;
+        color: #e2e8f0 !important;
+        border: none;
+        resize: none;
+    }
+    .code-editor:focus { box-shadow: none; background: rgba(0, 0, 0, 0.4) !important; }
+
+    /* Output stillari */
+    .output-area {
+        font-family: 'Consolas', monospace;
+        background: #0f172a;
+        color: #10b981;
+        border-radius: 0 0 10px 0;
+        min-height: 100px;
+    }
+    /* HTML Preview uchun oyna */
+    .html-preview-frame {
+        width: 100%;
+        height: 100%;
+        background: white;
+        border: none;
+        display: none; /* Boshida yashirin */
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-white fw-bold"><i class="fas fa-laptop-code text-warning me-2"></i> Universal Compiler</h2>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-primary bg-opacity-25 text-primary px-3 py-2 rounded-pill">Multi-Language</span>
+                </div>
+            </div>
+
+            <div class="compiler-card shadow-lg overflow-hidden">
+                <form id="compiler-form" method="post">
+                    {% csrf_token %}
+
+                    <div class="p-3 border-bottom border-secondary d-flex gap-3 align-items-center flex-wrap" style="background: rgba(255,255,255,0.02);">
+                        <select name="language" id="langSelect" class="form-select bg-dark text-white border-secondary" style="width: 200px;" onchange="handleLangChange()">
+                            {% for lang_code, lang_name in languages %}
+                                <option value="{{ lang_code }}" {% if current_lang == lang_code %}selected{% endif %}>{{ lang_name }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <button type="button" class="btn btn-sm btn-outline-light" onclick="fillExample()">
+                            <i class="fas fa-magic me-1"></i> Namuna
+                        </button>
+
+                        <button type="submit" class="btn btn-primary px-4 ms-auto fw-bold shadow-lg" id="runBtn">
+                            <i class="fas fa-play me-2"></i> Run Code
+                        </button>
+                    </div>
+
+                    <div class="row g-0">
+                        <div class="col-md-7 border-end border-secondary">
+                            <textarea name="code" id="codeInput" class="form-control code-editor p-4"
+                                style="height: 550px;"
+                                placeholder="// Kodingizni shu yerga yozing..." spellcheck="false">{{ code }}</textarea>
+                        </div>
+
+                        <div class="col-md-5 d-flex flex-column">
+                            <div id="inputSection">
+                                <div class="p-2 border-bottom border-secondary bg-dark bg-opacity-50 text-muted small fw-bold text-uppercase px-3">
+                                    <i class="fas fa-keyboard me-2"></i> Input
+                                </div>
+                                <textarea name="input" class="form-control bg-transparent text-white border-0 p-3"
+                                    style="height: 100px; font-family: monospace; resize: none; border-bottom: 1px solid rgba(255,255,255,0.1) !important;"
+                                    placeholder="Masalan: 10 20">{{ input }}</textarea>
+                            </div>
+
+                            <div class="p-2 border-bottom border-secondary bg-dark bg-opacity-50 text-muted small fw-bold text-uppercase px-3 d-flex justify-content-between">
+                                <span><i class="fas fa-desktop me-2"></i> Output / Preview</span>
+                                <span id="statusText" class="text-warning small" style="display:none;">Ishlamoqda...</span>
+                            </div>
+
+                            <pre id="outputArea" class="p-3 mb-0 flex-grow-1 output-area" style="overflow: auto; white-space: pre-wrap;">{{ result }}</pre>
+
+                            <iframe id="htmlPreview" class="html-preview-frame"></iframe>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const langSelect = document.getElementById('langSelect');
+    const inputSection = document.getElementById('inputSection');
+    const outputArea = document.getElementById('outputArea');
+    const htmlPreview = document.getElementById('htmlPreview');
+    const codeInput = document.getElementById('codeInput');
+
+    // Tillar o'zgarganda UI ni moslash
+    function handleLangChange() {
+        const lang = langSelect.value;
+        fillExample();
+
+        if (lang === 'html') {
+            // HTML bo'lsa Inputni yashiramiz va Previewni ko'rsatamiz
+            inputSection.style.display = 'none';
+            outputArea.style.display = 'none';
+            htmlPreview.style.display = 'block';
+        } else {
+            // Boshqa tillar bo'lsa Input va Text Outputni ko'rsatamiz
+            inputSection.style.display = 'block';
+            outputArea.style.display = 'block';
+            htmlPreview.style.display = 'none';
+        }
+    }
+
+    // RUN tugmasini bosish
+    document.getElementById('compiler-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('runBtn');
+        const lang = langSelect.value;
+
+        // Agar HTML bo'lsa, Serverga so'rov yubormaymiz!
+        if (lang === 'html') {
+            const code = codeInput.value;
+            // Iframe ichiga kodni yozamiz
+            const doc = htmlPreview.contentWindow.document;
+            doc.open();
+            doc.write(code);
+            doc.close();
+            return; // Shu yerda to'xtaymiz
+        }
+
+        // Boshqa tillar uchun AJAX (Serverga)
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Compiling...';
+        outputArea.innerText = 'Serverga ulanmoqda...';
+        outputArea.style.color = '#94a3b8';
+
+        const formData = new FormData(this);
+
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            outputArea.innerText = data.result;
+            if (data.result.toLowerCase().includes('error') || data.result.toLowerCase().includes('traceback')) {
+                outputArea.style.color = '#ef4444';
+            } else {
+                outputArea.style.color = '#10b981';
+            }
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        })
+        .catch(err => {
+            outputArea.innerText = "Xatolik yuz berdi.";
+            outputArea.style.color = '#ef4444';
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    });
+
+    // Tab tugmasi
+    codeInput.addEventListener('keydown', function(e) {
+        if (e.key == 'Tab') {
+            e.preventDefault();
+            var start = this.selectionStart;
+            var end = this.selectionEnd;
+            this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 4;
+        }
+    });
+
+    // Namunalar
+    const examples = {
+        'html': '<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: sans-serif; text-align: center; color: #333; }\n    h1 { color: #6366f1; }\n    button { padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 5px; cursor: pointer; }\n  </style>\n</head>\n<body>\n\n  <h1>Salom, DevTube!</h1>\n  <p>Bu HTML Preview oynasi.</p>\n  <button onclick="alert(\'Ishladi!\')">Meni bos</button>\n\n  <script>\n    console.log("JavaScript ham ishlaydi!");\n  <\/script>\n</body>\n</html>',
+        'python': 'print("Salom, DevTube!")\nnumbers = [1, 2, 3, 4, 5]\nprint(f"Kvadratlar: {[n**2 for n in numbers]}")',
+        'javascript': 'console.log("Salom, JS!");\n[1, 2, 3].forEach(n => console.log(n * 2));',
+        'cpp': '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "Salom, C++!" << endl;\n    return 0;\n}',
+        'java': 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Salom, Java!");\n    }\n}',
+        'go': 'package main\nimport "fmt"\nfunc main() {\n    fmt.Println("Salom, Go!")\n}',
+        'php': '<?php\necho "Salom, PHP!";\n?>',
+        'csharp': 'using System;\npublic class Program {\n    public static void Main() {\n        Console.WriteLine("Salom, C#!");\n    }\n}',
+        'ruby': 'puts "Salom, Ruby!"'
+    };
+
+    function fillExample() {
+        const lang = langSelect.value;
+        if (examples[lang]) {
+            codeInput.value = examples[lang];
+        } else {
+            codeInput.value = '';
+        }
+    }
+
+    // Sahifa yuklanganda tekshirish
+    window.onload = function() {
+        handleLangChange();
+    };
+</script>
+{% endblock %}

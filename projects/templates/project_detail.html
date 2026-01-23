@@ -1,0 +1,497 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    :root {
+        --neon-primary: #6366f1;
+        --neon-secondary: #a855f7;
+        --glass-bg: rgba(22, 27, 34, 0.85); /* Biroz to'qroq qildim o'qish oson bo'lishi uchun */
+        --border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    /* --- COMPACT LAYOUT --- */
+    .project-container {
+        max-width: 1100px; /* Kenglik kichraytirildi */
+        margin: 20px auto; /* Tepa-past masofa kamaytirildi */
+        display: grid;
+        grid-template-columns: 2.8fr 1fr; /* Chap tomon sal kengroq */
+        gap: 25px; /* Oradagi masofa 35px dan 25px ga tushdi */
+        padding: 0 15px;
+    }
+
+    @media (max-width: 992px) {
+        .project-container { grid-template-columns: 1fr; }
+        .info-panel { position: static !important; }
+    }
+
+    /* --- CARDS & GLASSMORPHISM --- */
+    .neon-preview-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px; /* Radius kichraytirildi */
+        overflow: hidden; margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .preview-header {
+        padding: 12px 20px; /* Header ingichkalashdi */
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid var(--border-color);
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .preview-title { font-weight: 600; color: #cbd5e1; font-size: 14px; letter-spacing: 0.5px; }
+
+    /* --- VISUAL PREVIEW (KICHRAYTIRILDI) --- */
+    .visual-preview {
+        width: 100%;
+        height: 380px; /* 600px dan 380px ga tushdi - eng muhim o'zgarish */
+        background-color: #0d1117;
+        display: flex; align-items: center; justify-content: center;
+        position: relative; overflow: hidden;
+    }
+    .preview-content { width: 100%; height: 100%; border: none; background: #fff; display: block; }
+    .preview-image { width: 100%; height: 100%; object-fit: contain; background: #000; }
+
+    /* --- CODE SECTION --- */
+    .code-lock-wrapper {
+        position: relative; background: #0d1117;
+        border-radius: 0 0 16px 16px;
+    }
+    .code-content {
+        font-family: 'Fira Code', 'Consolas', monospace; font-size: 13px; /* Shrift kichraydi */
+        padding: 20px; margin: 0; overflow-x: auto; line-height: 1.5;
+        color: #e6edf3;
+    }
+
+    /* LOCKED MODE */
+    .locked-mode .code-content {
+        max-height: 200px; /* Kod oynasi balandligi kamaydi */
+        overflow: hidden;
+        -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
+        mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
+        filter: blur(1px); user-select: none; pointer-events: none;
+    }
+
+    .neon-lock-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: linear-gradient(to bottom, transparent 0%, rgba(13, 17, 23, 0.9) 60%, #0d1117 100%);
+        z-index: 10;
+    }
+    .lock-icon-box {
+        width: 60px; height: 60px; /* Ikonka kichraydi */
+        background: rgba(245, 158, 11, 0.1);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        border: 2px solid rgba(245, 158, 11, 0.3); margin-bottom: 15px;
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+    }
+
+    /* --- SIDEBAR & PRICE --- */
+    .info-panel { position: sticky; top: 80px; } /* Yopishish joyi to'g'irlandi */
+
+    .neon-price-card {
+        background: var(--glass-bg); backdrop-filter: blur(16px);
+        border: 1px solid var(--border-color); padding: 25px 20px; /* Padding kamaydi */
+        border-radius: 16px; text-align: center; margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .price-tag {
+        font-size: 32px; /* 42px dan 32px ga tushdi */
+        font-weight: 800; color: #fff; display: block; margin: 10px 0 20px;
+        background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .price-tag.free { color: #4ade80; -webkit-text-fill-color: #4ade80; }
+
+    /* ACTION BUTTONS (Compact) */
+    .btn-action {
+        width: 100%; padding: 12px; /* Tugma ingichkalashdi */
+        border: none; border-radius: 12px;
+        font-weight: 600; font-size: 14px;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        text-decoration: none; transition: all 0.2s;
+        margin-bottom: 10px;
+    }
+    .btn-buy { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+    .btn-buy:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); color: white; }
+
+    .btn-download { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+
+    .btn-video { background: rgba(255, 255, 255, 0.05); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 10px; }
+
+    .social-actions { display: grid; grid-template-columns: 1fr 50px; gap: 8px; margin-top: 15px; }
+    .btn-like, .btn-save {
+        border-radius: 10px; border: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.03); color: #94a3b8; font-weight: 600;
+        transition: 0.2s; height: 42px; font-size: 13px;
+    }
+    .btn-like:hover, .btn-save:hover { background: rgba(255, 255, 255, 0.08); color: white; }
+
+    /* AUTHOR CARD (Compact) */
+    .author-card {
+        background: var(--glass-bg); padding: 15px; border-radius: 16px;
+        border: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px;
+    }
+    .author-avatar { width: 45px; height: 45px; object-fit: cover; border-radius: 50%; border: 2px solid var(--neon-primary); }
+
+    /* COMMENTS */
+    .comment-box {
+        background: rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 15px;
+        border: 1px solid var(--border-color); margin-bottom: 15px;
+    }
+    .form-control-dark {
+        background: #0d1117; border: 1px solid var(--border-color); color: #fff;
+        border-radius: 10px; padding: 12px; font-size: 14px;
+    }
+
+    /* INFO SECTION TYPOGRAPHY */
+    .project-title { font-size: 2rem !important; letter-spacing: -0.5px; } /* 2.5rem dan 2rem ga */
+    .project-stats { font-size: 0.85rem; }
+    .project-desc { font-size: 1rem; line-height: 1.6; }
+</style>
+
+<div class="project-container">
+    <div class="main-column">
+
+        <div class="neon-preview-card">
+            <div class="preview-header">
+                <span class="preview-title">
+                    {% if live_preview %}
+                        <i class="fas fa-play-circle text-primary me-2"></i> Live Preview
+                    {% else %}
+                        <i class="fas fa-image text-warning me-2"></i> Screenshot
+                    {% endif %}
+                </span>
+                <span class="badge {% if live_preview %}bg-primary{% else %}bg-secondary{% endif %} bg-opacity-75 rounded-pill px-3" style="font-size: 0.75rem;">
+                    {% if live_preview %}Interactive{% else %}Static{% endif %}
+                </span>
+            </div>
+
+            <div class="visual-preview">
+                {% if live_preview %}
+                    <iframe
+                        src="{% url 'live_project_view' project.pk %}"
+                        class="preview-content"
+                        sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
+                        loading="lazy">
+                    </iframe>
+                {% else %}
+                    {% if project.image %}
+                        <img src="{{ project.image.url }}" class="preview-image" alt="{{ project.title }}">
+                    {% else %}
+                        <div class="text-center py-5 opacity-25">
+                            <i class="fas fa-laptop-code fa-4x mb-3 text-secondary"></i>
+                            <p class="small">Ko'rinish mavjud emas</p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="neon-preview-card">
+            <div class="preview-header">
+                <span class="preview-title"><i class="fas fa-code me-2 text-info"></i> Kod</span>
+                <div class="d-flex align-items-center gap-2">
+                    {% if has_bought or project.price == 0 %}
+                        <button class="btn btn-sm btn-dark border-secondary rounded-pill px-3 text-light" onclick="copyCode()" id="copyBtn" style="font-size: 12px;">
+                            <i class="fas fa-copy me-1"></i> Nusxalash
+                        </button>
+                    {% endif %}
+                    <span class="badge bg-dark border border-secondary text-light rounded-pill px-3" style="font-size: 12px;">
+                        {% if project.source_code %}{{ project.source_code.name|slice:"14:" }}{% else %}source.txt{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            {% if has_bought or project.price == 0 %}
+                <div class="code-lock-wrapper">
+                    <pre class="code-content"><code id="sourceCode" class="language-html">{{ code_preview }}</code></pre>
+                </div>
+            {% else %}
+                <div class="code-lock-wrapper locked-mode">
+                    <pre class="code-content"><code class="language-html">{{ code_preview }}</code></pre>
+
+                    <div class="neon-lock-overlay">
+                        <div class="lock-icon-box">
+                            <i class="fas fa-lock fa-lg text-warning"></i>
+                        </div>
+                        <h5 class="text-white fw-bold mb-1">Premium Kod</h5>
+                        <p class="text-secondary small mb-3">To'liq kodni olish uchun xarid qiling</p>
+                        <a href="#buy-section" class="btn btn-warning btn-sm rounded-pill fw-bold px-4 shadow-lg text-dark">
+                            <i class="fas fa-unlock me-2"></i> Kodni Ochish
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="px-2">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h1 class="text-white fw-bold m-0 project-title">{{ project.title }}</h1>
+                <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold {% if is_synced %}active bg-primary text-white{% endif %}"
+                        id="syncBtn" onclick="toggleSync()" style="border-width: 1.5px;">
+                    <i class="fas fa-sync-alt me-2 {% if is_synced %}fa-spin{% endif %}"></i>
+                    <span id="syncText">{% if is_synced %}Sinxronlashdi{% else %}Sinxronlash{% endif %}</span>
+                </button>
+            </div>
+
+            <div class="d-flex flex-wrap gap-3 text-secondary mb-4 project-stats">
+                <span><i class="fas fa-eye me-2 text-primary"></i> {{ project.views }}</span>
+                <span><i class="far fa-calendar-alt me-2 text-success"></i> {{ project.created_at|date:"d.m.Y" }}</span>
+                <span><i class="far fa-comments me-2 text-info"></i> {{ project.comments.count }}</span>
+                <span class="text-white px-2 py-0 bg-secondary bg-opacity-25 rounded border border-secondary border-opacity-25">
+                    {{ project.get_category_display }}
+                </span>
+            </div>
+
+            <div class="text-light opacity-75 mb-4 project-desc">
+                {{ project.description|linebreaksbr }}
+            </div>
+
+            <hr class="border-secondary opacity-25 my-4">
+
+            <h5 class="text-white mb-3 fw-bold"><i class="far fa-comments me-2"></i>Fikrlar (<span id="comment-count-txt">{{ project.comments.count }}</span>)</h5>
+
+            {% if user.is_authenticated %}
+                <div class="d-flex gap-3 mb-4">
+                    <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}&background=6366f1&color=fff{% endif %}"
+                         class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                    <form id="comment-form" method="post" class="w-100 position-relative">
+                        {% csrf_token %}
+                        <textarea id="comment-body" name="body" class="form-control-dark w-100" placeholder="Fikringiz..." rows="2"></textarea>
+                        <button type="submit" class="btn btn-primary btn-sm rounded-pill fw-bold px-3 position-absolute bottom-0 end-0 m-2">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="alert alert-dark border-secondary opacity-75 rounded-3 mb-3 py-2 small">
+                    Izoh uchun <a href="{% url 'login' %}" class="text-primary fw-bold">kiring</a>.
+                </div>
+            {% endif %}
+
+            <div id="comment-list">
+                {% for comment in project.comments.all reversed %}
+                <div class="comment-box d-flex gap-3">
+                    <img src="{% if comment.user.profile.avatar %}{{ comment.user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ comment.user.username }}{% endif %}"
+                         class="rounded-circle" style="width: 35px; height: 35px; object-fit: cover;">
+                    <div>
+                        <div class="d-flex gap-2 align-items-center mb-1">
+                            <strong class="text-white small">{{ comment.user.username }}</strong>
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ comment.created_at|timesince }} oldin</small>
+                        </div>
+                        <p class="mb-0 text-light opacity-75 small">{{ comment.body }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="right-column">
+        <div class="info-panel" id="buy-section">
+
+            <div class="neon-price-card">
+                <span class="text-muted small text-uppercase fw-bold ls-1" style="font-size: 10px;">Loyiha Narxi</span>
+                {% if project.price > 0 %}
+                    <span class="price-tag">${{ project.price }}</span>
+                {% else %}
+                    <span class="price-tag free">BEPUL</span>
+                {% endif %}
+
+                {% if has_bought %}
+                    <a href="{{ project.source_code.url }}" class="btn-action btn-download" download>
+                        <i class="fas fa-cloud-download-alt"></i> Yuklash
+                    </a>
+                {% else %}
+                    <a href="{% url 'buy_project' project.pk %}" class="btn-action btn-buy" onclick="return confirm('Hisobingizdan ${{ project.price }} yechiladi. Tasdiqlaysizmi?')">
+                        <i class="fas fa-shopping-cart"></i> Xarid Qilish
+                    </a>
+                {% endif %}
+
+                {% if project.get_youtube_id %}
+                    <button class="btn-action btn-video" onclick="openVideoModal()">
+                        <i class="fab fa-youtube text-danger"></i> Video Sharh
+                    </button>
+                {% endif %}
+
+                <div class="social-actions">
+                    <button id="like-btn" data-like-url="{% url 'like_project' project.pk %}" class="btn-like">
+                        <i id="like-icon" class="{% if request.user in project.likes.all %}fas text-danger{% else %}far{% endif %} fa-heart me-1"></i>
+                        <span id="like-count">{{ project.likes.count }}</span>
+                    </button>
+
+                    <button id="save-btn" onclick="toggleSave({{ project.pk }})" data-save-url="{% url 'save_project' project.pk %}" class="btn-save" title="Saqlash">
+                        <i id="save-icon" class="{% if request.user in project.saved_by.all %}fas text-warning{% else %}far{% endif %} fa-bookmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="author-card">
+                <a href="{% url 'profile_by_username' project.author.username %}" class="position-relative">
+                    <img src="{% if project.author.profile.avatar %}{{ project.author.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ project.author.username }}{% endif %}"
+                         class="author-avatar">
+                    <span class="position-absolute bottom-0 end-0 bg-success border border-dark rounded-circle p-1" style="width: 10px; height: 10px;"></span>
+                </a>
+                <div class="flex-grow-1" style="line-height: 1.2;">
+                    <a href="{% url 'profile_by_username' project.author.username %}" class="text-white text-decoration-none fw-bold d-block mb-1" style="font-size: 15px;">
+                        {{ project.author.username }}
+                    </a>
+                    <div class="text-muted" style="font-size: 11px;"><i class="fas fa-users me-1"></i> {{ project.author.profile.followers.count }} Obunachi</div>
+                </div>
+                <a href="{% url 'profile_by_username' project.author.username %}" class="text-muted"><i class="fas fa-chevron-right small"></i></a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="videoModal" class="modal-overlay" onclick="closeVideoModal(event)">
+    <div class="modal-content-box">
+        <span class="close-modal" onclick="closeVideoModal(event)">&times;</span>
+        <div style="position: relative; padding-bottom: 56.25%; height: 0;">
+            <iframe id="youtubeIframe" src=""
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+                    allow="autoplay; encrypted-media" allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+    // JS kodlari avvalgidek qoldi, ularga o'zgartirish kiritish shart emas
+    function toggleSync() {
+        const btn = document.getElementById('syncBtn');
+        const txt = document.getElementById('syncText');
+        const icon = btn.querySelector('i');
+
+        fetch("{% url 'toggle_sync' project.author.username %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.is_synced) {
+                btn.classList.add('active', 'bg-primary', 'text-white');
+                txt.innerText = 'Sinxronlashdi';
+                icon.classList.add('fa-spin');
+                setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+            } else {
+                btn.classList.remove('active', 'bg-primary', 'text-white');
+                txt.innerText = 'Sinxronlash';
+            }
+        });
+    }
+
+    const youtubeId = "{{ project.get_youtube_id }}";
+    function openVideoModal() {
+        if(youtubeId) {
+            document.getElementById('youtubeIframe').src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
+            document.getElementById('videoModal').style.display = "flex";
+        }
+    }
+    function closeVideoModal(e) {
+        if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-modal')) {
+            document.getElementById('videoModal').style.display = "none";
+            document.getElementById('youtubeIframe').src = "";
+        }
+    }
+
+    function copyCode() {
+        const codeText = document.getElementById('sourceCode').innerText;
+        navigator.clipboard.writeText(codeText).then(() => {
+            const btn = document.getElementById('copyBtn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check text-success"></i>';
+            btn.classList.add('border-success');
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('border-success');
+            }, 2000);
+        });
+    }
+
+    document.getElementById('like-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        const url = this.getAttribute('data-like-url');
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('like-count').innerText = data.total_likes;
+            const icon = document.getElementById('like-icon');
+            if (data.is_liked) {
+                icon.classList.replace('far', 'fas');
+                icon.classList.add('text-danger');
+                icon.style.transform = 'scale(1.3)';
+                setTimeout(() => icon.style.transform = 'scale(1)', 200);
+            } else {
+                icon.classList.replace('fas', 'far');
+                icon.classList.remove('text-danger');
+            }
+        });
+    });
+
+    function toggleSave(id) {
+        const btn = document.getElementById('save-btn');
+        const icon = document.getElementById('save-icon');
+        const url = btn.getAttribute('data-save-url');
+        btn.disabled = true;
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.is_saved) {
+                icon.classList.replace('far', 'fas');
+                icon.classList.add('text-warning');
+            } else {
+                icon.classList.replace('fas', 'far');
+                icon.classList.remove('text-warning');
+            }
+            btn.disabled = false;
+        });
+    }
+
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            fetch(window.location.href, {
+                method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const html = `
+                    <div class="comment-box d-flex gap-3">
+                        <img src="${data.avatar_url || 'https://ui-avatars.com/api/?name=' + data.username}" class="rounded-circle" style="width: 35px; height: 35px; object-fit: cover;">
+                        <div>
+                            <div class="d-flex gap-2 align-items-center mb-1">
+                                <strong class="text-white small">${data.username}</strong>
+                                <small class="text-muted" style="font-size: 0.75rem;">hozirgina</small>
+                            </div>
+                            <p class="mb-0 text-light opacity-75 small">${data.body}</p>
+                        </div>
+                    </div>`;
+                document.getElementById('comment-list').insertAdjacentHTML('afterbegin', html);
+                document.getElementById('comment-body').value = '';
+                const countSpan = document.getElementById('comment-count-txt');
+                countSpan.innerText = parseInt(countSpan.innerText) + 1;
+                btn.disabled = false;
+            });
+        });
+    }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+{% endblock %}

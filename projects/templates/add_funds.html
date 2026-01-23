@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    /* --- CUSTOM STYLES FOR PAYMENT PAGE --- */
+
+    /* Shaffof Panel Dizayni */
+    .glass-card {
+        background: var(--glass-bg); /* Base.html dagi o'zgaruvchi */
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    /* Karta/Hisob raqam turadigan joy */
+    .credit-card-box {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+    .credit-card-box::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%);
+        animation: rotate 10s linear infinite;
+        z-index: 0;
+    }
+
+    /* Inputlar dizayni */
+    .cyber-input {
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid var(--glass-border) !important;
+        color: #fff !important;
+        border-radius: 12px !important;
+        padding: 12px 15px;
+        transition: 0.3s;
+    }
+    .cyber-input:focus {
+        border-color: var(--neon-primary) !important;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        background: rgba(0, 0, 0, 0.5) !important;
+    }
+    .cyber-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Light Mode moslashuvi (Base.html dagi class orqali) */
+    body.light-mode .cyber-input {
+        background: #fff !important;
+        color: #333 !important;
+        border-color: #ddd !important;
+    }
+    body.light-mode .cyber-input::placeholder { color: #888; }
+    body.light-mode .text-white-50 { color: #666 !important; }
+    body.light-mode .text-info { color: #0dcaf0 !important; }
+
+    /* --- CUSTOM FILE UPLOAD (Eng muhim qismi) --- */
+    .file-upload-wrapper {
+        position: relative;
+        width: 100%;
+        height: 120px;
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        cursor: pointer;
+        transition: 0.3s;
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .file-upload-wrapper:hover {
+        border-color: var(--neon-primary);
+        background: rgba(99, 102, 241, 0.05);
+    }
+    .file-upload-icon {
+        font-size: 2rem;
+        color: var(--neon-secondary);
+        margin-bottom: 8px;
+        transition: 0.3s;
+    }
+    .file-upload-wrapper:hover .file-upload-icon {
+        transform: translateY(-5px);
+        color: var(--neon-primary);
+    }
+    .file-name-display {
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.6);
+        text-align: center;
+        padding: 0 10px;
+    }
+
+    @keyframes rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="glass-card p-4 p-md-5">
+
+                <div class="text-center mb-4">
+                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; box-shadow: var(--neon-glow);">
+                        <i class="fas fa-wallet text-white fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold text-white mb-1">Hisobni to'ldirish</h3>
+                    <p class="text-white-50 small">Balansingizni xavfsiz to'ldiring</p>
+                </div>
+
+                <div class="credit-card-box p-3 mb-4 text-center position-relative">
+                    <div style="position: relative; z-index: 1;">
+                        <p class="mb-1 text-white-50 small text-uppercase" style="letter-spacing: 1px;">Quyidagi kartaga o'tkazing</p>
+                        <h4 class="text-white fw-bold my-2 d-flex justify-content-center align-items-center gap-2 copy-text" onclick="copyCardNumber()" style="cursor: pointer; font-family: monospace; font-size: 1.5rem;">
+                            <span>9860</span><span>3501</span><span>4254</span><span>7545</span>
+                            <i class="fas fa-copy ms-2 text-primary fs-6" style="opacity: 0.7;"></i>
+                        </h4>
+                        <p class="mb-0 small text-info fw-bold"><i class="fas fa-user-check me-1"></i> Hojiakbar H.</p>
+                    </div>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label text-white small fw-bold ms-1">Summa ($)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0 border-secondary text-white" style="border-color: var(--glass-border) !important;">
+                                <i class="fas fa-dollar-sign text-success"></i>
+                            </span>
+                            <input type="number" name="amount" class="form-control cyber-input border-start-0 ps-0" placeholder="Masalan: 50" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white small fw-bold ms-1">Chek rasmi (Skrinshot)</label>
+
+                        <input type="file" name="receipt" id="receiptFile" class="d-none" accept="image/*" required onchange="updateFileName(this)">
+
+                        <label for="receiptFile" class="file-upload-wrapper">
+                            <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                            <span class="text-white fw-bold mb-1">Rasm yuklash uchun bosing</span>
+                            <span class="file-name-display" id="fileName">Jpg, Png formatdagi chek rasmi</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white small fw-bold ms-1">Izoh (ixtiyoriy)</label>
+                        <input type="text" name="message" class="form-control cyber-input" placeholder="Vaqt va to'lov tizimi (Click/Payme)">
+                    </div>
+
+                    <button type="submit" class="btn w-100 fw-bold py-3 text-white shadow-lg"
+                            style="background: linear-gradient(90deg, var(--neon-primary), var(--neon-secondary)); border: none; border-radius: 12px; transition: 0.3s;">
+                        <i class="fas fa-check-circle me-2"></i> To'lovni Tasdiqlash
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateFileName(input) {
+        const fileNameSpan = document.getElementById('fileName');
+        const icon = document.querySelector('.file-upload-icon');
+
+        if (input.files && input.files[0]) {
+            fileNameSpan.textContent = input.files[0].name;
+            fileNameSpan.style.color = "#4ade80"; // Yashil rang
+            icon.className = "fas fa-check-circle file-upload-icon text-success";
+        } else {
+            fileNameSpan.textContent = "Jpg, Png formatdagi chek rasmi";
+            icon.className = "fas fa-cloud-upload-alt file-upload-icon";
+        }
+    }
+
+    function copyCardNumber() {
+        const cardNumber = "9860350142547545";
+        navigator.clipboard.writeText(cardNumber).then(() => {
+            alert("Karta raqami nusxalandi!");
+        });
+    }
+</script>
+
+{% endblock %}
