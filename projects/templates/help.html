@@ -1,34 +1,121 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container py-4">
-    <h2 class="text-white mb-4"><i class="fas fa-question-circle text-info me-2"></i> Yordam Markazi</h2>
-    
+
+<style>
+    .help-header {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+        border-radius: 20px;
+        padding: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .accordion-item {
+        background: rgba(255, 255, 255, 0.02) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 12px !important;
+        margin-bottom: 15px;
+        backdrop-filter: blur(10px);
+        transition: 0.3s;
+        overflow: hidden;
+    }
+
+    .accordion-item:hover {
+        border-color: rgba(99, 102, 241, 0.3) !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+    }
+
+    .accordion-button {
+        background: transparent !important;
+        color: #e2e8f0 !important;
+        font-weight: 500;
+        box-shadow: none !important;
+        padding: 20px;
+    }
+
+    .accordion-button:not(.collapsed) {
+        color: var(--neon-primary) !important;
+        background: rgba(99, 102, 241, 0.05) !important;
+    }
+
+    .accordion-button::after {
+        filter: invert(1); /* Oq strelka */
+        opacity: 0.5;
+    }
+
+    .accordion-button:not(.collapsed)::after {
+        filter: invert(0.5) sepia(1) saturate(5) hue-rotate(220deg); /* Neon rang strelka */
+    }
+
+    .accordion-body {
+        color: #94a3b8;
+        padding: 20px;
+        line-height: 1.6;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+</style>
+
+<div class="container py-4" style="max-width: 900px;">
+    <div class="help-header">
+        <h2 class="fw-bold text-white mb-2">
+            <i class="fas fa-life-ring me-2" style="color: var(--neon-primary);"></i> Yordam Markazi
+        </h2>
+        <p class="text-muted mb-0">Eng ko'p beriladigan savollarga javoblar</p>
+    </div>
+
     <div class="accordion" id="faqAccordion">
-        <div class="accordion-item bg-dark text-white border-secondary">
+
+        <div class="accordion-item shadow-sm">
             <h2 class="accordion-header">
-                <button class="accordion-button bg-dark text-white shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
-                    Loyiha yuklash pullikmi?
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                    <i class="fas fa-money-bill-wave me-3 opacity-50"></i> Loyiha yuklash pullikmi?
                 </button>
             </h2>
             <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                <div class="accordion-body text-muted">
-                    Yo'q, loyiha yuklash mutlaqo bepul. Siz istalgancha ochiq manbali (Open Source) yoki pullik loyihalarni joylashtirishingiz mumkin.
+                <div class="accordion-body">
+                    Yo'q, loyiha yuklash <strong>mutlaqo bepul</strong>. Siz istalgancha ochiq manbali (Open Source) yoki pullik loyihalarni joylashtirishingiz mumkin. Bizning platforma rivojlanishingiz uchun barcha imkoniyatlarni bepul taqdim etadi.
                 </div>
             </div>
         </div>
-        
-        <div class="accordion-item bg-dark text-white border-secondary mt-2">
+
+        <div class="accordion-item shadow-sm">
             <h2 class="accordion-header">
-                <button class="accordion-button collapsed bg-dark text-white shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
-                    Kodlarim xavfsizligi ta'minlanganmi?
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                    <i class="fas fa-shield-alt me-3 opacity-50"></i> Kodlarim xavfsizligi ta'minlanganmi?
                 </button>
             </h2>
             <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                <div class="accordion-body text-muted">
-                    Albatta! Pullik loyihalar kodi faqat sotib olgan foydalanuvchilarga ko'rinadi. Bepul loyihalar esa hamma uchun ochiq.
+                <div class="accordion-body">
+                    Albatta! Biz xavfsizlikka jiddiy e'tibor beramiz.
+                    <ul class="mt-2 mb-0 ps-3">
+                        <li>Pullik loyihalar kodi shifrlangan holda saqlanadi va faqat xaridorlarga ko'rinadi.</li>
+                        <li>Bepul loyihalar ochiq manbali hamjamiyat qoidalariga asosan himoyalanadi.</li>
+                    </ul>
                 </div>
             </div>
         </div>
+
+        <div class="accordion-item shadow-sm">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                    <i class="fas fa-code me-3 opacity-50"></i> Qanday dasturlash tillarini qo'llab-quvvatlaysiz?
+                </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    Platformamiz Python, JavaScript, C++, Java, PHP va boshqa ko'plab zamonaviy tillarni qo'llab-quvvatlaydi. Kodlarni sintaksis yoritgich (Syntax Highlighting) yordamida chiroyli ko'rinishda taqdim etamiz.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="text-center mt-5">
+        <p class="text-muted">Javob topa olmadingizmi?</p>
+        <a href="{% url 'contact' %}" class="btn btn-outline-light px-4 py-2 rounded-pill" style="border-color: rgba(255,255,255,0.2);">
+            <i class="fas fa-envelope me-2"></i> Bizga yozing
+        </a>
     </div>
 </div>
 {% endblock %}

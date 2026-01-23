@@ -1,40 +1,152 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load account socialaccount %}
+{% load static %}
 
 {% block content %}
 <style>
-    .neon-login-wrapper {
-        min-height: 85vh; display: flex; align-items: center; justify-content: center;
-        background: radial-gradient(circle, rgba(79, 70, 229, 0.1) 0%, transparent 70%);
+    .login-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
     }
+
+    /* Orqa fondagi xira neon shar (Glow effect) */
+    .login-bg-glow {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: var(--neon-primary);
+        filter: blur(150px);
+        opacity: 0.2;
+        border-radius: 50%;
+        z-index: 0;
+    }
+
     .neon-card {
-        width: 100%; max-width: 400px; padding: 40px;
-        background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); text-align: center;
+        width: 100%;
+        max-width: 420px;
+        padding: 40px;
+        background: rgba(15, 23, 42, 0.6); /* Glass effect */
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        position: relative;
+        z-index: 1;
     }
+
+    .brand-title {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        background: linear-gradient(135deg, #fff 30%, var(--neon-primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
     .neon-input {
-        width: 100%; padding: 12px; margin-bottom: 15px;
-        background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px; color: white; outline: none;
+        width: 100%;
+        padding: 14px 18px;
+        margin-bottom: 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: white;
+        font-size: 15px;
+        transition: all 0.3s ease;
     }
-    .btn-neon {
-        width: 100%; padding: 12px; border-radius: 50px; border: none;
-        background: linear-gradient(90deg, #4f46e5, #7c3aed); color: white; font-weight: bold;
+
+    .neon-input:focus {
+        outline: none;
+        border-color: var(--neon-primary);
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        background: rgba(0, 0, 0, 0.5);
     }
+
+    .neon-input::placeholder {
+        color: #64748b;
+    }
+
+    .btn-neon-auth {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+        color: white;
+        font-weight: 700;
+        font-size: 16px;
+        letter-spacing: 0.5px;
+        transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-neon-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+        filter: brightness(1.1);
+    }
+
     .social-btn {
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-        background: white; color: #333; padding: 10px; border-radius: 50px;
-        text-decoration: none; font-weight: 600; font-size: 14px; flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #e2e8f0;
+        padding: 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
+        flex: 1;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: 0.3s;
     }
+
+    .social-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        color: #475569;
+        font-size: 12px;
+        margin: 24px 0;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .divider::before { margin-right: 15px; }
+    .divider::after { margin-left: 15px; }
 </style>
 
-<div class="neon-login-wrapper">
-    <div class="neon-card">
-        <h2 class="fw-bold text-white mb-4">DevTube</h2>
-        
-        <div class="d-flex gap-2 mb-4">
+<div class="login-container">
+    <div class="login-bg-glow"></div>
+
+    <div class="neon-card text-center">
+        <div class="mb-4">
+            <div style="background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); width: 50px; height: 50px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); margin-bottom: 15px;">
+                <i class="fas fa-play text-white" style="font-size: 20px;"></i>
+            </div>
+            <h2 class="brand-title">DevTube</h2>
+            <p class="text-muted small">Dasturchilar platformasiga xush kelibsiz</p>
+        </div>
+
+        <div class="d-flex gap-3 mb-2">
             <a href="{% provider_login_url 'google' process='login' %}" class="social-btn">
                 <i class="fab fa-google text-danger"></i> Google
             </a>
@@ -43,21 +155,43 @@
             </a>
         </div>
 
-        <p class="text-muted small">YOKI EMAIL ORQALI</p>
+        <div class="divider">yoki login orqali</div>
 
         <form method="POST" action="{% url 'account_login' %}">
             {% csrf_token %}
+
             {% if form.errors %}
-                <div class="text-danger small mb-3">Login yoki parol xato!</div>
+                <div class="alert alert-danger py-2 small bg-danger bg-opacity-10 border-danger border-opacity-25 text-danger mb-3 rounded-3">
+                    <i class="fas fa-exclamation-circle me-1"></i> Login yoki parol noto'g'ri!
+                </div>
             {% endif %}
-            
-            <input type="text" name="login" placeholder="Login" class="neon-input" required>
-            <input type="password" name="password" placeholder="Parol" class="neon-input" required>
-            <button type="submit" class="btn-neon">Kirish</button>
+
+            <div class="text-start">
+                <input type="text" name="login" placeholder="Login yoki Email" class="neon-input" required autocomplete="username">
+            </div>
+
+            <div class="text-start mb-2">
+                <input type="password" name="password" placeholder="Parol" class="neon-input" required autocomplete="current-password">
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4 small">
+                <div class="form-check">
+                    <input class="form-check-input bg-dark border-secondary" type="checkbox" name="remember" id="remember">
+                    <label class="form-check-label text-muted" for="remember">Eslab qolish</label>
+                </div>
+                <a href="{% url 'account_reset_password' %}" class="text-primary text-decoration-none">Unutdingizmi?</a>
+            </div>
+
+            <button type="submit" class="btn-neon-auth">
+                Tizimga kirish <i class="fas fa-arrow-right ms-2"></i>
+            </button>
         </form>
-        
-        <div class="mt-3">
-            <a href="{% url 'account_signup' %}" class="text-primary small">Ro'yxatdan o'tish</a>
+
+        <div class="mt-4 pt-3 border-top border-secondary border-opacity-10">
+            <p class="text-muted small mb-0">Hali hisobingiz yo'qmi?</p>
+            <a href="{% url 'account_signup' %}" class="text-white fw-bold text-decoration-none hover-underline">
+                Ro'yxatdan o'tish
+            </a>
         </div>
     </div>
 </div>
