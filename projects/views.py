@@ -2,21 +2,23 @@ import os
 import requests
 from decimal import Decimal
 from django.conf import settings
+from django.db import transaction  # <--- MUHIM: Tranzaksiyalar uchun
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.clickjacking import xframe_options_exempt  # Iframe uchun ruxsat
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib import messages
 from django.db.models import Q, F
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 from notifications.signals import notify
 
-# --- FLUTTER API IMPORTLARI (MUHIM: Bularsiz xato beradi) ---
+# --- FLUTTER API IMPORTLARI ---
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
+from rest_framework.parsers import MultiPartParser, FormParser  # Rasmlar uchun
 from .serializers import ProjectSerializer, RegisterSerializer, ProfileSerializer
 
 # MODELLAR
@@ -32,14 +34,17 @@ from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, P
 # 1. YORDAMCHI FUNKSIYALAR
 # ==========================================
 def get_code_snippet(project):
-    """Manba kodi oynasi uchun qisqa preview (15 qator)"""
+    """Manba kodi oynasi uchun qisqa preview"""
     if not project.source_code:
         return "// Kod yuklanmagan."
     try:
-        with project.source_code.open('r') as f:
-            content = f.read(1000)
-            text = content.decode('utf-8', errors='ignore') if isinstance(content, bytes) else content
-            return "\n".join(text.splitlines()[:15]) + "\n..."
+        project.source_code.open('r')
+        content = project.source_code.read(1000)
+        # Fayl yopishni avtomatik qilish uchun open ishlatildi, lekin storage da context manager har doim ham ishlamasligi mumkin
+        # Shuning uchun oddiy read qilamiz.
+        text = content.decode('utf-8', errors='ignore') if isinstance(content, bytes) else content
+        project.source_code.close()  # Faylni yopish esdan chiqmasin
+        return "\n".join(text.splitlines()[:15]) + "\n..."
     except Exception:
         return "// Kodni o'qib bo'lmadi."
 
@@ -58,6 +63,7 @@ def home_page(request):
             Q(title__icontains=search_query) |
             Q(description__icontains=search_query)
         ).distinct()
+
     if category_filter:
         projects = projects.filter(category=category_filter)
 
@@ -70,7 +76,7 @@ def home_page(request):
 
 
 # ==========================================
-# 3. LOYIHA AMALLARI (CRUD & DETAIL)
+# 3. LOYIHA AMALLARI (WEB)
 # ==========================================
 @login_required
 def create_project(request):
@@ -80,9 +86,10 @@ def create_project(request):
             p = form.save(commit=False)
             p.author = request.user
             p.save()
+            # Qo'shimcha rasmlarni saqlash
             for img in request.FILES.getlist('more_images'):
                 ProjectImage.objects.create(project=p, image=img)
-            messages.success(request, f"'{p.title}' yuklandi!")
+            messages.success(request, f"'{p.title}' muvaffaqiyatli yuklandi!")
             return redirect('home')
     else:
         form = ProjectForm()
@@ -93,15 +100,19 @@ def create_project(request):
 def update_project(request, pk):
     p = get_object_or_404(Project, pk=pk)
     if request.user != p.author:
-        messages.error(request, "Huquqingiz yo'q!")
+        messages.error(request, "Bu loyihani tahrirlash huquqiga ega emassiz!")
         return redirect('home')
+
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES, instance=p)
         if form.is_valid():
             form.save()
-            messages.success(request, "Yangilandi!")
+            messages.success(request, "Loyiha yangilandi!")
             return redirect('project_detail', pk=p.pk)
-    return render(request, 'update_project.html', {'form': ProjectForm(instance=p), 'project': p})
+    else:
+        form = ProjectForm(instance=p)
+
+    return render(request, 'update_project.html', {'form': form, 'project': p})
 
 
 @login_required
@@ -109,31 +120,38 @@ def delete_project(request, pk):
     p = get_object_or_404(Project, pk=pk)
     if request.user != p.author:
         return HttpResponseForbidden("Faqat muallif o'chira oladi.")
+
     if request.method == 'POST':
         p.delete()
-        messages.warning(request, "O'chirildi.")
+        messages.warning(request, "Loyiha o'chirildi.")
         return redirect('profile', username=request.user.username)
     return render(request, 'delete.html', {'project': p})
 
 
-# --- ASOSIY PROJECT VIEW ---
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
+
+    # Muzlatilgan loyihani tekshirish
     if project.is_frozen and request.user != project.author and not request.user.is_superuser:
-        messages.error(request, "Loyiha muzlatilgan.")
+        messages.error(request, "Ushbu loyiha muzlatilgan.")
         return redirect('home')
 
+    # Ko'rishlar sonini oshirish (F() obyekti poygasi holatini oldini oladi)
     Project.objects.filter(pk=pk).update(views=F('views') + 1)
     project.refresh_from_db()
 
+    # Izoh qoldirish
     if request.method == 'POST' and request.user.is_authenticated:
         form = CommentForm(request.POST)
         if form.is_valid():
             c = form.save(commit=False)
-            c.user, c.project = request.user, project
+            c.user = request.user
+            c.project = project
             c.save()
+
             if project.author != request.user:
                 notify.send(request.user, recipient=project.author, verb='izoh qoldirdi', target=project)
+
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({
                     'username': c.user.username,
@@ -145,28 +163,39 @@ def project_detail(request, pk):
     code_preview = get_code_snippet(project)
     is_html_file = project.source_code and project.source_code.name.lower().endswith('.html')
 
-    has_access = project.price == 0 or (request.user.is_authenticated and (
-            request.user == project.author or project.buyers.filter(id=request.user.id).exists()))
-    is_synced = request.user.is_authenticated and Sync.objects.filter(follower=request.user.profile,
-                                                                      following=project.author.profile).exists()
+    # Xarid qilinganligini tekshirish
+    has_access = False
+    if project.price == 0:
+        has_access = True
+    elif request.user.is_authenticated:
+        if request.user == project.author or project.buyers.filter(id=request.user.id).exists():
+            has_access = True
+
+    is_synced = False
+    if request.user.is_authenticated:
+        is_synced = Sync.objects.filter(follower=request.user.profile, following=project.author.profile).exists()
 
     return render(request, 'project_detail.html', {
-        'project': project, 'form': CommentForm(), 'code_preview': code_preview,
-        'live_preview': is_html_file, 'has_bought': has_access, 'is_synced': is_synced
+        'project': project,
+        'form': CommentForm(),
+        'code_preview': code_preview,
+        'live_preview': is_html_file,
+        'has_bought': has_access,
+        'is_synced': is_synced
     })
 
 
-# --- JONLI NATIJA UCHUN PROXY VIEW ---
 @xframe_options_exempt
 def live_project_view(request, pk):
     project = get_object_or_404(Project, pk=pk)
     if not project.source_code:
         return HttpResponse("Kod yo'q", content_type="text/plain")
     try:
-        with project.source_code.open('r') as f:
-            content = f.read()
-            if isinstance(content, bytes):
-                content = content.decode('utf-8', errors='ignore')
+        project.source_code.open('r')
+        content = project.source_code.read()
+        if isinstance(content, bytes):
+            content = content.decode('utf-8', errors='ignore')
+        project.source_code.close()
         return HttpResponse(content, content_type="text/html")
     except Exception as e:
         return HttpResponse(f"Xatolik: {e}", content_type="text/plain")
@@ -181,13 +210,13 @@ def like_project(request, pk):
         p = get_object_or_404(Project, pk=pk)
         if request.user in p.likes.all():
             p.likes.remove(request.user)
-            l = False
+            liked = False
         else:
             p.likes.add(request.user)
-            l = True
-        if p.author != request.user:
-            notify.send(request.user, recipient=p.author, verb='like bosdi', target=p)
-        return JsonResponse({'total_likes': p.likes.count(), 'is_liked': l})
+            liked = True
+            if p.author != request.user:
+                notify.send(request.user, recipient=p.author, verb='like bosdi', target=p)
+        return JsonResponse({'total_likes': p.likes.count(), 'is_liked': liked})
     return JsonResponse({'error': 'POST required'}, status=400)
 
 
@@ -197,54 +226,78 @@ def save_project(request, pk):
         p = get_object_or_404(Project, pk=pk)
         if request.user in p.saved_by.all():
             p.saved_by.remove(request.user)
-            s = False
+            saved = False
         else:
             p.saved_by.add(request.user)
-            s = True
-        return JsonResponse({'is_saved': s})
+            saved = True
+        return JsonResponse({'is_saved': saved})
     return JsonResponse({'error': 'POST required'}, status=400)
 
 
 @login_required
 def toggle_sync(request, username):
     if request.method == 'POST':
-        t = get_object_or_404(User, username=username)
-        p = request.user.profile
-        if p == t.profile:
+        target_user = get_object_or_404(User, username=username)
+        my_profile = request.user.profile
+        target_profile = target_user.profile
+
+        if my_profile == target_profile:
             return JsonResponse({'error': 'Self'}, status=400)
-        obj = Sync.objects.filter(follower=p, following=t.profile)
+
+        obj = Sync.objects.filter(follower=my_profile, following=target_profile)
         if obj.exists():
             obj.delete()
-            s = False
+            is_synced = False
         else:
-            Sync.objects.create(follower=p, following=t.profile)
-            s = True
-            notify.send(request.user, recipient=t, verb='sinxronlashdi')
-        return JsonResponse({'is_synced': s, 'followers_count': t.profile.followers.count()})
+            Sync.objects.create(follower=my_profile, following=target_profile)
+            is_synced = True
+            notify.send(request.user, recipient=target_user, verb='sinxronlashdi')
+
+        return JsonResponse({
+            'is_synced': is_synced,
+            'followers_count': target_profile.followers.count()
+        })
     return JsonResponse({'error': 'POST required'}, status=400)
 
 
 @login_required
+@transaction.atomic  # <--- MUHIM: Tranzaksiya xavfsizligi
 def buy_project(request, pk):
-    p = get_object_or_404(Project, pk=pk)
-    b = request.user.profile
-    if p.is_frozen:
-        messages.error(request, "Muzlatilgan.")
+    project = get_object_or_404(Project, pk=pk)
+    buyer_profile = request.user.profile
+
+    if project.is_frozen:
+        messages.error(request, "Bu loyiha muzlatilgan, sotib olib bo'lmaydi.")
         return redirect('home')
-    if request.user == p.author or p.buyers.filter(id=request.user.id).exists():
+
+    if request.user == project.author or project.buyers.filter(id=request.user.id).exists():
         return redirect('project_detail', pk=pk)
-    if b.balance >= p.price:
-        b.balance -= p.price
-        b.save()
-        p.author.profile.balance += p.price
-        p.author.profile.save()
-        p.buyers.add(request.user)
-        Transaction.objects.create(user=request.user, project=p, amount=p.price, status=Transaction.COMPLETED)
-        notify.send(request.user, recipient=p.author, verb='sotib oldi', target=p)
-        messages.success(request, "Xarid qilindi!")
+
+    if buyer_profile.balance >= project.price:
+        # Pulni yechish
+        buyer_profile.balance -= project.price
+        buyer_profile.save()
+
+        # Muallifga pul o'tkazish
+        author_profile = project.author.profile
+        author_profile.balance += project.price
+        author_profile.save()
+
+        # Xaridni rasmiylashtirish
+        project.buyers.add(request.user)
+        Transaction.objects.create(
+            user=request.user,
+            project=project,
+            amount=project.price,
+            status=Transaction.COMPLETED
+        )
+
+        notify.send(request.user, recipient=project.author, verb='sotib oldi', target=project)
+        messages.success(request, f"'{project.title}' muvaffaqiyatli sotib olindi!")
     else:
-        messages.error(request, "Mablag' yetarli emas.")
+        messages.error(request, "Hisobingizda mablag' yetarli emas.")
         return redirect('add_funds')
+
     return redirect('project_detail', pk=pk)
 
 
@@ -253,13 +306,17 @@ def report_project(request, pk):
     p = get_object_or_404(Project, pk=pk)
     Project.objects.filter(pk=pk).update(reports_count=F('reports_count') + 1)
     p.refresh_from_db()
+
     if p.reports_count >= 10 and not p.is_frozen:
         p.is_frozen = True
         p.save()
-        notify.send(User.objects.filter(is_superuser=True).first(), recipient=p.author, verb='Bloklandi', target=p)
-        messages.error(request, "Bloklandi.")
+        superuser = User.objects.filter(is_superuser=True).first()
+        if superuser:
+            notify.send(superuser, recipient=p.author, verb='Loyiha Bloklandi (Juda ko\'p shikoyat)', target=p)
+        messages.error(request, "Loyiha vaqtincha bloklandi.")
     else:
-        messages.warning(request, "Shikoyat yuborildi.")
+        messages.warning(request, "Shikoyat yuborildi. Rahmat!")
+
     return redirect('home')
 
 
@@ -267,79 +324,134 @@ def report_project(request, pk):
 # 5. TOOLS & WALLET & PROFIL
 # ==========================================
 def online_compiler(request):
-    res = ""
+    result = ""
     if request.method == 'POST':
-        src, lang = request.POST.get('code', ''), request.POST.get('language', 'python')
+        source_code = request.POST.get('code', '')
+        language = request.POST.get('language', 'python')
+
+        # Piston API (EMKC)
         try:
-            r = requests.post("https://emkc.org/api/v2/piston/execute",
-                              json={"language": lang, "version": "*", "files": [{"content": src}]}, timeout=10)
-            data = r.json()
-            res = data['run'].get('stdout', '') + "\n" + data['run'].get('stderr', '')
-        except:
-            res = "API Error"
+            payload = {
+                "language": language,
+                "version": "*",
+                "files": [{"content": source_code}]
+            }
+            response = requests.post("https://emkc.org/api/v2/piston/execute", json=payload, timeout=10)
+            data = response.json()
+            result = data.get('run', {}).get('stdout', '') or data.get('run', {}).get('stderr', '')
+        except Exception as e:
+            result = f"Xatolik yuz berdi: {str(e)}"
+
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'result': res})
-    return render(request, 'compiler.html', {'result': res,
-                                             'languages': [('python', 'Python'), ('javascript', 'Node.js'),
-                                                           ('cpp', 'C++'), ('java', 'Java')]})
+            return JsonResponse({'result': result})
+
+    languages = [('python', 'Python'), ('javascript', 'Node.js'), ('cpp', 'C++'), ('java', 'Java')]
+    return render(request, 'compiler.html', {'result': result, 'languages': languages})
 
 
 def cpp_test(request):
+    # Bu shunchaki compilerga yo'naltiradi, lekin alohida view sifatida so'ralgan
     return online_compiler(request)
 
 
 @login_required
 def add_funds(request):
     if request.method == 'POST':
-        Deposit.objects.create(user=request.user, amount=Decimal(request.POST.get('amount')),
-                               receipt=request.FILES.get('receipt'), status=Deposit.PENDING)
-        messages.success(request, "Chek yuborildi.")
-        return redirect('profile')
+        try:
+            amount = Decimal(request.POST.get('amount'))
+            receipt = request.FILES.get('receipt')
+            Deposit.objects.create(
+                user=request.user,
+                amount=amount,
+                receipt=receipt,
+                status=Deposit.PENDING
+            )
+            messages.success(request, "Chek yuborildi. Admin tasdiqlashini kuting.")
+            return redirect('profile', username=request.user.username)
+        except:
+            messages.error(request, "Xato ma'lumot kiritildi.")
+
     return render(request, 'add_funds.html')
 
 
 @login_required
 def withdraw_money(request):
     if request.method == 'POST':
-        Withdrawal.objects.create(user=request.user, amount=Decimal(request.POST.get('amount')),
-                                  card_number=request.POST.get('card_number'), status=Withdrawal.PENDING)
-        messages.success(request, "So'rov yuborildi.")
-        return redirect('profile')
+        try:
+            amount = Decimal(request.POST.get('amount'))
+            card = request.POST.get('card_number')
+
+            if amount > request.user.profile.balance:
+                messages.error(request, "Balansda yetarli mablag' yo'q.")
+            else:
+                Withdrawal.objects.create(
+                    user=request.user,
+                    amount=amount,
+                    card_number=card,
+                    status=Withdrawal.PENDING
+                )
+                messages.success(request, "Pul yechish so'rovi yuborildi.")
+                return redirect('profile', username=request.user.username)
+        except:
+            messages.error(request, "Xato ma'lumot.")
+
     return render(request, 'withdraw.html')
 
 
 def profile(request, username=None):
     if username:
-        t = get_object_or_404(User, username=username)
-        o = (request.user == t)
+        target_user = get_object_or_404(User, username=username)
+        is_owner = (request.user == target_user)
     else:
         if not request.user.is_authenticated:
             return redirect('login')
-        t, o = request.user, True
-    if request.method == 'POST' and o:
-        u = UserUpdateForm(request.POST, instance=request.user)
-        p = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
-        if u.is_valid() and p.is_valid():
-            u.save()
-            p.save()
-            messages.success(request, 'Yangilandi!')
+        target_user = request.user
+        is_owner = True
+
+    if request.method == 'POST' and is_owner:
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            messages.success(request, 'Profil yangilandi!')
             return redirect('profile', username=request.user.username)
-    return render(request, 'profile.html', {'target_user': t, 'u_form': UserUpdateForm(instance=t),
-                                            'p_form': ProfileUpdateForm(instance=t.profile),
-                                            'projects': Project.objects.filter(author=t).order_by('-created_at'),
-                                            'is_owner': o,
-                                            'is_synced': request.user.is_authenticated and not o and Sync.objects.filter(
-                                                follower=request.user.profile, following=t.profile).exists()})
+    else:
+        u_form = UserUpdateForm(instance=target_user)
+        p_form = ProfileUpdateForm(instance=target_user.profile)
+
+    user_projects = Project.objects.filter(author=target_user).order_by('-created_at')
+
+    is_synced = False
+    if request.user.is_authenticated and not is_owner:
+        is_synced = Sync.objects.filter(follower=request.user.profile, following=target_user.profile).exists()
+
+    return render(request, 'profile.html', {
+        'target_user': target_user,
+        'u_form': u_form,
+        'p_form': p_form,
+        'projects': user_projects,
+        'is_owner': is_owner,
+        'is_synced': is_synced
+    })
 
 
 @login_required
 def community_chat(request):
+    # Oxirgi 50 ta xabarni olish
     msgs = CommunityMessage.objects.all().order_by('-created_at')[:50]
+
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'POST':
-        if txt := request.POST.get('body'):
+        txt = request.POST.get('body')
+        if txt:
             CommunityMessage.objects.create(user=request.user, body=txt)
-        return JsonResponse({'html': render_to_string('chat_messages_partial.html',
-                                                      {'chat_messages': reversed(msgs), 'request': request})})
+
+        # Yangi xabarlar ro'yxatini qaytarish
+        return JsonResponse({
+            'html': render_to_string('chat_messages_partial.html',
+                                     {'chat_messages': reversed(msgs), 'request': request})
+        })
+
     return render(request, 'community_chat.html', {'chat_messages': reversed(msgs)})
 
 
@@ -351,9 +463,12 @@ def my_notifications(request):
 
 @login_required
 def syncing_projects(request):
-    ids = [s.following.user.id for s in request.user.profile.following.all()]
-    return render(request, 'syncing.html',
-                  {'projects': Project.objects.filter(author__id__in=ids).order_by('-created_at')})
+    # Obuna bo'lgan odamlarning ID lari
+    following_profiles = request.user.profile.following.all()
+    author_ids = [sync.following.user.id for sync in following_profiles]
+
+    feed_projects = Project.objects.filter(author__id__in=author_ids).order_by('-created_at')
+    return render(request, 'syncing.html', {'projects': feed_projects})
 
 
 @login_required
@@ -372,7 +487,7 @@ def saved_projects(request):
 
 
 def trending(request):
-    return render(request, 'home.html', {'projects': Project.objects.all().order_by('-views')})
+    return render(request, 'home.html', {'projects': Project.objects.filter(is_frozen=False).order_by('-views')[:20]})
 
 
 def help_page(request):
@@ -380,7 +495,8 @@ def help_page(request):
 
 
 def announcements(request):
-    return render(request, 'announcements.html')
+    # Oldingi suhbatda news.html yaratgan edik
+    return render(request, 'news.html')
 
 
 def portfolio_page(request):
@@ -392,23 +508,26 @@ def register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "Xush kelibsiz!")
+            messages.success(request, "Ro'yxatdan o'tdingiz! Endi kiring.")
             return redirect('login')
-    return render(request, 'signup.html', {'form': UserRegisterForm()})
+    else:
+        form = UserRegisterForm()
+    return render(request, 'signup.html', {'form': form})
 
 
 @login_required
 def contact_page(request):
     if request.method == 'POST':
-        Contact.objects.create(user=request.user, subject=request.POST.get('subject'),
-                               message=request.POST.get('message'))
-        messages.success(request, "Xabar yuborildi.")
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        Contact.objects.create(user=request.user, subject=subject, message=message)
+        messages.success(request, "Xabaringiz yuborildi.")
         return redirect('contact')
     return render(request, 'contact.html')
 
 
 # ==========================================
-# 6. FLUTTER API (DRF) VIEWS - (MANA SHU YER XATOSIZ ISHLAYDI ENDI)
+# 6. FLUTTER API (DRF) VIEWS - TO'G'IRLANGAN
 # ==========================================
 
 # 1. REGISTRATSIYA
@@ -421,11 +540,13 @@ class RegisterAPI(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        # Token yaratish yoki borini olish
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             "user": RegisterSerializer(user, context=self.get_serializer_context()).data,
             "token": token.key
         })
+
 
 # 2. PROFILNI KO'RISH VA TAHRIRLASH
 class ProfileAPI(APIView):
@@ -442,24 +563,36 @@ class ProfileAPI(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 # 3. LOYIHALAR RO'YXATI (List)
 class ProjectListAPI(generics.ListAPIView):
     queryset = Project.objects.filter(is_frozen=False).order_by('-created_at')
     serializer_class = ProjectSerializer
+    permission_classes = [permissions.AllowAny]  # Hamma ko'ra olsin
+
 
 # 4. LOYIHA YARATISH (Create)
 class ProjectCreateAPI(generics.CreateAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)  # Rasmlarni qabul qilish uchun
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        project = serializer.save(author=self.request.user)
+
+        # Mobil ilovadan kelgan qo'shimcha rasmlarni saqlash
+        images = self.request.FILES.getlist('more_images')
+        for img in images:
+            ProjectImage.objects.create(project=project, image=img)
+
 
 # 5. BITTA LOYIHA (Detail)
 class ProjectDetailAPI(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
 
 # 6. LOYIHANI O'ZGARTIRISH/O'CHIRISH (Update/Delete)
 class ProjectUpdateDeleteAPI(generics.RetrieveUpdateDestroyAPIView):
@@ -468,5 +601,5 @@ class ProjectUpdateDeleteAPI(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Faqat o'z loyihasini o'chira oladi
+        # Foydalanuvchi faqat o'z loyihasini o'chira oladi
         return Project.objects.filter(author=self.request.user)

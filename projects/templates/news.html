@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Sahifa sarlavhasi */
+    .news-header {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(249, 115, 22, 0.1));
+        border-radius: 20px;
+        padding: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Yangilik kartochkasi */
+    .news-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: 0.3s;
+        position: relative;
+    }
+
+    .news-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(239, 68, 68, 0.3); /* Qizil neon */
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Sana belgisi */
+    .news-date {
+        font-size: 12px;
+        font-weight: 700;
+        color: #94a3b8;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 5px 12px;
+        border-radius: 50px;
+        display: inline-block;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .news-title {
+        color: white;
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .news-content {
+        color: #cbd5e1;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    /* "Yangi" belgisi (agar kerak bo'lsa) */
+    .badge-new {
+        background: linear-gradient(135deg, #ef4444, #f97316);
+        color: white;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 4px 8px;
+        border-radius: 6px;
+        margin-left: 10px;
+        text-transform: uppercase;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    }
+</style>
+
+<div class="container py-4" style="max-width: 800px;">
+    
+    <div class="news-header">
+        <h2 class="fw-bold text-white mb-2">
+            <i class="fas fa-bullhorn me-2 text-danger"></i> E'lonlar va Yangiliklar
+        </h2>
+        <p class="text-muted mb-0">Platformadagi so'nggi o'zgarishlar va muhim xabarlar</p>
+    </div>
+
+    <div class="news-list">
+        
+        <div class="news-card">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="news-date"><i class="far fa-calendar-alt me-2"></i> 24 Yanvar, 2026</span>
+                <span class="badge-new">Yangi</span>
+            </div>
+            <h3 class="news-title">DevTube 2.0 versiyasi ishga tushdi! 🚀</h3>
+            <p class="news-content">
+                Biz sayt dizaynini butunlay yangiladik! Endi "Cyber Mode" va "Minimal Mode" mavjud. 
+                Shuningdek, loyihalarni yuklash tizimi tezlashtirildi va xavfsizlik kuchaytirildi.
+            </p>
+        </div>
+
+        <div class="news-card">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="news-date"><i class="far fa-calendar-alt me-2"></i> 20 Yanvar, 2026</span>
+            </div>
+            <h3 class="news-title">C++ Compiler qo'shildi 💻</h3>
+            <p class="news-content">
+                Endi saytning o'zida C++ kodlarini yozib, natijasini tekshirishingiz mumkin. 
+                Chap menyudagi "Universal Compiler" bo'limiga o'tib sinab ko'ring.
+            </p>
+        </div>
+
+        <div class="news-card">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="news-date"><i class="far fa-calendar-alt me-2"></i> 15 Yanvar, 2026</span>
+            </div>
+            <h3 class="news-title">Texnik ishlar yakunlandi 🛠</h3>
+            <p class="news-content">
+                Serverdagi profilaktika ishlari tufayli yuzaga kelgan uzilishlar bartaraf etildi. 
+                Balans to'ldirish tizimi endi barqaror ishlamoqda.
+            </p>
+        </div>
+
+    </div>
+
+    </div>
+{% endblock %}
