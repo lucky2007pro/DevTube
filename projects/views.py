@@ -842,26 +842,24 @@ def telegram_webhook(request):
     return HttpResponse('Not a POST request')
 
 
-# views.py faylining eng oxiriga qo'shing
-# projects/views.py ning eng oxiriga qo'shing
-import random, string
+# projects/views.py faylining eng oxiriga qo'shing
+import random
+import string
 from django.http import HttpResponse
 from .models import Project
 
 
 def fix_database_slugs(request):
-    # Faqat admin kirishi uchun
+    # Faqat admin kirishi uchun xavfsizlik
     if not request.user.is_superuser:
-        return HttpResponse("Iltimos, avval admin bo'lib kiring!")
-
-    def gen_id(l=11):
-        return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(l))
+        return HttpResponse("Iltimos, avval admin panel orqali saytga kiring!")
 
     projects = Project.objects.all()
     count = 0
     for p in projects:
-        p.slug = gen_id()
+        # Tasodifiy 11 talik ID yaratish
+        p.slug = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(11))
         p.save()
         count += 1
 
-    return HttpResponse(f"G'alaba! {count} ta loyiha yangilandi.")
+    return HttpResponse(f"G'alaba! {count} ta loyiha Render bazasida yangilandi.")
