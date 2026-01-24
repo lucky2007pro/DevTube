@@ -4,7 +4,31 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.exceptions import ValidationError  # <--- MUHIM: Xatolik qaytarish uchun
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
+
+
+# ==========================================
+# 0. VALIDATORLAR (SERVER HIMOYA QATLAMI)
+# ==========================================
+
+def validate_file_size(value):
+    """Fayl hajmini cheklash (Max: 50 MB)"""
+    filesize = value.size
+    limit = 50 * 1024 * 1024  # 50 MB
+    if filesize > limit:
+        raise ValidationError("Fayl hajmi juda katta! Maksimal hajm: 50 MB")
+
+def validate_file_extension(value):
+    """Faqat ruxsat etilgan fayl turlarini tekshirish"""
+    ext = os.path.splitext(value.name)[1]  # Fayl kengaytmasini olamiz
+    valid_extensions = [
+        '.zip', '.rar', '.7z', '.tar', '.gz',  # Arxivlar
+        '.py', '.js', '.html', '.css', '.cpp', '.java', '.c', '.cs', '.php', '.sql', '.json', '.xml', '.txt', '.md', # Kodlar
+        '.ipynb', '.dart', '.go', '.rs', '.swift', '.kt' # Qo'shimcha tillar
+    ]
+    if not ext.lower() in valid_extensions:
+        raise ValidationError("Ruxsat etilmagan fayl turi! Faqat kod fayllari yoki arxiv (.zip, .rar) yuklash mumkin.")
 
 
 # ==========================================
@@ -40,12 +64,13 @@ class Project(models.Model):
     image = models.ImageField(upload_to='project_thumbnails/')
     youtube_link = models.URLField(max_length=200, help_text="YouTube video ssilkasini qo'ying (Majburiy)")
 
-    # Fayl va Statistika
+    # Fayl va Statistika (VALIDATORLAR QO'SHILDI)
     source_code = models.FileField(
         upload_to='project_code/',
         blank=True,
         null=True,
-        storage=RawMediaCloudinaryStorage()
+        storage=RawMediaCloudinaryStorage(),
+        validators=[validate_file_size, validate_file_extension]  # <--- HIMOYA YOQILDI
     )
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='web')
     price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
@@ -57,7 +82,7 @@ class Project(models.Model):
     saved_by = models.ManyToManyField(User, related_name='saved_projects', blank=True)
     buyers = models.ManyToManyField(User, related_name='bought_projects', blank=True)
 
-    # --- XAVFSIZLIK TIZIMI (YANGI QO'SHILDI) ---
+    # --- XAVFSIZLIK TIZIMI ---
     is_scanned = models.BooleanField(default=False)  # Tekshirildimi?
     security_status = models.CharField(
         max_length=20,
