@@ -15,7 +15,7 @@
         max-width: 1200px;
         margin: 0 auto;
         display: grid;
-        grid-template-columns: 3fr 1fr; /* Chap taraf kengroq */
+        grid-template-columns: 3fr 1fr;
         gap: 30px;
     }
 
@@ -44,7 +44,7 @@
 
     /* --- VISUAL PREVIEW --- */
     .visual-preview {
-        width: 100%; height: 450px; /* Balandlik oshirildi */
+        width: 100%; height: 450px;
         background-color: #0d1117;
         display: flex; align-items: center; justify-content: center;
         position: relative; overflow: hidden;
@@ -57,20 +57,26 @@
     .code-content {
         font-family: 'Fira Code', 'Consolas', monospace; font-size: 13px;
         padding: 20px; margin: 0; overflow-x: auto; line-height: 1.6; color: #e6edf3;
-        max-height: 500px; /* Kod juda uzun bo'lib ketmasligi uchun */
+        max-height: 500px;
     }
 
-    /* Qulf rejimi */
+    /* Qulf rejimi (Muhim qism) */
     .locked-mode .code-content {
-        max-height: 250px; overflow: hidden;
+        max-height: 250px;
+        overflow: hidden;
+        /* Blur effekti */
+        filter: blur(5px);
+        opacity: 0.6;
+        user-select: none; /* Belgilab bo'lmaydi */
+        pointer-events: none;
         -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
         mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
-        filter: blur(3px); user-select: none; pointer-events: none;
     }
+
     .neon-lock-overlay {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        background: linear-gradient(to bottom, transparent 0%, rgba(13, 17, 23, 0.95) 70%);
+        background: linear-gradient(to bottom, transparent 0%, rgba(13, 17, 23, 0.8) 50%, #0d1117 100%);
         z-index: 10;
     }
     .lock-icon-box {
@@ -80,23 +86,16 @@
         box-shadow: 0 0 25px rgba(245, 158, 11, 0.2);
     }
 
-    /* --- INSTAGRAM STYLE ACTIONS --- */
-    .insta-actions-bar {
-        display: flex; align-items: center; gap: 25px;
-        margin: 15px 0; padding: 0 10px;
-    }
+    /* --- ACTIONS --- */
+    .insta-actions-bar { display: flex; align-items: center; gap: 25px; margin: 15px 0; padding: 0 10px; }
     .insta-btn {
-        background: none; border: none; padding: 0;
-        color: #fff; opacity: 0.8; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        background: none; border: none; padding: 0; color: #fff; opacity: 0.8;
+        transition: all 0.2s; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
     .insta-btn i { font-size: 28px; }
     .insta-btn:hover { opacity: 1; transform: scale(1.1); }
-    .insta-btn:active { transform: scale(0.9); }
-
     .insta-btn.liked i { color: #ef4444; animation: heartPop 0.3s forwards; font-weight: 900; opacity: 1; }
     .insta-btn.saved i { color: #f59e0b; font-weight: 900; opacity: 1; }
-
     @keyframes heartPop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
     .likes-count-text { font-weight: 700; color: #fff; font-size: 15px; margin-left: 10px; display: block; }
 
@@ -110,7 +109,8 @@
     }
     .price-tag {
         font-size: 36px; font-weight: 800; color: #fff; display: block; margin: 15px 0 25px;
-        background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .price-tag.free { color: #4ade80; -webkit-text-fill-color: #4ade80; }
 
@@ -120,7 +120,6 @@
         text-decoration: none; transition: all 0.3s; margin-bottom: 12px;
     }
     .btn-buy { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
-    .btn-buy:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); color: white; }
     .btn-download { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
     .btn-video { background: rgba(255, 255, 255, 0.05); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.1); }
     .btn-video:hover { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: #ef4444; }
@@ -136,9 +135,8 @@
         background: #0d1117; border: 1px solid var(--border-color); color: #fff;
         border-radius: 12px; padding: 15px; font-size: 14px; resize: none;
     }
-    .form-control-dark:focus { background: #0d1117; border-color: var(--neon-primary); color: #fff; outline: none; box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
 
-    /* --- VIDEO MODAL (YANGI QO'SHILDI) --- */
+    /* --- MODAL --- */
     .modal-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0, 0, 0, 0.9); z-index: 2000;
@@ -190,19 +188,26 @@
                         </button>
                     {% endif %}
                     <span class="badge bg-dark border border-secondary text-light rounded-pill px-3 font-monospace">
-                        {{ project.source_code.name|default:"source.txt"|slice:"14:" }}
+                        {{ project.source_code.name|default:"main.py"|slice:"14:" }}
                     </span>
                 </div>
             </div>
 
             <div class="code-lock-wrapper {% if not has_bought and project.price > 0 %}locked-mode{% endif %}">
-                <pre class="code-content"><code id="sourceCode" class="language-python">{{ code_preview }}</code></pre>
+
+                <pre class="code-content"><code id="sourceCode" class="language-python">{% if has_bought or project.price == 0 %}{{ project.code_content }}{% else %}{{ project.code_content|slice:":500" }}...
+# ----------------------------------------------------
+#  ⚠️ DIQQAT: BU FAYLNING FAQAT BIR QISMI (PREVIEW)
+#  To'liq kodni ko'rish va yuklab olish uchun loyihani
+#  xarid qilishingiz kerak.
+# ----------------------------------------------------{% endif %}</code></pre>
 
                 {% if not has_bought and project.price > 0 %}
                     <div class="neon-lock-overlay">
                         <div class="lock-icon-box"><i class="fas fa-lock fa-2x text-warning"></i></div>
                         <h4 class="text-white fw-bold mb-1">Premium Kod</h4>
                         <p class="text-secondary small mb-3">To'liq kodni ko'rish uchun loyihani xarid qiling</p>
+
                         <a href="#buy-section" class="btn btn-warning rounded-pill fw-bold px-4 shadow-lg text-dark">
                             <i class="fas fa-shopping-cart me-2"></i> ${{ project.price }} ga Olish
                         </a>
@@ -287,7 +292,7 @@
 
             {% if user.is_authenticated %}
                 <div class="d-flex gap-3 mb-4">
-                    <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="rounded-circle" style="width: 40px; height: 40px;">
+                    <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                     <form id="comment-form" method="post" class="w-100 position-relative">
                         {% csrf_token %}
                         <textarea id="comment-body" name="body" class="form-control-dark w-100" placeholder="Ushbu kod haqida fikringiz..." rows="2"></textarea>
@@ -301,7 +306,7 @@
             <div id="comment-list">
                 {% for comment in project.comments.all reversed %}
                 <div class="comment-box d-flex gap-3">
-                    <img src="{% if comment.user.profile.avatar %}{{ comment.user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ comment.user.username }}{% endif %}" class="rounded-circle" style="width: 35px; height: 35px;">
+                    <img src="{% if comment.user.profile.avatar %}{{ comment.user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ comment.user.username }}{% endif %}" class="rounded-circle" style="width: 35px; height: 35px; object-fit: cover;">
                     <div>
                         <div class="d-flex gap-2 align-items-center mb-1">
                             <strong class="text-white small">{{ comment.user.username }}</strong>
