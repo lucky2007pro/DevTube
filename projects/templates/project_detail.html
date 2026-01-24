@@ -1,13 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load markdown_extras %}
+
 {% block extra_head %}
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:title" content="{{ project.title }} - DevTube">
     <meta property="og:description" content="{{ project.description|truncatewords:20 }}">
     {% if project.image %}
-        <meta property="og:image" content="{{ project.image.url }}">
+        <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ project.image.url }}">
+    {% else %}
+        <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/devtube-banner.png' %}">
     {% endif %}
 {% endblock %}
-{% extends 'base.html' %}
-{% load static %}
-{% load markdown_extras %} {% block content %}
+
+{% block content %}
 <style>
     /* --- MARKDOWN STYLES (NEON) --- */
     .project-description h1, .project-description h2, .project-description h3 {
@@ -249,44 +256,44 @@
         </div>
 
         <div class="neon-preview-card mb-4">
-            <div class="preview-header">
-                <span class="preview-title"><i class="fas fa-shield-alt text-success me-2"></i> Xavfsizlik Tahlili</span>
-                {% if project.is_scanned %}
-                    <span class="badge {% if project.security_status == 'safe' %}bg-success{% elif project.security_status == 'danger' %}bg-danger{% else %}bg-warning text-dark{% endif %} bg-opacity-75 rounded-pill px-3">
-                        {{ project.get_security_status_display }}
-                    </span>
-                {% else %}
-                     <span class="badge bg-secondary bg-opacity-50 rounded-pill px-3"><i class="fas fa-sync fa-spin me-1"></i> Tekshirilmoqda</span>
-                {% endif %}
-            </div>
+    <div class="preview-header">
+        <span class="preview-title"><i class="fas fa-shield-alt text-success me-2"></i> Xavfsizlik Tahlili</span>
+        {% if project.is_scanned %}
+            <span class="badge {% if project.security_status == 'safe' %}bg-success{% elif project.security_status == 'danger' %}bg-danger{% else %}bg-warning text-dark{% endif %} bg-opacity-75 rounded-pill px-3">
+                {{ project.get_security_status_display }}
+            </span>
+        {% else %}
+             <span class="badge bg-secondary bg-opacity-50 rounded-pill px-3" id="scan-status-badge">
+                 <i class="fas fa-sync fa-spin me-1"></i> Tekshirilmoqda
+             </span>
+        {% endif %}
+    </div>
 
-            <div class="p-4">
-                {% if project.is_scanned %}
-                    <div class="alert {% if project.security_status == 'safe' %}alert-success border-success{% elif project.security_status == 'danger' %}alert-danger border-danger{% else %}alert-warning border-warning{% endif %} bg-opacity-10 text-white d-flex align-items-center gap-3 mb-3">
-                        <div class="fs-1">{% if project.security_status == 'safe' %}🛡️{% elif project.security_status == 'danger' %}💀{% else %}⚠️{% endif %}</div>
-                        <div>
-                            <h6 class="fw-bold m-0">
-                                {% if project.security_status == 'safe' %}Kod toza va xavfsiz{% elif project.security_status == 'danger' %}Diqqat! Zararli kod{% else %}Shubhali qismlar mavjud{% endif %}
-                            </h6>
-                            <small class="opacity-75">
-                                AI va Antiviruslar ushbu faylni tekshirdi. {% if project.security_status == 'safe' %}Tahdid aniqlanmadi.{% else %}Ehtiyot bo'ling.{% endif %}
-                            </small>
-                        </div>
-                    </div>
-                    <div class="bg-dark bg-opacity-50 p-3 rounded-3 border border-secondary border-opacity-25">
-                        <small class="text-uppercase fw-bold text-info" style="font-size: 11px; letter-spacing: 1px;">GEMINI AI XULOSASI:</small>
-                        <p class="text-light mt-2 small opacity-90 mb-0" style="line-height: 1.6;">
-                            <i class="fas fa-robot text-primary me-2"></i> {{ project.ai_analysis|default:"Izoh kutilmoqda..." }}
-                        </p>
-                    </div>
-                {% else %}
-                    <div class="text-center py-3">
-                        <div class="spinner-border text-primary mb-2" role="status"></div>
-                        <p class="text-muted small">Tahlil qilinmoqda... (Sahifani yangilang)</p>
-                    </div>
-                {% endif %}
+    <div class="p-4" id="ai-analysis-container">
+        {% if project.is_scanned %}
+            <div class="alert {% if project.security_status == 'safe' %}alert-success border-success{% elif project.security_status == 'danger' %}alert-danger border-danger{% else %}alert-warning border-warning{% endif %} bg-opacity-10 text-white d-flex align-items-center gap-3 mb-3">
+                <div class="fs-1">{% if project.security_status == 'safe' %}🛡️{% elif project.security_status == 'danger' %}💀{% else %}⚠️{% endif %}</div>
+                <div>
+                    <h6 class="fw-bold m-0">
+                        {% if project.security_status == 'safe' %}Kod toza va xavfsiz{% elif project.security_status == 'danger' %}Diqqat! Zararli kod{% else %}Shubhali qismlar mavjud{% endif %}
+                    </h6>
+                    <small class="opacity-75">AI tahlili natijasi</small>
+                </div>
             </div>
-        </div>
+            <div class="bg-dark bg-opacity-50 p-3 rounded-3 border border-secondary border-opacity-25">
+                <small class="text-uppercase fw-bold text-info" style="font-size: 11px; letter-spacing: 1px;">GEMINI AI XULOSASI:</small>
+                <p class="text-light mt-2 small opacity-90 mb-0">
+                    <i class="fas fa-robot text-primary me-2"></i> {{ project.ai_analysis|default:"Tahlil xulosasi mavjud emas." }}
+                </p>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <div class="spinner-grow text-primary mb-3" role="status"></div>
+                <p class="text-muted small">Gemini AI loyihani zararli kodlarga tekshirmoqda... <br>Natija bir necha soniyadan so'ng chiqadi.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
 
         <div class="px-2">
             <div class="insta-actions-bar">
@@ -408,7 +415,7 @@
         if(youtubeId) {
             document.getElementById('youtubeIframe').src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1&rel=0";
             document.getElementById('videoModal').style.display = "flex";
-            document.body.style.overflow = "hidden"; // Scrollni to'xtatish
+            document.body.style.overflow = "hidden";
         } else {
             alert("Video ID topilmadi!");
         }
@@ -417,7 +424,7 @@
     function closeVideoModal(e) {
         if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-modal')) {
             document.getElementById('videoModal').style.display = "none";
-            document.getElementById('youtubeIframe').src = ""; // Videoni to'xtatish
+            document.getElementById('youtubeIframe').src = "";
             document.body.style.overflow = "auto";
         }
     }
@@ -427,10 +434,11 @@
         const codeText = document.getElementById('sourceCode').innerText;
         navigator.clipboard.writeText(codeText).then(() => {
             const btn = document.getElementById('copyBtn');
-            btn.innerHTML = '<i class="fas fa-check"></i>';
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Saqlandi';
             btn.classList.replace('btn-dark', 'btn-success');
             setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-copy me-1"></i> Nusxalash';
+                btn.innerHTML = originalContent;
                 btn.classList.replace('btn-success', 'btn-dark');
             }, 2000);
         });
@@ -485,7 +493,7 @@
         });
     });
 
-    // SAQLASH
+    // SAQLASH (Optimallashtirilgan yagona funksiya)
     function toggleSave(id) {
         const btn = document.getElementById('save-btn');
         const icon = btn.querySelector('i');
@@ -493,7 +501,10 @@
 
         fetch(url, {
             method: 'POST',
-            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' }
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
         .then(res => res.json())
         .then(data => {
@@ -504,7 +515,8 @@
                 icon.classList.replace('fas', 'far');
                 btn.classList.remove('saved');
             }
-        });
+        })
+        .catch(err => console.error("Xatolik:", err));
     }
 
     // IZOH QOLDIRISH
@@ -517,27 +529,33 @@
             btn.disabled = true;
 
             fetch(window.location.href, {
-                method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(res => res.json())
             .then(data => {
-                const html = `
-                    <div class="comment-box d-flex gap-3">
-                        <img src="${data.avatar_url || 'https://ui-avatars.com/api/?name=' + data.username}" class="rounded-circle" style="width: 35px; height: 35px; object-fit: cover;">
-                        <div>
-                            <div class="d-flex gap-2 align-items-center mb-1">
-                                <strong class="text-white small">${data.username}</strong>
-                                <small class="text-muted" style="font-size: 11px;">hozirgina</small>
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    const html = `
+                        <div class="comment-box d-flex gap-3">
+                            <img src="${data.avatar_url || 'https://ui-avatars.com/api/?name=' + data.username}" class="rounded-circle" style="width: 35px; height: 35px; object-fit: cover;">
+                            <div>
+                                <div class="d-flex gap-2 align-items-center mb-1">
+                                    <strong class="text-white small">${data.username}</strong>
+                                    <small class="text-muted" style="font-size: 11px;">hozirgina</small>
+                                </div>
+                                <p class="mb-0 text-light opacity-75 small">${data.body}</p>
                             </div>
-                            <p class="mb-0 text-light opacity-75 small">${data.body}</p>
-                        </div>
-                    </div>`;
-                document.getElementById('comment-list').insertAdjacentHTML('afterbegin', html);
-                document.getElementById('comment-body').value = '';
-                const countSpan = document.getElementById('comment-count-txt');
-                countSpan.innerText = parseInt(countSpan.innerText) + 1;
-                btn.disabled = false;
-            });
+                        </div>`;
+                    document.getElementById('comment-list').insertAdjacentHTML('afterbegin', html);
+                    document.getElementById('comment-body').value = '';
+                    const countSpan = document.getElementById('comment-count-txt');
+                    countSpan.innerText = parseInt(countSpan.innerText || 0) + 1;
+                }
+            })
+            .finally(() => { btn.disabled = false; });
         });
     }
 </script>
