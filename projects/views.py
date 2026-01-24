@@ -127,7 +127,10 @@ def run_security_scan(project_id):
 
     except Exception as e:
         print(f"Scan Error: {e}")
-
+        project.is_scanned = True  # Loadingni to'xtatamiz
+        project.security_status = 'warning'  # Sariq "Ogohlantirish" beramiz
+        project.ai_analysis = f"Tizim xatoligi: {str(e)}. Keyinroq qayta urinib ko'ring."
+        project.save()
 
 # ==========================================
 # 2. ASOSIY SAHIFA
