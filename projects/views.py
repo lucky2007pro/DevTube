@@ -843,24 +843,25 @@ def telegram_webhook(request):
 
 
 # views.py faylining eng oxiriga qo'shing
+# projects/views.py ning eng oxiriga qo'shing
 import random, string
 from django.http import HttpResponse
 from .models import Project
 
 
-def fix_render_db_slugs(request):
-    # Faqat admin kirishi uchun (xavfsizlik uchun)
+def fix_database_slugs(request):
+    # Faqat admin kirishi uchun
     if not request.user.is_superuser:
-        return HttpResponse("Iltimos, avval admin sifatida saytga kiring!")
+        return HttpResponse("Iltimos, avval admin bo'lib kiring!")
 
     def gen_id(l=11):
         return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(l))
 
     projects = Project.objects.all()
-    updated_count = 0
+    count = 0
     for p in projects:
         p.slug = gen_id()
         p.save()
-        updated_count += 1
+        count += 1
 
-    return HttpResponse(f"G'alaba! {updated_count} ta loyiha YouTube-ID bilan yangilandi. Endi saytga qayting.")
+    return HttpResponse(f"G'alaba! {count} ta loyiha yangilandi.")
