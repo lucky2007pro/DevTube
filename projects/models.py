@@ -1,5 +1,7 @@
 import os
 import re
+import random
+import string
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -8,99 +10,78 @@ from django.core.exceptions import ValidationError
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
 from django.utils.text import slugify
 
+# ==========================================
+# 0. YORDAMCHI FUNKSIYALAR (YouTube Style)
+# ==========================================
 
-# ==========================================
-# 0. VALIDATORLAR
-# ==========================================
+def generate_youtube_id(length=11):
+    """Tasodifiy harf va raqamlar generatori"""
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
 
 def validate_file_size(value):
-    filesize = value.size
-    limit = 50 * 1024 * 1024  # 50 MB
-    if filesize > limit:
+    if value.size > 50 * 1024 * 1024:
         raise ValidationError("Fayl hajmi juda katta! Maksimal hajm: 50 MB")
 
-
 def validate_file_extension(value):
-    ext = os.path.splitext(value.name)[1]
-    valid_extensions = [
-        '.zip', '.rar', '.7z', '.tar', '.gz',
-        '.py', '.js', '.html', '.css', '.cpp', '.java', '.c', '.cs', '.php', '.sql', '.json', '.xml', '.txt', '.md',
-        '.ipynb', '.dart', '.go', '.rs', '.swift', '.kt'
-    ]
-    if not ext.lower() in valid_extensions:
-        raise ValidationError("Faqat kod fayllari yoki arxiv (.zip, .rar) yuklash mumkin.")
-
+    ext = os.path.splitext(value.name)[1].lower()
+    valid_extensions = ['.zip', '.rar', '.7z', '.tar', '.gz', '.py', '.js', '.html', '.css', '.cpp', '.java', '.dart', '.go', '.php']
+    if ext not in valid_extensions:
+        raise ValidationError("Faqat kod fayllari yoki arxiv yuklash mumkin.")
 
 # ==========================================
-# 1. PROFILE (Foydalanuvchi ma'lumotlari + HAMYON)
+# 1. PROFILE (Foydalanuvchi + Hamyon)
 # ==========================================
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    is_verified = models.BooleanField(default=False)  # Moviy belgi shaxsga tegishli bo'lishi mantiqiyroq
+    is_verified = models.BooleanField(default=False)
     avatar = models.ImageField(upload_to='avatars/', default='default.jpg')
     bio = models.TextField(blank=True)
-    slug = models.SlugField(unique=True, blank=True, null=True)
+    slug = models.SlugField(unique=True, blank=True, null=True) # User ID: u7H2kLp9
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    telegram_id = models.CharField(max_length=50, blank=True, null=True,
-                                   help_text="Bildirishnoma olish uchun Telegram ID")
+    telegram_id = models.CharField(max_length=50, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.user.username)
+            self.slug = generate_youtube_id(8)
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.username} profili"
 
-
 # ==========================================
-# 2. LOYIHA MODELI (ASOSIY)
+# 2. PROJECT (Asosiy Model)
 # ==========================================
 class Project(models.Model):
     CATEGORY_CHOICES = [
-        ('web', 'Web Dasturlash'),
-        ('mobile', 'Mobil Ilovalar'),
-        ('ai', 'Sun\'iy Intellekt'),
-        ('game', 'O\'yinlar'),
-        ('desktop', 'Kompyuter Dasturlari'),
+        ('web', 'Web Dasturlash'), ('mobile', 'Mobil Ilovalar'),
+        ('ai', 'Sun\'iy Intellekt'), ('game', 'O\'yinlar'), ('desktop', 'Soft')
     ]
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True, blank=True, null=True)  # <--- SIZDA SHU QATOR YO'Q EDI (BUG!)
+    slug = models.SlugField(unique=True, blank=True, null=True) # Project ID: jNQXAC9IVRw
     description = models.TextField()
     image = models.ImageField(upload_to='project_thumbnails/')
-    youtube_link = models.URLField(max_length=200, help_text="YouTube video ssilkasini qo'ying")
+    youtube_link = models.URLField(max_length=200)
 
     source_code = models.FileField(
-        upload_to='project_code/',
-        blank=True,
-        null=True,
+        upload_to='project_code/', blank=True, null=True,
         storage=RawMediaCloudinaryStorage(),
         validators=[validate_file_size, validate_file_extension]
     )
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='web')
     price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
-    created_at = models.DateTimeField(auto_now_add=True)
     views = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    # Ijtimoiy aloqalar
     likes = models.ManyToManyField(User, related_name='project_likes', blank=True)
     saved_by = models.ManyToManyField(User, related_name='saved_projects', blank=True)
     buyers = models.ManyToManyField(User, related_name='bought_projects', blank=True)
 
-    # --- XAVFSIZLIK TIZIMI ---
+    # --- Xavfsizlik Tizimi ---
     is_scanned = models.BooleanField(default=False)
-    security_status = models.CharField(
-        max_length=20,
-        choices=[
-            ('safe', 'Xavfsiz'),
-            ('warning', 'Shubhali'),
-            ('danger', 'Xavfli'),
-            ('pending', 'Tekshirilmoqda')
-        ],
-        default='pending'
-    )
+    security_status = models.CharField(max_length=20, default='pending')
     ai_analysis = models.TextField(blank=True, null=True)
     virustotal_link = models.URLField(blank=True, null=True)
     reports_count = models.PositiveIntegerField(default=0)
@@ -111,13 +92,15 @@ class Project(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)
+            new_slug = generate_youtube_id(11)
+            while Project.objects.filter(slug=new_slug).exists():
+                new_slug = generate_youtube_id(11)
+            self.slug = new_slug
         super().save(*args, **kwargs)
 
     @property
     def get_youtube_id(self):
-        if not self.youtube_link:
-            return None
+        if not self.youtube_link: return None
         regex = r'(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})'
         match = re.search(regex, self.youtube_link)
         return match.group(1) if match else None
@@ -125,25 +108,19 @@ class Project(models.Model):
     def __str__(self):
         return self.title
 
-
 # ==========================================
-# 3. YORDAMCHI MODELLAR (Rasmlar, Izohlar, Chat)
+# 3. IJTIMOIY MODELLAR (Rasmlar, Izohlar, Chat)
 # ==========================================
 
 class ProjectImage(models.Model):
     project = models.ForeignKey(Project, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='project_screenshots/')
 
-
 class Comment(models.Model):
     project = models.ForeignKey(Project, related_name='comments', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
 
 class Sync(models.Model):
     follower = models.ForeignKey(Profile, related_name='following', on_delete=models.CASCADE)
@@ -153,12 +130,10 @@ class Sync(models.Model):
     class Meta:
         unique_together = ('follower', 'following')
 
-
 class CommunityMessage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
 
 class Contact(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contacts')
@@ -166,9 +141,8 @@ class Contact(models.Model):
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-
 # ==========================================
-# MOLIYAVIY MODELLAR (PUL TIZIMI)
+# 4. MOLIYAVIY MODELLAR (Pul Tizimi)
 # ==========================================
 
 class Transaction(models.Model):
@@ -180,7 +154,6 @@ class Transaction(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='processing')
     created_at = models.DateTimeField(auto_now_add=True)
 
-
 class Withdrawal(models.Model):
     STATUS_CHOICES = [('pending', 'Kutilmoqda'), ('approved', 'To\'lab berildi'), ('rejected', 'Rad etildi')]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -188,7 +161,6 @@ class Withdrawal(models.Model):
     card_number = models.CharField(max_length=16)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
-
 
 class Deposit(models.Model):
     STATUS_CHOICES = [('pending', 'Kutilmoqda'), ('approved', 'Tasdiqlandi'), ('rejected', 'Rad etildi')]
@@ -198,9 +170,8 @@ class Deposit(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
-
 # ==========================================
-# SIGNALS
+# 5. SIGNALS
 # ==========================================
 @receiver(post_save, sender=User)
 def create_or_save_profile(sender, instance, created, **kwargs):
