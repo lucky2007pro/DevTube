@@ -279,7 +279,7 @@
                 <small class="text-muted d-block mb-3">{{ project.get_category_display }}</small>
 
                 <div class="d-flex justify-content-between align-items-center">
-                    <a href="{% url 'project_detail' project.pk %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Ko'rish</a>
+                    <a href="{% url 'project_detail' project.slug %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Ko'rish</a>
                     <div class="d-flex gap-2">
                         {% if request.user == target_user %}
                             <a href="{% url 'update_project' project.pk %}" class="btn-neon-edit" title="Tahrirlash"><i class="fas fa-edit"></i></a>
@@ -305,7 +305,7 @@
                     <div class="p-3">
                         <h5 class="text-white fw-bold mb-1">{{ project.title }}</h5>
                         <small class="text-success mb-3 d-block"><i class="fas fa-check-circle me-1"></i> Sotib olingan</small>
-                        <a href="{% url 'project_detail' project.pk %}" class="btn btn-sm btn-success w-100 rounded-pill">Darsni ko'rish</a>
+                        <a href="{% url 'project_detail' project.slug %}" class="btn btn-sm btn-success w-100 rounded-pill">Darsni ko'rish</a>
                     </div>
                 </div>
             {% endfor %}
