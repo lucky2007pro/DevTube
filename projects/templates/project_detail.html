@@ -1,3 +1,10 @@
+{% block extra_head %}
+    <meta property="og:title" content="{{ project.title }} - DevTube">
+    <meta property="og:description" content="{{ project.description|truncatewords:20 }}">
+    {% if project.image %}
+        <meta property="og:image" content="{{ project.image.url }}">
+    {% endif %}
+{% endblock %}
 {% extends 'base.html' %}
 {% load static %}
 {% load markdown_extras %} {% block content %}

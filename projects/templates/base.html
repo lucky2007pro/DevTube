@@ -2,6 +2,17 @@
 {% load static %}
 <html lang="uz">
 <head>
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="DevTube | Premium Code Marketplace">
+    <meta property="og:description" content="Eng yaxshi dasturlash loyihalari, xavfsiz kodlar va hamjamiyat uchun maxsus platforma.">
+    <meta property="og:image" content="{% static 'img/devtube-banner.png' %}">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta property="twitter:title" content="DevTube | Premium Code Marketplace">
+    <meta property="twitter:description" content="Kodlarni sotib oling va soting. AI xavfsizlik tekshiruvi bilan.">
+    <meta property="twitter:image" content="{% static 'img/devtube-banner.png' %}">
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
