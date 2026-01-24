@@ -247,19 +247,57 @@ def delete_project(request, pk):
     return render(request, 'delete.html', {'project': p})
 
 
+# views.py ichida:
+
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
 
-    # Muzlatilgan loyihani tekshirish (faqat admin va muallif ko'ra oladi)
+    # Muzlatilgan loyihani tekshirish
     if project.is_frozen and request.user != project.author and not request.user.is_superuser:
-        messages.error(request, "Ushbu loyiha xavfsizlik qoidalarini buzgani uchun bloklangan.")
+        messages.error(request, "Ushbu loyiha bloklangan.")
         return redirect('home')
 
     # Ko'rishlar sonini oshirish
     Project.objects.filter(pk=pk).update(views=F('views') + 1)
     project.refresh_from_db()
 
-    # Izoh qoldirish
+    # --- KODNI O'QISH QISMI (YANGI) ---
+    code_content = "// Kodni o'qib bo'lmadi."
+    if project.source_code:
+        try:
+            # 1. Agar fayl URL bo'lsa (Cloudinary/S3/Render serverda)
+            if hasattr(project.source_code, 'url'):
+                import requests
+                # Fayl matnini internetdan tortib olamiz
+                response = requests.get(project.source_code.url)
+                if response.status_code == 200:
+                    code_content = response.content.decode('utf-8', errors='ignore')
+                else:
+                    code_content = "// Fayl serverda topilmadi."
+
+            # 2. Agar lokal kompyuterda bo'lsa
+            else:
+                with project.source_code.open('r') as f:
+                    code_content = f.read()
+        except Exception as e:
+            code_content = f"// Xatolik: {e}"
+    else:
+        code_content = "// Kod yuklanmagan."
+
+    # HTML fayl ekanligini aniqlash (Live Preview uchun)
+    is_html_file = False
+    if project.source_code and hasattr(project.source_code, 'name'):
+        is_html_file = project.source_code.name.lower().endswith('.html')
+
+    # Sotib olganligini tekshirish
+    has_access = False
+    if project.price == 0:
+        has_access = True
+    elif request.user.is_authenticated:
+        if request.user == project.author or project.buyers.filter(id=request.user.id).exists():
+            has_access = True
+
+    # Izoh qoldirish logikasi
     if request.method == 'POST' and request.user.is_authenticated:
         form = CommentForm(request.POST)
         if form.is_valid():
@@ -267,29 +305,7 @@ def project_detail(request, pk):
             c.user = request.user
             c.project = project
             c.save()
-
-            if project.author != request.user:
-                notify.send(request.user, recipient=project.author, verb='izoh qoldirdi', target=project)
-
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'username': c.user.username,
-                    'avatar_url': c.user.profile.avatar.url if c.user.profile.avatar else '',
-                    'body': c.body
-                })
             return redirect('project_detail', pk=pk)
-
-    code_preview = get_code_snippet(project)
-    is_html_file = False
-    if project.source_code and hasattr(project.source_code, 'name'):
-        is_html_file = project.source_code.name.lower().endswith('.html')
-
-    has_access = False
-    if project.price == 0:
-        has_access = True
-    elif request.user.is_authenticated:
-        if request.user == project.author or project.buyers.filter(id=request.user.id).exists():
-            has_access = True
 
     is_synced = False
     if request.user.is_authenticated:
@@ -298,7 +314,10 @@ def project_detail(request, pk):
     return render(request, 'project_detail.html', {
         'project': project,
         'form': CommentForm(),
-        'code_preview': code_preview,
+
+        # ⚠️ ENG MUHIMI: Kod matnini alohida yuboryapmiz
+        'code_content': code_content,
+
         'live_preview': is_html_file,
         'has_bought': has_access,
         'is_synced': is_synced

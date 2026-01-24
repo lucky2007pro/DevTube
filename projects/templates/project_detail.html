@@ -199,7 +199,7 @@
 
             <div class="code-lock-wrapper {% if not has_bought and project.price > 0 %}locked-mode{% endif %}">
 
-                <pre class="code-content"><code id="sourceCode" class="language-python">{% if has_bought or project.price == 0 %}{{ project.code_content }}{% else %}{{ project.code_content|slice:":600" }}
+                <pre class="code-content"><code id="sourceCode" class="language-python">{% if has_bought or project.price == 0 %}{{ code_content }}{% else %}{{ code_content|slice:":600" }}
 
 # --------------------------------------------------------
 # 🔒 PREMIUM KOD (QISQARTIRILGAN KO'RINISH)
