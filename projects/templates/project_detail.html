@@ -1,8 +1,46 @@
 {% extends 'base.html' %}
 {% load static %}
-
-{% block content %}
+{% load markdown_extras %} {% block content %}
 <style>
+    /* --- MARKDOWN STYLES (NEON) --- */
+    .project-description h1, .project-description h2, .project-description h3 {
+        color: #fff; margin-top: 25px; margin-bottom: 15px; font-weight: 800; letter-spacing: -0.5px;
+    }
+    .project-description p { color: #cbd5e1; margin-bottom: 15px; line-height: 1.8; font-size: 15px; }
+    .project-description ul, .project-description ol { color: #cbd5e1; padding-left: 20px; margin-bottom: 20px; }
+    .project-description li { margin-bottom: 8px; }
+
+    /* Kod bo'laklari (inline) */
+    .project-description code {
+        background: rgba(99, 102, 241, 0.15); color: #a5b4fc;
+        padding: 2px 6px; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 0.9em;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    /* Kod bloklari (pre) */
+    .project-description pre {
+        background: #0f172a; padding: 20px; border-radius: 16px;
+        overflow-x: auto; border: 1px solid rgba(255, 255, 255, 0.08);
+        margin: 20px 0; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    }
+    .project-description pre code {
+        background: transparent; color: #e2e8f0; padding: 0; border: none; font-size: 13px;
+    }
+
+    /* Iqtiboslar */
+    .project-description blockquote {
+        border-left: 4px solid var(--neon-primary);
+        padding: 15px 20px; background: rgba(255, 255, 255, 0.03);
+        border-radius: 0 12px 12px 0; margin: 20px 0;
+        color: #94a3b8; font-style: italic;
+    }
+
+    .project-description img {
+        max-width: 100%; border-radius: 12px; margin: 20px 0;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* --- ASOSIY LAYOUT --- */
     :root {
         --neon-primary: #6366f1;
         --neon-secondary: #a855f7;
@@ -10,13 +48,9 @@
         --border-color: rgba(255, 255, 255, 0.08);
     }
 
-    /* --- LAYOUT --- */
     .project-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: 3fr 1fr;
-        gap: 30px;
+        max-width: 1200px; margin: 0 auto; display: grid;
+        grid-template-columns: 3fr 1fr; gap: 30px;
     }
 
     @media (max-width: 992px) {
@@ -28,15 +62,13 @@
     .neon-preview-card {
         background: var(--glass-bg);
         backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
+        border: 1px solid var(--border-color); border-radius: 16px;
         overflow: hidden; margin-bottom: 25px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
 
     .preview-header {
-        padding: 15px 20px;
-        background: rgba(255, 255, 255, 0.03);
+        padding: 15px 20px; background: rgba(255, 255, 255, 0.03);
         border-bottom: 1px solid var(--border-color);
         display: flex; justify-content: space-between; align-items: center;
     }
@@ -44,8 +76,7 @@
 
     /* --- VISUAL PREVIEW --- */
     .visual-preview {
-        width: 100%; height: 450px;
-        background-color: #0d1117;
+        width: 100%; height: 450px; background-color: #0d1117;
         display: flex; align-items: center; justify-content: center;
         position: relative; overflow: hidden;
     }
@@ -60,15 +91,11 @@
         max-height: 500px;
     }
 
-    /* Qulf rejimi (Muhim qism) */
+    /* Qulf rejimi */
     .locked-mode .code-content {
-        max-height: 250px;
-        overflow: hidden;
-        /* Blur effekti - Xiralashtirish */
-        filter: blur(5px);
-        opacity: 0.6;
-        user-select: none; /* Belgilab bo'lmaydi */
-        pointer-events: none;
+        max-height: 250px; overflow: hidden;
+        filter: blur(5px); opacity: 0.6;
+        user-select: none; pointer-events: none;
         -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
         mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
     }
@@ -159,11 +186,7 @@
         <div class="neon-preview-card">
             <div class="preview-header">
                 <span class="preview-title">
-                    {% if live_preview %}
-                        <i class="fas fa-play-circle text-primary me-2"></i> Live Preview
-                    {% else %}
-                        <i class="fas fa-image text-warning me-2"></i> Screenshot
-                    {% endif %}
+                    {% if live_preview %}<i class="fas fa-play-circle text-primary me-2"></i> Live Preview{% else %}<i class="fas fa-image text-warning me-2"></i> Screenshot{% endif %}
                 </span>
                 <span class="badge {% if live_preview %}bg-primary{% else %}bg-secondary{% endif %} bg-opacity-75 rounded-pill px-3">
                     {% if live_preview %}Interactive{% else %}Static{% endif %}
@@ -198,13 +221,11 @@
             </div>
 
             <div class="code-lock-wrapper {% if not has_bought and project.price > 0 %}locked-mode{% endif %}">
-
                 <pre class="code-content"><code id="sourceCode" class="language-python">{% if has_bought or project.price == 0 %}{{ code_content }}{% else %}{{ code_content|slice:":600" }}
 
 # --------------------------------------------------------
-# 🔒 PREMIUM KOD (QISQARTIRILGAN KO'RINISH)
-# Ushbu kodning to'liq qismini ko'rish va yuklab olish
-# uchun loyihani xarid qilishingiz kerak.
+# 🔒 PREMIUM KOD (PREVIEW)
+# To'liq ko'rish uchun loyihani xarid qiling.
 # --------------------------------------------------------{% endif %}</code></pre>
 
                 {% if not has_bought and project.price > 0 %}
@@ -212,7 +233,6 @@
                         <div class="lock-icon-box"><i class="fas fa-lock fa-2x text-warning"></i></div>
                         <h4 class="text-white fw-bold mb-1">Premium Kod</h4>
                         <p class="text-secondary small mb-3">To'liq kodni ochish uchun xarid qiling</p>
-
                         <a href="#buy-section" class="btn btn-warning rounded-pill fw-bold px-4 shadow-lg text-dark">
                             <i class="fas fa-shopping-cart me-2"></i> ${{ project.price }} ga Olish
                         </a>
@@ -246,7 +266,6 @@
                             </small>
                         </div>
                     </div>
-
                     <div class="bg-dark bg-opacity-50 p-3 rounded-3 border border-secondary border-opacity-25">
                         <small class="text-uppercase fw-bold text-info" style="font-size: 11px; letter-spacing: 1px;">GEMINI AI XULOSASI:</small>
                         <p class="text-light mt-2 small opacity-90 mb-0" style="line-height: 1.6;">
@@ -289,8 +308,8 @@
                 <span class="text-light bg-secondary bg-opacity-25 px-2 rounded">{{ project.get_category_display }}</span>
             </div>
 
-            <div class="text-light opacity-75 mb-5" style="line-height: 1.7;">
-                {{ project.description|linebreaksbr }}
+            <div class="project-description mb-5">
+                {{ project.description|markdown|safe }}
             </div>
 
             <h5 class="text-white mb-3 fw-bold"><i class="far fa-comments me-2"></i>Izohlar (<span id="comment-count-txt">{{ project.comments.count }}</span>)</h5>

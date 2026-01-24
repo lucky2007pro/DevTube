@@ -21,6 +21,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
+        /* Markdown Styles */
+.project-description h1, .project-description h2, .project-description h3 {
+    color: #fff; margin-top: 20px; font-weight: bold;
+}
+.project-description p { color: #cbd5e1; margin-bottom: 15px; }
+.project-description ul, .project-description ol { color: #cbd5e1; padding-left: 20px; }
+.project-description code {
+    background: rgba(255,255,255,0.1); color: #ff79c6;
+    padding: 2px 5px; border-radius: 4px; font-family: monospace;
+}
+.project-description pre {
+    background: #1e293b; padding: 15px; border-radius: 10px;
+    overflow-x: auto; border: 1px solid rgba(255,255,255,0.1);
+}
+.project-description pre code {
+    background: transparent; color: #e6edf3; padding: 0;
+}
+.project-description blockquote {
+    border-left: 4px solid var(--neon-primary);
+    padding-left: 15px; color: #94a3b8; font-style: italic;
+}
         :root {
             --neon-primary: #6366f1;
             --neon-secondary: #a855f7;
