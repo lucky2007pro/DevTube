@@ -840,3 +840,26 @@ def telegram_webhook(request):
 
         return HttpResponse('OK')
     return HttpResponse('Not a POST request')
+
+
+# views.py oxiriga qo'shing
+import random, string
+from .models import Project
+
+
+def fix_database_slugs(request):
+    if not request.user.is_superuser:
+        return HttpResponse("Faqat admin uchun!")
+
+    def gen(l=11):
+        return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(l))
+
+    projects = Project.objects.all()
+    count = 0
+    for p in projects:
+        # Har doim yangi ID berish (xatolikni oldini olish uchun)
+        p.slug = gen()
+        p.save()
+        count += 1
+
+    return HttpResponse(f"Muvaffaqiyatli yakunlandi! {count} ta loyiha yangilandi.")
