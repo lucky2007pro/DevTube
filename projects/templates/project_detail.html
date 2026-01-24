@@ -64,7 +64,7 @@
     .locked-mode .code-content {
         max-height: 250px;
         overflow: hidden;
-        /* Blur effekti */
+        /* Blur effekti - Xiralashtirish */
         filter: blur(5px);
         opacity: 0.6;
         user-select: none; /* Belgilab bo'lmaydi */
@@ -159,7 +159,11 @@
         <div class="neon-preview-card">
             <div class="preview-header">
                 <span class="preview-title">
-                    {% if live_preview %}<i class="fas fa-play-circle text-primary me-2"></i> Live Preview{% else %}<i class="fas fa-image text-warning me-2"></i> Screenshot{% endif %}
+                    {% if live_preview %}
+                        <i class="fas fa-play-circle text-primary me-2"></i> Live Preview
+                    {% else %}
+                        <i class="fas fa-image text-warning me-2"></i> Screenshot
+                    {% endif %}
                 </span>
                 <span class="badge {% if live_preview %}bg-primary{% else %}bg-secondary{% endif %} bg-opacity-75 rounded-pill px-3">
                     {% if live_preview %}Interactive{% else %}Static{% endif %}
@@ -195,18 +199,19 @@
 
             <div class="code-lock-wrapper {% if not has_bought and project.price > 0 %}locked-mode{% endif %}">
 
-                <pre class="code-content"><code id="sourceCode" class="language-python">{% if has_bought or project.price == 0 %}{{ project.code_content }}{% else %}{{ project.code_content|slice:":500" }}...
-# ----------------------------------------------------
-#  ⚠️ DIQQAT: BU FAYLNING FAQAT BIR QISMI (PREVIEW)
-#  To'liq kodni ko'rish va yuklab olish uchun loyihani
-#  xarid qilishingiz kerak.
-# ----------------------------------------------------{% endif %}</code></pre>
+                <pre class="code-content"><code id="sourceCode" class="language-python">{% if has_bought or project.price == 0 %}{{ project.code_content }}{% else %}{{ project.code_content|slice:":600" }}
+
+# --------------------------------------------------------
+# 🔒 PREMIUM KOD (QISQARTIRILGAN KO'RINISH)
+# Ushbu kodning to'liq qismini ko'rish va yuklab olish
+# uchun loyihani xarid qilishingiz kerak.
+# --------------------------------------------------------{% endif %}</code></pre>
 
                 {% if not has_bought and project.price > 0 %}
                     <div class="neon-lock-overlay">
                         <div class="lock-icon-box"><i class="fas fa-lock fa-2x text-warning"></i></div>
                         <h4 class="text-white fw-bold mb-1">Premium Kod</h4>
-                        <p class="text-secondary small mb-3">To'liq kodni ko'rish uchun loyihani xarid qiling</p>
+                        <p class="text-secondary small mb-3">To'liq kodni ochish uchun xarid qiling</p>
 
                         <a href="#buy-section" class="btn btn-warning rounded-pill fw-bold px-4 shadow-lg text-dark">
                             <i class="fas fa-shopping-cart me-2"></i> ${{ project.price }} ga Olish
