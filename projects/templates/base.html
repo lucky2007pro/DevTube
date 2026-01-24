@@ -2,6 +2,14 @@
 {% load static %}
 <html lang="uz">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <title>{% block title %}DevTube | Premium Code Platform{% endblock %}</title>
+
+    {% block extra_head %}
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:title" content="DevTube | Premium Code Marketplace">
@@ -13,46 +21,38 @@
     <meta property="twitter:title" content="DevTube | Premium Code Marketplace">
     <meta property="twitter:description" content="Kodlarni sotib oling va soting. AI xavfsizlik tekshiruvi bilan.">
     <meta property="twitter:image" content="{% static 'img/devtube-banner.png' %}">
-    <link rel="manifest" href="{% static 'manifest.json' %}">
-    <meta name="theme-color" content="#6366f1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    {% endblock %}
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register("{% static 'js/sw.js' %}");
-            });
-        }
-    </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevTube | Premium Code Platform</title>
+    <link rel="manifest" href="{% static 'manifest.json' %}">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
     <style>
         /* Markdown Styles */
-.project-description h1, .project-description h2, .project-description h3 {
-    color: #fff; margin-top: 20px; font-weight: bold;
-}
-.project-description p { color: #cbd5e1; margin-bottom: 15px; }
-.project-description ul, .project-description ol { color: #cbd5e1; padding-left: 20px; }
-.project-description code {
-    background: rgba(255,255,255,0.1); color: #ff79c6;
-    padding: 2px 5px; border-radius: 4px; font-family: monospace;
-}
-.project-description pre {
-    background: #1e293b; padding: 15px; border-radius: 10px;
-    overflow-x: auto; border: 1px solid rgba(255,255,255,0.1);
-}
-.project-description pre code {
-    background: transparent; color: #e6edf3; padding: 0;
-}
-.project-description blockquote {
-    border-left: 4px solid var(--neon-primary);
-    padding-left: 15px; color: #94a3b8; font-style: italic;
-}
+        .project-description h1, .project-description h2, .project-description h3 {
+            color: #fff; margin-top: 20px; font-weight: bold;
+        }
+        .project-description p { color: #cbd5e1; margin-bottom: 15px; }
+        .project-description ul, .project-description ol { color: #cbd5e1; padding-left: 20px; }
+        .project-description code {
+            background: rgba(255,255,255,0.1); color: #ff79c6;
+            padding: 2px 5px; border-radius: 4px; font-family: monospace;
+        }
+        .project-description pre {
+            background: #1e293b; padding: 15px; border-radius: 10px;
+            overflow-x: auto; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .project-description pre code {
+            background: transparent; color: #e6edf3; padding: 0;
+        }
+        .project-description blockquote {
+            border-left: 4px solid var(--neon-primary);
+            padding-left: 15px; color: #94a3b8; font-style: italic;
+        }
+
+        /* Asosiy O'zgaruvchilar */
         :root {
             --neon-primary: #6366f1;
             --neon-secondary: #a855f7;
@@ -157,7 +157,7 @@
             align-items: center;
         }
 
-        /* --- NOTIFICATION STYLES (YANGI QO'SHILDI) --- */
+        /* --- NOTIFICATION STYLES --- */
         .noti-btn {
             width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
             border-radius: 50%; color: #94a3b8; transition: 0.3s; position: relative;
@@ -280,8 +280,8 @@
             .main-content { margin-left: 0; padding-top: 80px; }
 
             .sidebar {
-                transform: translateX(-100%); /* -260px o'rniga -100% ishonchliroq */
-                width: 260px; /* Kenglikni aniq belgilash */
+                transform: translateX(-100%);
+                width: 260px;
                 height: 100vh;
                 top: var(--nav-height) !important;
                 left: 0;
@@ -289,12 +289,12 @@
 
             .sidebar.active {
                 transform: translateX(0);
-                box-shadow: 10px 0 30px rgba(0,0,0,0.5); /* Ochilganda soya berish */
+                box-shadow: 10px 0 30px rgba(0,0,0,0.5);
             }
         }
     </style>
 </head>
-<body>
+<body class="minimal-mode">
 
     <nav class="navbar fixed-top flex-nowrap">
         <div class="d-flex align-items-center gap-3 px-2">
@@ -458,20 +458,16 @@
         const toggleBtn = document.getElementById('sidebarToggle');
 
         toggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Tugma bosilganda boshqa hodisalarni to'xtatish
+            e.stopPropagation();
 
-            // Agar ekran kichik bo'lsa (Mobile/Tablet)
             if (window.innerWidth <= 992) {
                 sidebar.classList.toggle('active');
-            }
-            // Agar ekran katta bo'lsa (Desktop)
-            else {
+            } else {
                 sidebar.classList.toggle('collapsed');
                 mainContent.classList.toggle('expanded');
             }
         });
 
-        // Qo'shimcha: Mobil menyu ochilganda, ekranning boshqa joyi bosilsa menyuni yopish
         document.addEventListener('click', (e) => {
              if (window.innerWidth <= 992) {
                 if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target) && sidebar.classList.contains('active')) {
@@ -480,7 +476,7 @@
             }
         });
 
-        // 1. MINIMAL MODE (Sidebar dagi switch)
+        // 1. MINIMAL MODE
         const themeToggle = document.querySelector('#theme-checkbox');
         const modeLabel = document.querySelector('#mode-label');
         const currentMinimal = localStorage.getItem('theme');
@@ -507,12 +503,11 @@
             }
         });
 
-        // 2. LIGHT/DARK MODE (Tepadagi oy/quyosh tugmasi)
+        // 2. LIGHT/DARK MODE
         const lightToggleBtn = document.getElementById('light-dark-toggle');
         const lightIcon = lightToggleBtn.querySelector('i');
         const currentLight = localStorage.getItem('light-theme');
 
-        // Sahifa yuklanganda tekshirish
         if (currentLight === 'active') {
             document.body.classList.add('light-mode');
             lightIcon.classList.remove('fa-moon');
@@ -524,13 +519,11 @@
             document.body.classList.toggle('light-mode');
 
             if (document.body.classList.contains('light-mode')) {
-                // Yorug' rejim yoqildi
                 lightIcon.classList.remove('fa-moon');
                 lightIcon.classList.add('fa-sun');
                 lightIcon.classList.add('text-warning');
                 localStorage.setItem('light-theme', 'active');
             } else {
-                // Qorong'u rejim (Default)
                 lightIcon.classList.add('fa-moon');
                 lightIcon.classList.remove('fa-sun');
                 lightIcon.classList.remove('text-warning');
@@ -538,6 +531,7 @@
             }
         });
 
+        // Voice Search
         function startVoiceSearch() {
             if ('webkitSpeechRecognition' in window) {
                 const recognition = new webkitSpeechRecognition();
@@ -548,6 +542,13 @@
                 };
                 recognition.start();
             }
+        }
+
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("{% static 'js/sw.js' %}");
+            });
         }
     </script>
 </body>
