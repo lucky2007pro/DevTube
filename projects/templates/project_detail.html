@@ -12,12 +12,11 @@
 
     /* --- LAYOUT --- */
     .project-container {
-        max-width: 1100px;
-        margin: 20px auto;
+        max-width: 1200px;
+        margin: 0 auto;
         display: grid;
-        grid-template-columns: 2.8fr 1fr;
-        gap: 25px;
-        padding: 0 15px;
+        grid-template-columns: 3fr 1fr; /* Chap taraf kengroq */
+        gap: 30px;
     }
 
     @media (max-width: 992px) {
@@ -25,147 +24,149 @@
         .info-panel { position: static !important; }
     }
 
-    /* --- CARDS --- */
+    /* --- CARDS & PANELS --- */
     .neon-preview-card {
         background: var(--glass-bg);
         backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
         border: 1px solid var(--border-color);
         border-radius: 16px;
-        overflow: hidden; margin-bottom: 20px;
+        overflow: hidden; margin-bottom: 25px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
 
     .preview-header {
-        padding: 12px 20px;
-        background: rgba(255, 255, 255, 0.02);
+        padding: 15px 20px;
+        background: rgba(255, 255, 255, 0.03);
         border-bottom: 1px solid var(--border-color);
         display: flex; justify-content: space-between; align-items: center;
     }
-    .preview-title { font-weight: 600; color: #cbd5e1; font-size: 14px; letter-spacing: 0.5px; }
+    .preview-title { font-weight: 600; color: #cbd5e1; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase; }
 
     /* --- VISUAL PREVIEW --- */
     .visual-preview {
-        width: 100%; height: 380px;
+        width: 100%; height: 450px; /* Balandlik oshirildi */
         background-color: #0d1117;
         display: flex; align-items: center; justify-content: center;
         position: relative; overflow: hidden;
     }
-    .preview-content { width: 100%; height: 100%; border: none; background: #fff; display: block; }
+    .preview-content { width: 100%; height: 100%; border: none; background: #fff; }
     .preview-image { width: 100%; height: 100%; object-fit: contain; background: #000; }
 
     /* --- CODE SECTION --- */
     .code-lock-wrapper { position: relative; background: #0d1117; border-radius: 0 0 16px 16px; }
     .code-content {
         font-family: 'Fira Code', 'Consolas', monospace; font-size: 13px;
-        padding: 20px; margin: 0; overflow-x: auto; line-height: 1.5; color: #e6edf3;
+        padding: 20px; margin: 0; overflow-x: auto; line-height: 1.6; color: #e6edf3;
+        max-height: 500px; /* Kod juda uzun bo'lib ketmasligi uchun */
     }
+
+    /* Qulf rejimi */
     .locked-mode .code-content {
-        max-height: 200px; overflow: hidden;
+        max-height: 250px; overflow: hidden;
         -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
         mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
-        filter: blur(1px); user-select: none; pointer-events: none;
+        filter: blur(3px); user-select: none; pointer-events: none;
     }
     .neon-lock-overlay {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        background: linear-gradient(to bottom, transparent 0%, rgba(13, 17, 23, 0.9) 60%, #0d1117 100%);
+        background: linear-gradient(to bottom, transparent 0%, rgba(13, 17, 23, 0.95) 70%);
         z-index: 10;
     }
     .lock-icon-box {
-        width: 60px; height: 60px; background: rgba(245, 158, 11, 0.1);
+        width: 70px; height: 70px; background: rgba(245, 158, 11, 0.1);
         border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        border: 2px solid rgba(245, 158, 11, 0.3); margin-bottom: 15px;
-        box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+        border: 2px solid rgba(245, 158, 11, 0.3); margin-bottom: 20px;
+        box-shadow: 0 0 25px rgba(245, 158, 11, 0.2);
     }
 
-    /* --- INSTAGRAM STYLE ACTIONS (YANGI) --- */
+    /* --- INSTAGRAM STYLE ACTIONS --- */
     .insta-actions-bar {
-        display: flex; align-items: center; gap: 20px;
-        margin-bottom: 10px; padding: 5px 10px;
+        display: flex; align-items: center; gap: 25px;
+        margin: 15px 0; padding: 0 10px;
     }
     .insta-btn {
         background: none; border: none; padding: 0;
-        color: #fff; opacity: 0.7; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        color: #fff; opacity: 0.8; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    .insta-btn i { font-size: 26px; } /* Ikonkalar katta */
+    .insta-btn i { font-size: 28px; }
     .insta-btn:hover { opacity: 1; transform: scale(1.1); }
     .insta-btn:active { transform: scale(0.9); }
 
-    /* Like bosilganda yurak qizarishi */
-    .insta-btn.liked i { color: #ef4444; font-weight: 900; animation: heartPop 0.3s forwards; opacity: 1; }
+    .insta-btn.liked i { color: #ef4444; animation: heartPop 0.3s forwards; font-weight: 900; opacity: 1; }
     .insta-btn.saved i { color: #f59e0b; font-weight: 900; opacity: 1; }
 
-    @keyframes heartPop {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.4); }
-        100% { transform: scale(1); }
-    }
-
-    .likes-count-text { font-weight: 700; color: #fff; font-size: 14px; margin-left: 10px; margin-bottom: 15px; display: block; }
+    @keyframes heartPop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+    .likes-count-text { font-weight: 700; color: #fff; font-size: 15px; margin-left: 10px; display: block; }
 
     /* --- SIDEBAR --- */
-    .info-panel { position: sticky; top: 80px; }
+    .info-panel { position: sticky; top: 90px; }
     .neon-price-card {
         background: var(--glass-bg); backdrop-filter: blur(16px);
-        border: 1px solid var(--border-color); padding: 25px 20px;
-        border-radius: 16px; text-align: center; margin-bottom: 20px;
+        border: 1px solid var(--border-color); padding: 30px 20px;
+        border-radius: 16px; text-align: center; margin-bottom: 25px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
     .price-tag {
-        font-size: 32px; font-weight: 800; color: #fff; display: block; margin: 10px 0 20px;
-        background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-size: 36px; font-weight: 800; color: #fff; display: block; margin: 15px 0 25px;
+        background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .price-tag.free { color: #4ade80; -webkit-text-fill-color: #4ade80; }
 
     .btn-action {
-        width: 100%; padding: 12px; border: none; border-radius: 12px;
-        font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
-        text-decoration: none; transition: all 0.2s; margin-bottom: 10px;
+        width: 100%; padding: 14px; border: none; border-radius: 12px;
+        font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;
+        text-decoration: none; transition: all 0.3s; margin-bottom: 12px;
     }
-    .btn-buy { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
-    .btn-buy:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); color: white; }
-    .btn-download { background: linear-gradient(135deg, #10b981, #059669); color: white; }
-    .btn-video { background: rgba(255, 255, 255, 0.05); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 10px; }
+    .btn-buy { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
+    .btn-buy:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); color: white; }
+    .btn-download { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+    .btn-video { background: rgba(255, 255, 255, 0.05); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.1); }
+    .btn-video:hover { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: #ef4444; }
 
     .author-card {
         background: var(--glass-bg); padding: 15px; border-radius: 16px;
         border: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px;
     }
-    .author-avatar { width: 45px; height: 45px; object-fit: cover; border-radius: 50%; border: 2px solid var(--neon-primary); }
 
-    /* COMMENTS */
-    .comment-box {
-        background: rgba(255, 255, 255, 0.02); border-radius: 12px; padding: 15px;
-        border: 1px solid var(--border-color); margin-bottom: 15px;
-    }
+    /* --- COMMENTS --- */
+    .comment-box { background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 15px; border: 1px solid var(--border-color); margin-bottom: 15px; }
     .form-control-dark {
         background: #0d1117; border: 1px solid var(--border-color); color: #fff;
-        border-radius: 10px; padding: 12px; font-size: 14px;
+        border-radius: 12px; padding: 15px; font-size: 14px; resize: none;
     }
+    .form-control-dark:focus { background: #0d1117; border-color: var(--neon-primary); color: #fff; outline: none; box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
 
-    .project-title { font-size: 2rem !important; letter-spacing: -0.5px; }
-    .project-desc { font-size: 1rem; line-height: 1.6; }
+    /* --- VIDEO MODAL (YANGI QO'SHILDI) --- */
+    .modal-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.9); z-index: 2000;
+        align-items: center; justify-content: center; backdrop-filter: blur(8px);
+    }
+    .modal-content-box {
+        position: relative; width: 90%; max-width: 900px; background: #000;
+        border-radius: 16px; overflow: hidden; box-shadow: 0 0 40px rgba(99, 102, 241, 0.2); border: 1px solid rgba(255,255,255,0.1);
+    }
+    .close-modal {
+        position: absolute; top: -45px; right: 0; color: #fff; font-size: 35px; cursor: pointer; transition: 0.3s;
+    }
+    .close-modal:hover { color: #ef4444; transform: rotate(90deg); }
 </style>
 
 <div class="project-container">
+
     <div class="main-column">
 
         <div class="neon-preview-card">
             <div class="preview-header">
                 <span class="preview-title">
-                    {% if live_preview %}
-                        <i class="fas fa-play-circle text-primary me-2"></i> Live Preview
-                    {% else %}
-                        <i class="fas fa-image text-warning me-2"></i> Screenshot
-                    {% endif %}
+                    {% if live_preview %}<i class="fas fa-play-circle text-primary me-2"></i> Live Preview{% else %}<i class="fas fa-image text-warning me-2"></i> Screenshot{% endif %}
                 </span>
-                <span class="badge {% if live_preview %}bg-primary{% else %}bg-secondary{% endif %} bg-opacity-75 rounded-pill px-3" style="font-size: 0.75rem;">
+                <span class="badge {% if live_preview %}bg-primary{% else %}bg-secondary{% endif %} bg-opacity-75 rounded-pill px-3">
                     {% if live_preview %}Interactive{% else %}Static{% endif %}
                 </span>
             </div>
-
             <div class="visual-preview">
                 {% if live_preview %}
                     <iframe src="{% url 'live_project_view' project.pk %}" class="preview-content" sandbox="allow-scripts allow-modals allow-forms allow-same-origin" loading="lazy"></iframe>
@@ -181,152 +182,130 @@
 
         <div class="neon-preview-card">
             <div class="preview-header">
-                <span class="preview-title"><i class="fas fa-code me-2 text-info"></i> Kod</span>
+                <span class="preview-title"><i class="fas fa-code me-2 text-info"></i> Manba Kodi</span>
                 <div class="d-flex align-items-center gap-2">
                     {% if has_bought or project.price == 0 %}
-                        <button class="btn btn-sm btn-dark border-secondary rounded-pill px-3 text-light" onclick="copyCode()" id="copyBtn" style="font-size: 12px;">
+                        <button class="btn btn-sm btn-dark border-secondary rounded-pill px-3 text-light" onclick="copyCode()" id="copyBtn">
                             <i class="fas fa-copy me-1"></i> Nusxalash
                         </button>
                     {% endif %}
-                    <span class="badge bg-dark border border-secondary text-light rounded-pill px-3" style="font-size: 12px;">
-                        {% if project.source_code %}{{ project.source_code.name|slice:"14:" }}{% else %}source.txt{% endif %}
+                    <span class="badge bg-dark border border-secondary text-light rounded-pill px-3 font-monospace">
+                        {{ project.source_code.name|default:"source.txt"|slice:"14:" }}
                     </span>
                 </div>
             </div>
 
-            {% if has_bought or project.price == 0 %}
-                <div class="code-lock-wrapper">
-                    <pre class="code-content"><code id="sourceCode" class="language-html">{{ code_preview }}</code></pre>
-                </div>
-            {% else %}
-                <div class="code-lock-wrapper locked-mode">
-                    <pre class="code-content"><code class="language-html">{{ code_preview }}</code></pre>
+            <div class="code-lock-wrapper {% if not has_bought and project.price > 0 %}locked-mode{% endif %}">
+                <pre class="code-content"><code id="sourceCode" class="language-python">{{ code_preview }}</code></pre>
+
+                {% if not has_bought and project.price > 0 %}
                     <div class="neon-lock-overlay">
-                        <div class="lock-icon-box"><i class="fas fa-lock fa-lg text-warning"></i></div>
-                        <h5 class="text-white fw-bold mb-1">Premium Kod</h5>
-                        <p class="text-secondary small mb-3">To'liq kodni olish uchun xarid qiling</p>
-                        <a href="#buy-section" class="btn btn-warning btn-sm rounded-pill fw-bold px-4 shadow-lg text-dark"><i class="fas fa-unlock me-2"></i> Kodni Ochish</a>
+                        <div class="lock-icon-box"><i class="fas fa-lock fa-2x text-warning"></i></div>
+                        <h4 class="text-white fw-bold mb-1">Premium Kod</h4>
+                        <p class="text-secondary small mb-3">To'liq kodni ko'rish uchun loyihani xarid qiling</p>
+                        <a href="#buy-section" class="btn btn-warning rounded-pill fw-bold px-4 shadow-lg text-dark">
+                            <i class="fas fa-shopping-cart me-2"></i> ${{ project.price }} ga Olish
+                        </a>
                     </div>
-                </div>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
 
         <div class="neon-preview-card mb-4">
             <div class="preview-header">
-                <span class="preview-title">
-                    <i class="fas fa-shield-alt text-primary me-2"></i> Xavfsizlik Tizimi (AI + Antivirus)
-                </span>
+                <span class="preview-title"><i class="fas fa-shield-alt text-success me-2"></i> Xavfsizlik Tahlili</span>
                 {% if project.is_scanned %}
-                    {% if project.security_status == 'safe' %}
-                        <span class="badge bg-success bg-opacity-75 rounded-pill px-3"><i class="fas fa-check-circle me-1"></i> Xavfsiz</span>
-                    {% elif project.security_status == 'danger' %}
-                        <span class="badge bg-danger bg-opacity-75 rounded-pill px-3"><i class="fas fa-virus me-1"></i> Xavfli</span>
-                    {% else %}
-                        <span class="badge bg-warning text-dark rounded-pill px-3"><i class="fas fa-exclamation-triangle me-1"></i> Shubhali</span>
-                    {% endif %}
+                    <span class="badge {% if project.security_status == 'safe' %}bg-success{% elif project.security_status == 'danger' %}bg-danger{% else %}bg-warning text-dark{% endif %} bg-opacity-75 rounded-pill px-3">
+                        {{ project.get_security_status_display }}
+                    </span>
                 {% else %}
-                     <span class="badge bg-secondary bg-opacity-50 rounded-pill px-3"><i class="fas fa-spinner fa-spin me-1"></i> Tekshirilmoqda</span>
+                     <span class="badge bg-secondary bg-opacity-50 rounded-pill px-3"><i class="fas fa-sync fa-spin me-1"></i> Tekshirilmoqda</span>
                 {% endif %}
             </div>
 
-            <div class="p-3">
+            <div class="p-4">
                 {% if project.is_scanned %}
-                    <div class="alert {% if project.security_status == 'safe' %}alert-success border-success{% elif project.security_status == 'danger' %}alert-danger border-danger{% else %}alert-warning border-warning{% endif %} bg-opacity-10 text-white d-flex align-items-center gap-3 mb-3" style="background: rgba(255,255,255,0.05); border: 1px solid;">
-                        <div style="font-size: 24px;">{% if project.security_status == 'safe' %}🛡️{% elif project.security_status == 'danger' %}💀{% else %}⚠️{% endif %}</div>
+                    <div class="alert {% if project.security_status == 'safe' %}alert-success border-success{% elif project.security_status == 'danger' %}alert-danger border-danger{% else %}alert-warning border-warning{% endif %} bg-opacity-10 text-white d-flex align-items-center gap-3 mb-3">
+                        <div class="fs-1">{% if project.security_status == 'safe' %}🛡️{% elif project.security_status == 'danger' %}💀{% else %}⚠️{% endif %}</div>
                         <div>
-                            <h6 class="fw-bold m-0">{% if project.security_status == 'safe' %}Fayl toza{% elif project.security_status == 'danger' %}Diqqat! Zararli kod aniqlandi{% else %}Ehtiyot bo'ling{% endif %}</h6>
+                            <h6 class="fw-bold m-0">
+                                {% if project.security_status == 'safe' %}Kod toza va xavfsiz{% elif project.security_status == 'danger' %}Diqqat! Zararli kod{% else %}Shubhali qismlar mavjud{% endif %}
+                            </h6>
                             <small class="opacity-75">
-                                {% if project.security_status == 'safe' %}Gemini AI va 70+ Antiviruslar hech qanday tahdid topmadi.{% elif project.security_status == 'danger' %}Ushbu kodda virus yoki ma'lumot o'g'irlash belgilari mavjud.{% else %}Qo'shimcha tekshiruv talab qilinishi mumkin.{% endif %}
+                                AI va Antiviruslar ushbu faylni tekshirdi. {% if project.security_status == 'safe' %}Tahdid aniqlanmadi.{% else %}Ehtiyot bo'ling.{% endif %}
                             </small>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <small class="text-uppercase fw-bold text-muted" style="font-size: 11px; letter-spacing: 1px;">GEMINI AI XULOSASI:</small>
-                        <p class="text-light mt-1 small opacity-75" style="line-height: 1.6;"><i class="fas fa-robot text-info me-2"></i> {{ project.ai_analysis|default:"Izoh yo'q" }}</p>
+
+                    <div class="bg-dark bg-opacity-50 p-3 rounded-3 border border-secondary border-opacity-25">
+                        <small class="text-uppercase fw-bold text-info" style="font-size: 11px; letter-spacing: 1px;">GEMINI AI XULOSASI:</small>
+                        <p class="text-light mt-2 small opacity-90 mb-0" style="line-height: 1.6;">
+                            <i class="fas fa-robot text-primary me-2"></i> {{ project.ai_analysis|default:"Izoh kutilmoqda..." }}
+                        </p>
                     </div>
-                    {% if project.virustotal_link %}
-                        <a href="{{ project.virustotal_link }}" target="_blank" class="btn btn-sm btn-outline-secondary w-100 rounded-pill" style="font-size: 12px;"><i class="fas fa-external-link-alt me-2"></i> VirusTotal hisobotini ko'rish</a>
-                    {% endif %}
                 {% else %}
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary mb-3" role="status"></div>
-                        <p class="text-muted small mb-0">Sun'iy intellekt va Antiviruslar kodni tahlil qilmoqda...</p>
-                        <small class="text-secondary" style="font-size: 10px;">
-                            (Bu jarayon 1-2 daqiqa vaqt olishi mumkin. Iltimos, sahifani yangilab turing 🔄)
-                        </small>
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary mb-2" role="status"></div>
+                        <p class="text-muted small">Tahlil qilinmoqda... (Sahifani yangilang)</p>
                     </div>
                 {% endif %}
             </div>
         </div>
 
         <div class="px-2">
-
             <div class="insta-actions-bar">
-                <button id="like-btn" data-like-url="{% url 'like_project' project.pk %}" class="insta-btn {% if request.user in project.likes.all %}liked{% endif %}" title="Like">
+                <button id="like-btn" data-like-url="{% url 'like_project' project.pk %}" class="insta-btn {% if request.user in project.likes.all %}liked{% endif %}">
                     <i class="{% if request.user in project.likes.all %}fas{% else %}far{% endif %} fa-heart"></i>
                 </button>
-
-                <button onclick="document.getElementById('comment-form').scrollIntoView({behavior: 'smooth'})" class="insta-btn" title="Izoh qoldirish">
+                <button onclick="document.getElementById('comment-body').focus()" class="insta-btn">
                     <i class="far fa-comment"></i>
                 </button>
-
-                <button id="save-btn" onclick="toggleSave({{ project.pk }})" data-save-url="{% url 'save_project' project.pk %}" class="insta-btn ms-auto {% if request.user in project.saved_by.all %}saved{% endif %}" title="Saqlash">
+                <button id="save-btn" onclick="toggleSave({{ project.pk }})" data-save-url="{% url 'save_project' project.pk %}" class="insta-btn ms-auto {% if request.user in project.saved_by.all %}saved{% endif %}">
                     <i class="{% if request.user in project.saved_by.all %}fas{% else %}far{% endif %} fa-bookmark"></i>
                 </button>
             </div>
-
             <span class="likes-count-text"><span id="like-count">{{ project.likes.count }}</span> ta "Yoqdi"</span>
 
-            <div class="d-flex justify-content-between align-items-start mb-3 mt-3">
-                <h1 class="text-white fw-bold m-0 project-title">{{ project.title }}</h1>
-                <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold {% if is_synced %}active bg-primary text-white{% endif %}"
-                        id="syncBtn" onclick="toggleSync()" style="border-width: 1.5px;">
-                    <i class="fas fa-sync-alt me-2 {% if is_synced %}fa-spin{% endif %}"></i>
-                    <span id="syncText">{% if is_synced %}Sinxronlashdi{% else %}Sinxronlash{% endif %}</span>
+            <div class="d-flex justify-content-between align-items-start mb-3 mt-4">
+                <h1 class="text-white fw-bold m-0" style="font-size: 2rem;">{{ project.title }}</h1>
+                <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold {% if is_synced %}active bg-primary text-white{% endif %}" id="syncBtn" onclick="toggleSync()">
+                    <i class="fas fa-sync-alt me-2"></i> <span id="syncText">{% if is_synced %}Sinxronlashdi{% else %}Sinxronlash{% endif %}</span>
                 </button>
             </div>
 
-            <div class="d-flex flex-wrap gap-3 text-secondary mb-4 project-stats">
-                <span><i class="fas fa-eye me-2 text-primary"></i> {{ project.views }}</span>
-                <span><i class="far fa-calendar-alt me-2 text-success"></i> {{ project.created_at|date:"d.m.Y" }}</span>
-                <span class="text-white px-2 py-0 bg-secondary bg-opacity-25 rounded border border-secondary border-opacity-25">{{ project.get_category_display }}</span>
+            <div class="d-flex flex-wrap gap-3 text-secondary mb-4 small">
+                <span><i class="fas fa-eye me-1 text-primary"></i> {{ project.views }} ko'rish</span>
+                <span><i class="far fa-calendar-alt me-1 text-success"></i> {{ project.created_at|date:"d.m.Y" }}</span>
+                <span class="text-light bg-secondary bg-opacity-25 px-2 rounded">{{ project.get_category_display }}</span>
             </div>
 
-            <div class="text-light opacity-75 mb-4 project-desc">
+            <div class="text-light opacity-75 mb-5" style="line-height: 1.7;">
                 {{ project.description|linebreaksbr }}
             </div>
 
-            <hr class="border-secondary opacity-25 my-4">
-
-            <h5 class="text-white mb-3 fw-bold"><i class="far fa-comments me-2"></i>Fikrlar (<span id="comment-count-txt">{{ project.comments.count }}</span>)</h5>
+            <h5 class="text-white mb-3 fw-bold"><i class="far fa-comments me-2"></i>Izohlar (<span id="comment-count-txt">{{ project.comments.count }}</span>)</h5>
 
             {% if user.is_authenticated %}
                 <div class="d-flex gap-3 mb-4">
-                    <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}&background=6366f1&color=fff{% endif %}"
-                         class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                    <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="rounded-circle" style="width: 40px; height: 40px;">
                     <form id="comment-form" method="post" class="w-100 position-relative">
                         {% csrf_token %}
-                        <textarea id="comment-body" name="body" class="form-control-dark w-100" placeholder="Fikringiz..." rows="2"></textarea>
-                        <button type="submit" class="btn btn-primary btn-sm rounded-pill fw-bold px-3 position-absolute bottom-0 end-0 m-2">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+                        <textarea id="comment-body" name="body" class="form-control-dark w-100" placeholder="Ushbu kod haqida fikringiz..." rows="2"></textarea>
+                        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 position-absolute bottom-0 end-0 m-2 fw-bold"><i class="fas fa-paper-plane"></i></button>
                     </form>
                 </div>
             {% else %}
-                <div class="alert alert-dark border-secondary opacity-75 rounded-3 mb-3 py-2 small">
-                    Izoh uchun <a href="{% url 'login' %}" class="text-primary fw-bold">kiring</a>.
-                </div>
+                <div class="alert alert-dark opacity-75 small">Izoh yozish uchun <a href="{% url 'login' %}">kiring</a>.</div>
             {% endif %}
 
             <div id="comment-list">
                 {% for comment in project.comments.all reversed %}
                 <div class="comment-box d-flex gap-3">
-                    <img src="{% if comment.user.profile.avatar %}{{ comment.user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ comment.user.username }}{% endif %}"
-                         class="rounded-circle" style="width: 35px; height: 35px; object-fit: cover;">
+                    <img src="{% if comment.user.profile.avatar %}{{ comment.user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ comment.user.username }}{% endif %}" class="rounded-circle" style="width: 35px; height: 35px;">
                     <div>
                         <div class="d-flex gap-2 align-items-center mb-1">
                             <strong class="text-white small">{{ comment.user.username }}</strong>
-                            <small class="text-muted" style="font-size: 0.75rem;">{{ comment.created_at|timesince }} oldin</small>
+                            <small class="text-muted" style="font-size: 11px;">{{ comment.created_at|timesince }} oldin</small>
                         </div>
                         <p class="mb-0 text-light opacity-75 small">{{ comment.body }}</p>
                     </div>
@@ -346,7 +325,7 @@
                     <span class="price-tag free">BEPUL</span>
                 {% endif %}
 
-                {% if has_bought %}
+                {% if has_bought or project.price == 0 %}
                     <a href="{{ project.source_code.url }}" class="btn-action btn-download" download>
                         <i class="fas fa-cloud-download-alt"></i> Yuklash
                     </a>
@@ -358,38 +337,70 @@
 
                 {% if project.get_youtube_id %}
                     <button class="btn-action btn-video" onclick="openVideoModal()">
-                        <i class="fab fa-youtube text-danger"></i> Video Sharh
+                        <i class="fab fa-youtube text-danger fa-lg"></i> Video Sharh
                     </button>
                 {% endif %}
-                </div>
+            </div>
 
             <div class="author-card">
-                <a href="{% url 'profile_by_username' project.author.username %}" class="position-relative">
-                    <img src="{% if project.author.profile.avatar %}{{ project.author.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ project.author.username }}{% endif %}" class="author-avatar">
-                    <span class="position-absolute bottom-0 end-0 bg-success border border-dark rounded-circle p-1" style="width: 10px; height: 10px;"></span>
+                <a href="{% url 'profile_by_username' project.author.username %}">
+                    <img src="{% if project.author.profile.avatar %}{{ project.author.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ project.author.username }}{% endif %}" class="rounded-circle border border-2 border-primary" style="width: 45px; height: 45px;">
                 </a>
                 <div class="flex-grow-1" style="line-height: 1.2;">
-                    <a href="{% url 'profile_by_username' project.author.username %}" class="text-white text-decoration-none fw-bold d-block mb-1" style="font-size: 15px;">{{ project.author.username }}</a>
-                    <div class="text-muted" style="font-size: 11px;"><i class="fas fa-users me-1"></i> {{ project.author.profile.followers.count }} Sinxronlar</div>
+                    <a href="{% url 'profile_by_username' project.author.username %}" class="text-white text-decoration-none fw-bold d-block mb-1">{{ project.author.username }}</a>
+                    <div class="text-muted" style="font-size: 11px;"><i class="fas fa-code me-1"></i> Dasturchi</div>
                 </div>
-                <a href="{% url 'profile_by_username' project.author.username %}" class="text-muted"><i class="fas fa-chevron-right small"></i></a>
             </div>
         </div>
     </div>
 </div>
 
 <div id="videoModal" class="modal-overlay" onclick="closeVideoModal(event)">
+    <span class="close-modal" onclick="closeVideoModal(event)">&times;</span>
     <div class="modal-content-box">
-        <span class="close-modal" onclick="closeVideoModal(event)">&times;</span>
-        <div style="position: relative; padding-bottom: 56.25%; height: 0;">
-            <iframe id="youtubeIframe" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <div class="ratio ratio-16x9">
+            <iframe id="youtubeIframe" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
         </div>
     </div>
 </div>
 
 <script>
-    // JS KODLAR (Instagram Style uchun moslashtirildi)
+    // VIDEO MODAL LOGIC
+    const youtubeId = "{{ project.get_youtube_id }}";
 
+    function openVideoModal() {
+        if(youtubeId) {
+            document.getElementById('youtubeIframe').src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1&rel=0";
+            document.getElementById('videoModal').style.display = "flex";
+            document.body.style.overflow = "hidden"; // Scrollni to'xtatish
+        } else {
+            alert("Video ID topilmadi!");
+        }
+    }
+
+    function closeVideoModal(e) {
+        if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-modal')) {
+            document.getElementById('videoModal').style.display = "none";
+            document.getElementById('youtubeIframe').src = ""; // Videoni to'xtatish
+            document.body.style.overflow = "auto";
+        }
+    }
+
+    // NUSXALASH
+    function copyCode() {
+        const codeText = document.getElementById('sourceCode').innerText;
+        navigator.clipboard.writeText(codeText).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.classList.replace('btn-dark', 'btn-success');
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-copy me-1"></i> Nusxalash';
+                btn.classList.replace('btn-success', 'btn-dark');
+            }, 2000);
+        });
+    }
+
+    // SINXRONLASH
     function toggleSync() {
         const btn = document.getElementById('syncBtn');
         const txt = document.getElementById('syncText');
@@ -413,35 +424,7 @@
         });
     }
 
-    const youtubeId = "{{ project.get_youtube_id }}";
-    function openVideoModal() {
-        if(youtubeId) {
-            document.getElementById('youtubeIframe').src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
-            document.getElementById('videoModal').style.display = "flex";
-        }
-    }
-    function closeVideoModal(e) {
-        if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-modal')) {
-            document.getElementById('videoModal').style.display = "none";
-            document.getElementById('youtubeIframe').src = "";
-        }
-    }
-
-    function copyCode() {
-        const codeText = document.getElementById('sourceCode').innerText;
-        navigator.clipboard.writeText(codeText).then(() => {
-            const btn = document.getElementById('copyBtn');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check text-success"></i>';
-            btn.classList.add('border-success');
-            setTimeout(() => {
-                btn.innerHTML = originalHtml;
-                btn.classList.remove('border-success');
-            }, 2000);
-        });
-    }
-
-    // Like bosish (Instagram Style Update)
+    // LIKE BOSISH
     document.getElementById('like-btn').addEventListener('click', function(e) {
         e.preventDefault();
         const url = this.getAttribute('data-like-url');
@@ -466,12 +449,12 @@
         });
     });
 
-    // Save bosish (Instagram Style Update)
+    // SAQLASH
     function toggleSave(id) {
         const btn = document.getElementById('save-btn');
         const icon = btn.querySelector('i');
         const url = btn.getAttribute('data-save-url');
-        btn.disabled = true;
+
         fetch(url, {
             method: 'POST',
             headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' }
@@ -485,10 +468,10 @@
                 icon.classList.replace('fas', 'far');
                 btn.classList.remove('saved');
             }
-            btn.disabled = false;
         });
     }
 
+    // IZOH QOLDIRISH
     const commentForm = document.getElementById('comment-form');
     if (commentForm) {
         commentForm.addEventListener('submit', function(e) {
@@ -496,6 +479,7 @@
             const formData = new FormData(this);
             const btn = this.querySelector('button[type="submit"]');
             btn.disabled = true;
+
             fetch(window.location.href, {
                 method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
@@ -507,7 +491,7 @@
                         <div>
                             <div class="d-flex gap-2 align-items-center mb-1">
                                 <strong class="text-white small">${data.username}</strong>
-                                <small class="text-muted" style="font-size: 0.75rem;">hozirgina</small>
+                                <small class="text-muted" style="font-size: 11px;">hozirgina</small>
                             </div>
                             <p class="mb-0 text-light opacity-75 small">${data.body}</p>
                         </div>
@@ -521,8 +505,7 @@
         });
     }
 </script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
 {% endblock %}
