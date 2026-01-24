@@ -14,5 +14,5 @@ def markdown(value):
     return md.markdown(value, extensions=[
         'markdown.extensions.fenced_code',  # Kod bloklari uchun
         'markdown.extensions.tables',  # Jadvallar uchun
-        'markdown.extensions.nl2br',  # Enter bosganda <br> qo'yish uchun
+        #'markdown.extensions.nl2br',  # Enter bosganda <br> qo'yish uchun
     ])
