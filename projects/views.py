@@ -13,7 +13,7 @@ from django.db.models import Q, F
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 from notifications.signals import notify
-
+from .utils import send_telegram_message
 # --- XAVFSIZLIK TIZIMI IMPORTLARI ---
 from .security import scan_with_gemini, scan_with_virustotal
 
@@ -418,8 +418,21 @@ def buy_project(request, pk):
         author_profile = project.author.profile
         author_profile.balance += project.price
         author_profile.save()
-
+        author_telegram_id = project.author.profile.telegram_id
         project.buyers.add(request.user)
+        if author_telegram_id:
+            msg = (
+                f"🎉 <b>Tabriklaymiz!</b>\n\n"
+                f"Sizning <b>{project.title}</b> loyihangiz sotildi!\n"
+                f"💰 Summa: <b>${project.price}</b>\n"
+                f"👤 Xaridor: {request.user.username}\n\n"
+                f"<i>Balansingizni tekshirib ko'ring!</i>"
+            )
+            # Orqa fonda (thread) yuborish shart emas, chunki requests tez ishlaydi,
+            # lekin xohlasangiz thread orqali ham qilsa bo'ladi. Hozircha oddiy chaqiramiz:
+            send_telegram_message(author_telegram_id, msg)
+
+        messages.success(request, f"'{project.title}' sotib olindi!")
         Transaction.objects.create(
             user=request.user,
             project=project,
