@@ -31,7 +31,6 @@ urlpatterns = [
 
     # --- JONLI NATIJA ---
     path('live-view/<slug:slug>/', views.live_project_view, name='live_project_view'),
-
     # --- ASOSIY SAHIFALAR ---
     path('', views.home_page, name='home'),
     path('trending/', views.trending, name='trending'),
