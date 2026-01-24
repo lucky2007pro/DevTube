@@ -149,7 +149,7 @@
         {% for project in projects %}
             <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
                 <div class="project-card">
-                    <a href="{% url 'project_detail' project.pk %}" class="text-decoration-none">
+                    <a href="{% url 'project_detail' project.slug %}" class="text-decoration-none">
                         <div class="thumbnail-container">
                             {% if project.image %}
                                  <img src="{{ project.image.url }}" alt="{{ project.title }}" class="thumbnail-img">
@@ -172,7 +172,7 @@
 
                         <div class="flex-grow-1 overflow-hidden">
                             <div class="d-flex justify-content-between align-items-start">
-                                <a href="{% url 'project_detail' project.pk %}" class="text-decoration-none overflow-hidden">
+                                <a href="{% url 'project_detail' project.slug %}" class="text-decoration-none overflow-hidden">
                                     <h3 class="text-white fs-6 fw-bold mb-1 text-truncate" title="{{ project.title }}">{{ project.title }}</h3>
                                 </a>
 

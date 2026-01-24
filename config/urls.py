@@ -42,8 +42,7 @@ urlpatterns = [
 
     # --- LOYIHA AMALLARI ---
     path('create/', views.create_project, name='create_project'),
-    path('watch/<int:pk>/', views.project_detail, name='project_detail'),
-    path('update/<int:pk>/', views.update_project, name='update_project'),
+    path('watch/<slug:slug>/', views.project_detail, name='project_detail'),    path('update/<int:pk>/', views.update_project, name='update_project'),
     path('delete/<int:pk>/', views.delete_project, name='delete_project'),
 
     # --- INTERAKTIV ---
