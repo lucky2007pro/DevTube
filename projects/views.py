@@ -1,8 +1,9 @@
 import os
 import requests
+import threading  # <--- MUHIM: Orqa fon jarayonlari uchun
 from decimal import Decimal
 from django.conf import settings
-from django.db import transaction  # <--- MUHIM: Tranzaksiyalar uchun
+from django.db import transaction
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -13,12 +14,15 @@ from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 from notifications.signals import notify
 
+# --- XAVFSIZLIK TIZIMI IMPORTLARI ---
+from .security import scan_with_gemini, scan_with_virustotal
+
 # --- FLUTTER API IMPORTLARI ---
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from rest_framework.parsers import MultiPartParser, FormParser  # Rasmlar uchun
+from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import ProjectSerializer, RegisterSerializer, ProfileSerializer
 
 # MODELLAR
@@ -38,15 +42,68 @@ def get_code_snippet(project):
     if not project.source_code:
         return "// Kod yuklanmagan."
     try:
+        # Cloudinary yoki S3 dan o'qish uchun url dan foydalanamiz
+        # Agar fayl juda katta bo'lsa, hammasini o'qimaymiz (server qotmasligi uchun)
+        if hasattr(project.source_code, 'url'):
+            # Faqat sarlavha qismini qaytaramiz (Prevyu)
+            return "// Kodni yuklab olish yoki to'liq ko'rish uchun loyihani oching."
+
         project.source_code.open('r')
         content = project.source_code.read(1000)
-        # Fayl yopishni avtomatik qilish uchun open ishlatildi, lekin storage da context manager har doim ham ishlamasligi mumkin
-        # Shuning uchun oddiy read qilamiz.
         text = content.decode('utf-8', errors='ignore') if isinstance(content, bytes) else content
-        project.source_code.close()  # Faylni yopish esdan chiqmasin
+        project.source_code.close()
         return "\n".join(text.splitlines()[:15]) + "\n..."
     except Exception:
         return "// Kodni o'qib bo'lmadi."
+
+
+# --- XAVFSIZLIK TEKSHIRUVI (ORQA FONDA) ---
+def run_security_scan(project_id):
+    """
+    Bu funksiya alohida oqimda (Thread) ishlaydi.
+    Sayt qotib qolmasligi uchun faylni Cloudinarydan olib tekshiradi.
+    """
+    try:
+        project = Project.objects.get(id=project_id)
+        if not project.source_code:
+            return
+
+        # Cloudinary URL
+        file_url = project.source_code.url
+        file_name = project.source_code.name
+
+        # 1. Kodni o'qib olish (Gemini uchun)
+        ai_result = "Tahlil qilinmadi"
+        try:
+            # Faylni internetdan o'qib olamiz
+            response = requests.get(file_url, timeout=10)
+            if response.status_code == 200:
+                code_content = response.content.decode('utf-8', errors='ignore')
+                ai_result = scan_with_gemini(code_content)
+        except Exception as e:
+            ai_result = f"O'qish xatosi: {e}"
+
+        # 2. VirusTotal Tekshiruvi
+        vt_link, vt_status = scan_with_virustotal(file_url, file_name)
+
+        # 3. Natijani Saqlash
+        project.ai_analysis = ai_result
+        project.virustotal_link = vt_link
+        project.is_scanned = True
+
+        # Statusni aniqlash
+        if "DANGER" in str(ai_result):
+            project.security_status = 'danger'
+        elif "SAFE" in str(ai_result):
+            project.security_status = 'safe'
+        else:
+            project.security_status = 'warning'
+
+        project.save()
+        print(f"Project {project_id} scanned successfully!")
+
+    except Exception as e:
+        print(f"Scan Error: {e}")
 
 
 # ==========================================
@@ -86,10 +143,20 @@ def create_project(request):
             p = form.save(commit=False)
             p.author = request.user
             p.save()
+
             # Qo'shimcha rasmlarni saqlash
             for img in request.FILES.getlist('more_images'):
                 ProjectImage.objects.create(project=p, image=img)
-            messages.success(request, f"'{p.title}' muvaffaqiyatli yuklandi!")
+
+            # --- XAVFSIZLIK: SCANNI FONDA ISHGA TUSHIRISH ---
+            # Sayt qotib qolmasligi uchun Thread ishlatamiz
+            if p.source_code:
+                thread = threading.Thread(target=run_security_scan, args=(p.id,))
+                thread.start()
+                messages.success(request, f"'{p.title}' yuklandi! Xavfsizlik tekshiruvi boshlandi... 🛡️")
+            else:
+                messages.success(request, f"'{p.title}' muvaffaqiyatli yuklandi!")
+
             return redirect('home')
     else:
         form = ProjectForm()
@@ -106,7 +173,16 @@ def update_project(request, pk):
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES, instance=p)
         if form.is_valid():
-            form.save()
+            p = form.save()
+            # Agar yangi kod yuklansa, qayta tekshirish kerak
+            if 'source_code' in request.FILES:
+                p.is_scanned = False
+                p.security_status = 'pending'
+                p.save()
+                thread = threading.Thread(target=run_security_scan, args=(p.id,))
+                thread.start()
+                messages.info(request, "Yangi kod tekshirilmoqda...")
+
             messages.success(request, "Loyiha yangilandi!")
             return redirect('project_detail', pk=p.pk)
     else:
@@ -136,7 +212,7 @@ def project_detail(request, pk):
         messages.error(request, "Ushbu loyiha muzlatilgan.")
         return redirect('home')
 
-    # Ko'rishlar sonini oshirish (F() obyekti poygasi holatini oldini oladi)
+    # Ko'rishlar sonini oshirish
     Project.objects.filter(pk=pk).update(views=F('views') + 1)
     project.refresh_from_db()
 
@@ -161,7 +237,10 @@ def project_detail(request, pk):
             return redirect('project_detail', pk=pk)
 
     code_preview = get_code_snippet(project)
-    is_html_file = project.source_code and project.source_code.name.lower().endswith('.html')
+    # URL borligini tekshirish (Cloudinary uchun)
+    is_html_file = False
+    if project.source_code and hasattr(project.source_code, 'name'):
+        is_html_file = project.source_code.name.lower().endswith('.html')
 
     # Xarid qilinganligini tekshirish
     has_access = False
@@ -187,16 +266,19 @@ def project_detail(request, pk):
 
 @xframe_options_exempt
 def live_project_view(request, pk):
+    """
+    Faylni Cloudinarydan o'qib, brauzerga HTML sifatida qaytarish
+    """
     project = get_object_or_404(Project, pk=pk)
     if not project.source_code:
         return HttpResponse("Kod yo'q", content_type="text/plain")
     try:
-        project.source_code.open('r')
-        content = project.source_code.read()
-        if isinstance(content, bytes):
-            content = content.decode('utf-8', errors='ignore')
-        project.source_code.close()
-        return HttpResponse(content, content_type="text/html")
+        # Cloudinary URL orqali o'qish
+        response = requests.get(project.source_code.url)
+        if response.status_code == 200:
+            content = response.content.decode('utf-8', errors='ignore')
+            return HttpResponse(content, content_type="text/html")
+        return HttpResponse("Faylni yuklab bo'lmadi", content_type="text/plain")
     except Exception as e:
         return HttpResponse(f"Xatolik: {e}", content_type="text/plain")
 
@@ -261,7 +343,7 @@ def toggle_sync(request, username):
 
 
 @login_required
-@transaction.atomic  # <--- MUHIM: Tranzaksiya xavfsizligi
+@transaction.atomic
 def buy_project(request, pk):
     project = get_object_or_404(Project, pk=pk)
     buyer_profile = request.user.profile
@@ -329,7 +411,6 @@ def online_compiler(request):
         source_code = request.POST.get('code', '')
         language = request.POST.get('language', 'python')
 
-        # Piston API (EMKC)
         try:
             payload = {
                 "language": language,
@@ -350,7 +431,6 @@ def online_compiler(request):
 
 
 def cpp_test(request):
-    # Bu shunchaki compilerga yo'naltiradi, lekin alohida view sifatida so'ralgan
     return online_compiler(request)
 
 
@@ -438,7 +518,6 @@ def profile(request, username=None):
 
 @login_required
 def community_chat(request):
-    # Oxirgi 50 ta xabarni olish
     msgs = CommunityMessage.objects.all().order_by('-created_at')[:50]
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'POST':
@@ -446,7 +525,6 @@ def community_chat(request):
         if txt:
             CommunityMessage.objects.create(user=request.user, body=txt)
 
-        # Yangi xabarlar ro'yxatini qaytarish
         return JsonResponse({
             'html': render_to_string('chat_messages_partial.html',
                                      {'chat_messages': reversed(msgs), 'request': request})
@@ -463,7 +541,6 @@ def my_notifications(request):
 
 @login_required
 def syncing_projects(request):
-    # Obuna bo'lgan odamlarning ID lari
     following_profiles = request.user.profile.following.all()
     author_ids = [sync.following.user.id for sync in following_profiles]
 
@@ -495,7 +572,6 @@ def help_page(request):
 
 
 def announcements(request):
-    # Oldingi suhbatda news.html yaratgan edik
     return render(request, 'news.html')
 
 
@@ -527,7 +603,7 @@ def contact_page(request):
 
 
 # ==========================================
-# 6. FLUTTER API (DRF) VIEWS - TO'G'IRLANGAN
+# 6. FLUTTER API (DRF) VIEWS
 # ==========================================
 
 # 1. REGISTRATSIYA
@@ -540,7 +616,6 @@ class RegisterAPI(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        # Token yaratish yoki borini olish
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             "user": RegisterSerializer(user, context=self.get_serializer_context()).data,
@@ -564,19 +639,19 @@ class ProfileAPI(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# 3. LOYIHALAR RO'YXATI (List)
+# 3. LOYIHALAR RO'YXATI
 class ProjectListAPI(generics.ListAPIView):
     queryset = Project.objects.filter(is_frozen=False).order_by('-created_at')
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.AllowAny]  # Hamma ko'ra olsin
+    permission_classes = [permissions.AllowAny]
 
 
-# 4. LOYIHA YARATISH (Create)
+# 4. LOYIHA YARATISH
 class ProjectCreateAPI(generics.CreateAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = (MultiPartParser, FormParser)  # Rasmlarni qabul qilish uchun
+    parser_classes = (MultiPartParser, FormParser)
 
     def perform_create(self, serializer):
         project = serializer.save(author=self.request.user)
@@ -586,20 +661,24 @@ class ProjectCreateAPI(generics.CreateAPIView):
         for img in images:
             ProjectImage.objects.create(project=project, image=img)
 
+        # API orqali ham scan qilish
+        if project.source_code:
+            thread = threading.Thread(target=run_security_scan, args=(project.id,))
+            thread.start()
 
-# 5. BITTA LOYIHA (Detail)
+
+# 5. BITTA LOYIHA
 class ProjectDetailAPI(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-# 6. LOYIHANI O'ZGARTIRISH/O'CHIRISH (Update/Delete)
+# 6. LOYIHANI O'ZGARTIRISH/O'CHIRISH
 class ProjectUpdateDeleteAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Foydalanuvchi faqat o'z loyihasini o'chira oladi
         return Project.objects.filter(author=self.request.user)

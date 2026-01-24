@@ -7,36 +7,25 @@ from django.dispatch import receiver
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
 
 
-# --- 1. PROFILE (Foydalanuvchi ma'lumotlari + HAMYON) ---
+# ==========================================
+# 1. PROFILE (Foydalanuvchi ma'lumotlari + HAMYON)
+# ==========================================
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     avatar = models.ImageField(upload_to='avatars/', default='default.jpg')
     bio = models.TextField(blank=True)
 
-    # Real tizimda boshlang'ich balans 0 bo'lishi kerak
+    # Hamyon balansi (Default 0$)
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
         return f"{self.user.username} profili"
 
 
-# --- 2. LOYIHA MODELI ---
+# ==========================================
+# 2. LOYIHA MODELI (ASOSIY)
+# ==========================================
 class Project(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    image = models.ImageField(upload_to='project_thumbnails/')
-    youtube_link = models.URLField(max_length=200, help_text="YouTube video ssilkasini qo'ying (Majburiy)")
-    # models.py ichida Project modeliga qo'shing:
-    reports_count = models.PositiveIntegerField(default=0)
-    is_frozen = models.BooleanField(default=False)
-    source_code = models.FileField(
-        upload_to='project_code/',
-        blank=True,
-        null=True,
-        storage=RawMediaCloudinaryStorage()
-    )
-
     CATEGORY_CHOICES = [
         ('web', 'Web Dasturlash'),
         ('mobile', 'Mobil Ilovalar'),
@@ -44,14 +33,51 @@ class Project(models.Model):
         ('game', 'O\'yinlar'),
         ('desktop', 'Kompyuter Dasturlari'),
     ]
+
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    image = models.ImageField(upload_to='project_thumbnails/')
+    youtube_link = models.URLField(max_length=200, help_text="YouTube video ssilkasini qo'ying (Majburiy)")
+
+    # Fayl va Statistika
+    source_code = models.FileField(
+        upload_to='project_code/',
+        blank=True,
+        null=True,
+        storage=RawMediaCloudinaryStorage()
+    )
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='web')
     price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
     views = models.IntegerField(default=0)
 
+    # Ijtimoiy aloqalar
     likes = models.ManyToManyField(User, related_name='project_likes', blank=True)
     saved_by = models.ManyToManyField(User, related_name='saved_projects', blank=True)
     buyers = models.ManyToManyField(User, related_name='bought_projects', blank=True)
+
+    # --- XAVFSIZLIK TIZIMI (YANGI QO'SHILDI) ---
+    is_scanned = models.BooleanField(default=False)  # Tekshirildimi?
+    security_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('safe', 'Xavfsiz'),
+            ('warning', 'Shubhali'),
+            ('danger', 'Xavfli'),
+            ('pending', 'Tekshirilmoqda')
+        ],
+        default='pending'
+    )
+    ai_analysis = models.TextField(blank=True, null=True)  # Gemini xulosasi
+    virustotal_link = models.URLField(blank=True, null=True)  # VirusTotal hisoboti
+
+    # Bloklash tizimi
+    reports_count = models.PositiveIntegerField(default=0)
+    is_frozen = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
 
     @property
     def get_youtube_id(self):
@@ -67,7 +93,9 @@ class Project(models.Model):
         return self.title
 
 
-# --- 3. QO'SHIMCHA RASMLAR ---
+# ==========================================
+# 3. QO'SHIMCHA RASMLAR
+# ==========================================
 class ProjectImage(models.Model):
     project = models.ForeignKey(Project, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='project_screenshots/')
@@ -76,18 +104,25 @@ class ProjectImage(models.Model):
         return f"{self.project.title} uchun rasm"
 
 
-# --- 4. IZOHLAR ---
+# ==========================================
+# 4. IZOHLAR
+# ==========================================
 class Comment(models.Model):
     project = models.ForeignKey(Project, related_name='comments', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
         return f"{self.user.username} - {self.project.title}"
 
 
-# --- 5. OBUNALAR (FOLLOWING) ---
+# ==========================================
+# 5. OBUNALAR (FOLLOWING)
+# ==========================================
 class Sync(models.Model):
     follower = models.ForeignKey(Profile, related_name='following', on_delete=models.CASCADE)
     following = models.ForeignKey(Profile, related_name='followers', on_delete=models.CASCADE)
@@ -101,7 +136,9 @@ class Sync(models.Model):
         return f"{self.follower.user.username} -> {self.following.user.username}"
 
 
-# --- 6. CHAT ---
+# ==========================================
+# 6. CHAT
+# ==========================================
 class CommunityMessage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.TextField()
@@ -114,7 +151,9 @@ class CommunityMessage(models.Model):
         return f"{self.user.username}: {self.body[:20]}"
 
 
-# --- 7. ALOQA (CONTACT) ---
+# ==========================================
+# 7. ALOQA (CONTACT)
+# ==========================================
 class Contact(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contacts')
     subject = models.CharField(max_length=200)
@@ -126,10 +165,10 @@ class Contact(models.Model):
 
 
 # ==========================================
-# YANGI MOLIYAVIY MODELLAR (PUL TIZIMI)
+# MOLIYAVIY MODELLAR (PUL TIZIMI)
 # ==========================================
 
-# --- 8. TRANZAKSIYALAR (CLICK/PAYME UCHUN) ---
+# --- 8. TRANZAKSIYALAR ---
 class Transaction(models.Model):
     PROCESSING = 'processing'
     COMPLETED = 'completed'
@@ -142,7 +181,7 @@ class Transaction(models.Model):
     ]
 
     click_trans_id = models.CharField(max_length=255, blank=True, null=True)
-    merchant_trans_id = models.CharField(max_length=255)  # Order ID
+    merchant_trans_id = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
@@ -175,9 +214,7 @@ class Withdrawal(models.Model):
         return f"{self.user.username} - {self.amount} ({self.status})"
 
 
-# --- 10. DEPOZIT (PUL KIRITISH - Manual) ---
-# projects/models.py ichidagi Deposit modelini topib, shunday o'zgartiring:
-
+# --- 10. DEPOZIT (PUL KIRITISH) ---
 class Deposit(models.Model):
     PENDING = 'pending'
     APPROVED = 'approved'
@@ -192,9 +229,9 @@ class Deposit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
 
-    # YANGI QO'SHILGAN QATORLAR:
+    # Chek rasmi va izoh
     receipt = models.ImageField(upload_to='deposit_receipts/', blank=True, null=True)
-    message = models.CharField(max_length=255, blank=True, null=True)  # Izoh uchun
+    message = models.CharField(max_length=255, blank=True, null=True)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -203,7 +240,9 @@ class Deposit(models.Model):
         return f"{self.user.username} - {self.amount}"
 
 
-# --- SIGNALS (PROFIL YARATISH) ---
+# ==========================================
+# SIGNALS (AVTOMATIK PROFIL YARATISH)
+# ==========================================
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
