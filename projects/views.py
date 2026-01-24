@@ -61,7 +61,9 @@ def get_code_snippet(project):
 def run_security_scan(project_id):
     """
     Bu funksiya orqa fonda ishlaydi.
-    Agar xavf aniqlansa, loyihani AVTOMATIK MUZLATADI (yashiradi).
+    1. Faylni Cloudinarydan o'qiydi.
+    2. Gemini va VirusTotaldan o'tkazadi.
+    3. Agar xavf aniqlansa, loyihani AVTOMATIK MUZLATADI.
     """
     try:
         project = Project.objects.get(id=project_id)
@@ -72,35 +74,48 @@ def run_security_scan(project_id):
         file_url = project.source_code.url
         file_name = project.source_code.name
 
-        # 1. Gemini Tekshiruvi
+        # --- 1. GEMINI TEKSHIRUVI ---
         ai_result = "Tahlil qilinmadi"
         try:
-            # Faylni internetdan o'qib olamiz (timeout 10 soniya)
-            response = requests.get(file_url, timeout=10)
+            # Faylni internetdan o'qib olamiz (timeout 20 soniya - katta fayllar uchun)
+            response = requests.get(file_url, timeout=20)
             if response.status_code == 200:
-                code_content = response.content.decode('utf-8', errors='ignore')
-                ai_result = scan_with_gemini(code_content)
+                # Kodni o'qish (faqat matnli fayllar uchun)
+                try:
+                    code_content = response.content.decode('utf-8', errors='ignore')
+                    # Geminiga yuborish
+                    ai_result = scan_with_gemini(code_content)
+                except:
+                    ai_result = "Fayl matn formatida emas (Binary), faqat VirusTotal tekshiradi."
+            else:
+                ai_result = "Faylni yuklab bo'lmadi."
         except Exception as e:
-            ai_result = f"O'qish xatosi: {e}"
+            ai_result = f"AI Xatosi: {e}"
 
-        # 2. VirusTotal Tekshiruvi
+        # --- 2. VIRUSTOTAL TEKSHIRUVI ---
+        # Fayl URLini VirusTotalga yuboramiz
         vt_link, vt_status = scan_with_virustotal(file_url, file_name)
 
-        # 3. Natijani Saqlash
+        # --- 3. NATIJALARNI SAQLASH ---
         project.ai_analysis = ai_result
         project.virustotal_link = vt_link
         project.is_scanned = True
 
-        # --- MUHIM O'ZGARISH: AVTO-BLOKLASH ---
-        # Agar Gemini "DANGER" desa YOKI VirusTotaldan yomon xabar kelsa
-        if "DANGER" in str(ai_result) or (vt_status and "malicious" in str(vt_status)):
+        # --- 4. HUKM CHIQARISH (AVTO-BLOKLASH) ---
+
+        # Qoida: Agar Gemini "DANGER" desa YOKI VirusTotal "malicious" (zararli) desa
+        is_dangerous_ai = "DANGER" in str(ai_result)
+        is_dangerous_vt = vt_status and "malicious" in str(vt_status).lower()
+
+        if is_dangerous_ai or is_dangerous_vt:
             project.security_status = 'danger'
-            project.is_frozen = True  # <--- ZARARLI FAYLNI YASHIRAMIZ!
-            print(f"DIQQAT! Loyiha {project_id} virus sababli bloklandi!")
+            project.is_frozen = True  # <--- FAYL SAYTDAN YASHIRILADI
+            print(f"DIQQAT! Loyiha {project_id} xavfli deb topildi va bloklandi!")
 
         elif "SAFE" in str(ai_result):
             project.security_status = 'safe'
-            # Agar oldin bloklangan bo'lsa va qayta tekshiruvda toza chiqsa, ochamiz
+            # Agar oldin avtomatik bloklangan bo'lsa va endi toza chiqsa, ochamiz
+            # (Lekin admin qo'lda bloklagan bo'lsa (reports_count > 10), tegmaymiz)
             if project.is_frozen and project.reports_count < 10:
                 project.is_frozen = False
 
@@ -108,7 +123,7 @@ def run_security_scan(project_id):
             project.security_status = 'warning'
 
         project.save()
-        print(f"Project {project_id} scanned successfully!")
+        print(f"Loyiha {project_id} tekshiruvi yakunlandi: {project.security_status}")
 
     except Exception as e:
         print(f"Scan Error: {e}")
