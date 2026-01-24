@@ -1,6 +1,6 @@
 import os
 import requests
-import threading  # <--- MUHIM: Orqa fon jarayonlari uchun
+import threading
 from decimal import Decimal
 from django.conf import settings
 from django.db import transaction
@@ -35,17 +35,15 @@ from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, P
 
 
 # ==========================================
-# 1. YORDAMCHI FUNKSIYALAR
+# 1. YORDAMCHI FUNKSIYALAR & ORQA FON (THREAD)
 # ==========================================
+
 def get_code_snippet(project):
     """Manba kodi oynasi uchun qisqa preview"""
     if not project.source_code:
         return "// Kod yuklanmagan."
     try:
-        # Cloudinary yoki S3 dan o'qish uchun url dan foydalanamiz
-        # Agar fayl juda katta bo'lsa, hammasini o'qimaymiz (server qotmasligi uchun)
         if hasattr(project.source_code, 'url'):
-            # Faqat sarlavha qismini qaytaramiz (Prevyu)
             return "// Kodni yuklab olish yoki to'liq ko'rish uchun loyihani oching."
 
         project.source_code.open('r')
@@ -57,13 +55,13 @@ def get_code_snippet(project):
         return "// Kodni o'qib bo'lmadi."
 
 
-# --- XAVFSIZLIK TEKSHIRUVI (ORQA FONDA) ---
 def run_security_scan(project_id):
     """
     Bu funksiya orqa fonda ishlaydi.
     1. Faylni Cloudinarydan o'qiydi.
     2. Gemini va VirusTotaldan o'tkazadi.
     3. Agar xavf aniqlansa, loyihani AVTOMATIK MUZLATADI.
+    4. Agar xato chiqsa, sayt qotib qolmasligi uchun statusni yangilaydi.
     """
     try:
         project = Project.objects.get(id=project_id)
@@ -73,6 +71,7 @@ def run_security_scan(project_id):
         # Cloudinary URL
         file_url = project.source_code.url
         file_name = project.source_code.name
+        print(f"DEBUG: Scan boshlandi ID: {project_id}, URL: {file_url}")
 
         # --- 1. GEMINI TEKSHIRUVI ---
         ai_result = "Tahlil qilinmadi"
@@ -80,42 +79,36 @@ def run_security_scan(project_id):
             # Faylni internetdan o'qib olamiz (timeout 20 soniya - katta fayllar uchun)
             response = requests.get(file_url, timeout=20)
             if response.status_code == 200:
-                # Kodni o'qish (faqat matnli fayllar uchun)
                 try:
                     code_content = response.content.decode('utf-8', errors='ignore')
-                    # Geminiga yuborish
                     ai_result = scan_with_gemini(code_content)
                 except:
                     ai_result = "Fayl matn formatida emas (Binary), faqat VirusTotal tekshiradi."
             else:
-                ai_result = "Faylni yuklab bo'lmadi."
+                ai_result = f"Faylni yuklab bo'lmadi. Status: {response.status_code}"
         except Exception as e:
-            ai_result = f"AI Xatosi: {e}"
+            ai_result = f"AI/Request Xatosi: {e}"
 
         # --- 2. VIRUSTOTAL TEKSHIRUVI ---
-        # Fayl URLini VirusTotalga yuboramiz
         vt_link, vt_status = scan_with_virustotal(file_url, file_name)
 
         # --- 3. NATIJALARNI SAQLASH ---
         project.ai_analysis = ai_result
         project.virustotal_link = vt_link
-        project.is_scanned = True
+        project.is_scanned = True  # Loading to'xtaydi
 
         # --- 4. HUKM CHIQARISH (AVTO-BLOKLASH) ---
-
-        # Qoida: Agar Gemini "DANGER" desa YOKI VirusTotal "malicious" (zararli) desa
         is_dangerous_ai = "DANGER" in str(ai_result)
         is_dangerous_vt = vt_status and "malicious" in str(vt_status).lower()
 
         if is_dangerous_ai or is_dangerous_vt:
             project.security_status = 'danger'
-            project.is_frozen = True  # <--- FAYL SAYTDAN YASHIRILADI
+            project.is_frozen = True  # <--- ZARARLI FAYLNI YASHIRAMIZ!
             print(f"DIQQAT! Loyiha {project_id} xavfli deb topildi va bloklandi!")
 
         elif "SAFE" in str(ai_result):
             project.security_status = 'safe'
             # Agar oldin avtomatik bloklangan bo'lsa va endi toza chiqsa, ochamiz
-            # (Lekin admin qo'lda bloklagan bo'lsa (reports_count > 10), tegmaymiz)
             if project.is_frozen and project.reports_count < 10:
                 project.is_frozen = False
 
@@ -126,11 +119,17 @@ def run_security_scan(project_id):
         print(f"Loyiha {project_id} tekshiruvi yakunlandi: {project.security_status}")
 
     except Exception as e:
-        print(f"Scan Error: {e}")
-        project.is_scanned = True  # Loadingni to'xtatamiz
-        project.security_status = 'warning'  # Sariq "Ogohlantirish" beramiz
-        project.ai_analysis = f"Tizim xatoligi: {str(e)}. Keyinroq qayta urinib ko'ring."
-        project.save()
+        # AGAR XATO CHIQSA HAM FOYDALANUVCHINI KUTTIRMASLIK KERAK
+        print(f"CRITICAL SCAN ERROR: {e}")
+        try:
+            p = Project.objects.get(id=project_id)
+            p.is_scanned = True
+            p.security_status = 'warning'
+            p.ai_analysis = f"Tizim xatoligi yuz berdi: {str(e)}. Iltimos, keyinroq qayta urinib ko'ring."
+            p.save()
+        except:
+            pass
+
 
 # ==========================================
 # 2. ASOSIY SAHIFA
@@ -138,6 +137,8 @@ def run_security_scan(project_id):
 def home_page(request):
     search_query = request.GET.get('q', '')
     category_filter = request.GET.get('category', None)
+
+    # Muzlatilgan loyihalar chiqmaydi
     projects = Project.objects.filter(is_frozen=False)
 
     if search_query:
@@ -162,49 +163,39 @@ def home_page(request):
 # 3. LOYIHA AMALLARI (WEB)
 # ==========================================
 @login_required
-@login_required
-@transaction.atomic  # <--- MUHIM: Agar rasm yuklashda xato bo'lsa, loyihani ham saqlamaydi (Baza toza turadi)
+@transaction.atomic
 def create_project(request):
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES)
-
         if form.is_valid():
             try:
                 # 1. Loyihani saqlash
                 p = form.save(commit=False)
                 p.author = request.user
-
-                # Standart qiymatlarni aniqlashtirish
                 p.is_scanned = False
                 p.security_status = 'pending'
                 p.save()
 
-                # 2. Qo'shimcha rasmlarni saqlash
-                more_images = request.FILES.getlist('more_images')
-                for img in more_images:
+                # 2. Rasmlarni saqlash
+                for img in request.FILES.getlist('more_images'):
                     ProjectImage.objects.create(project=p, image=img)
 
                 # 3. XAVFSIZLIK: SCANNI FONDA ISHGA TUSHIRISH
-                # Agar kod fayli yuklangan bo'lsa, Thread ishga tushadi
                 if p.source_code:
-                    # Daemon=True qilib qo'yamiz (xavfsizroq)
                     thread = threading.Thread(target=run_security_scan, args=(p.id,))
-                    thread.daemon = True
+                    thread.daemon = True  # Server o'chsa thread ham o'chadi
                     thread.start()
-
                     messages.success(request, f"'{p.title}' yuklandi! Xavfsizlik tekshiruvi orqa fonda boshlandi... 🛡️")
                 else:
-                    messages.success(request, f"'{p.title}' muvaffaqiyatli yuklandi (Kod fayli yo'q).")
+                    messages.success(request, f"'{p.title}' muvaffaqiyatli yuklandi!")
 
                 return redirect('home')
-
             except Exception as e:
-                messages.error(request, f"Yuklashda xatolik yuz berdi: {e}")
+                messages.error(request, f"Xatolik yuz berdi: {e}")
         else:
-            messages.error(request, "Formada xatolik bor. Iltimos, tekshirib qaytadan urinib ko'ring.")
+            messages.error(request, "Formada xatolik bor.")
     else:
         form = ProjectForm()
-
     return render(request, 'create_project.html', {'form': form})
 
 
@@ -218,17 +209,22 @@ def update_project(request, pk):
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES, instance=p)
         if form.is_valid():
-            p = form.save()
+            p = form.save(commit=False)
+
             # Agar yangi kod yuklansa, qayta tekshirish kerak
             if 'source_code' in request.FILES:
                 p.is_scanned = False
                 p.security_status = 'pending'
-                p.save()
-                thread = threading.Thread(target=run_security_scan, args=(p.id,))
-                thread.start()
-                messages.info(request, "Yangi kod tekshirilmoqda...")
+                p.save()  # Avval saqlab olamiz
 
-            messages.success(request, "Loyiha yangilandi!")
+                thread = threading.Thread(target=run_security_scan, args=(p.id,))
+                thread.daemon = True
+                thread.start()
+                messages.info(request, "Yangi kod qayta tekshirilmoqda...")
+            else:
+                p.save()
+                messages.success(request, "Loyiha yangilandi!")
+
             return redirect('project_detail', pk=p.pk)
     else:
         form = ProjectForm(instance=p)
@@ -252,9 +248,9 @@ def delete_project(request, pk):
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
 
-    # Muzlatilgan loyihani tekshirish
+    # Muzlatilgan loyihani tekshirish (faqat admin va muallif ko'ra oladi)
     if project.is_frozen and request.user != project.author and not request.user.is_superuser:
-        messages.error(request, "Ushbu loyiha muzlatilgan.")
+        messages.error(request, "Ushbu loyiha xavfsizlik qoidalarini buzgani uchun bloklangan.")
         return redirect('home')
 
     # Ko'rishlar sonini oshirish
@@ -282,12 +278,10 @@ def project_detail(request, pk):
             return redirect('project_detail', pk=pk)
 
     code_preview = get_code_snippet(project)
-    # URL borligini tekshirish (Cloudinary uchun)
     is_html_file = False
     if project.source_code and hasattr(project.source_code, 'name'):
         is_html_file = project.source_code.name.lower().endswith('.html')
 
-    # Xarid qilinganligini tekshirish
     has_access = False
     if project.price == 0:
         has_access = True
@@ -311,14 +305,10 @@ def project_detail(request, pk):
 
 @xframe_options_exempt
 def live_project_view(request, pk):
-    """
-    Faylni Cloudinarydan o'qib, brauzerga HTML sifatida qaytarish
-    """
     project = get_object_or_404(Project, pk=pk)
     if not project.source_code:
         return HttpResponse("Kod yo'q", content_type="text/plain")
     try:
-        # Cloudinary URL orqali o'qish
         response = requests.get(project.source_code.url)
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
@@ -401,16 +391,13 @@ def buy_project(request, pk):
         return redirect('project_detail', pk=pk)
 
     if buyer_profile.balance >= project.price:
-        # Pulni yechish
         buyer_profile.balance -= project.price
         buyer_profile.save()
 
-        # Muallifga pul o'tkazish
         author_profile = project.author.profile
         author_profile.balance += project.price
         author_profile.save()
 
-        # Xaridni rasmiylashtirish
         project.buyers.add(request.user)
         Transaction.objects.create(
             user=request.user,
@@ -651,7 +638,6 @@ def contact_page(request):
 # 6. FLUTTER API (DRF) VIEWS
 # ==========================================
 
-# 1. REGISTRATSIYA
 class RegisterAPI(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
@@ -668,7 +654,6 @@ class RegisterAPI(generics.CreateAPIView):
         })
 
 
-# 2. PROFILNI KO'RISH VA TAHRIRLASH
 class ProfileAPI(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -684,14 +669,12 @@ class ProfileAPI(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# 3. LOYIHALAR RO'YXATI
 class ProjectListAPI(generics.ListAPIView):
     queryset = Project.objects.filter(is_frozen=False).order_by('-created_at')
     serializer_class = ProjectSerializer
     permission_classes = [permissions.AllowAny]
 
 
-# 4. LOYIHA YARATISH
 class ProjectCreateAPI(generics.CreateAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
@@ -700,26 +683,22 @@ class ProjectCreateAPI(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         project = serializer.save(author=self.request.user)
-
-        # Mobil ilovadan kelgan qo'shimcha rasmlarni saqlash
         images = self.request.FILES.getlist('more_images')
         for img in images:
             ProjectImage.objects.create(project=project, image=img)
 
-        # API orqali ham scan qilish
         if project.source_code:
             thread = threading.Thread(target=run_security_scan, args=(project.id,))
+            thread.daemon = True
             thread.start()
 
 
-# 5. BITTA LOYIHA
 class ProjectDetailAPI(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-# 6. LOYIHANI O'ZGARTIRISH/O'CHIRISH
 class ProjectUpdateDeleteAPI(generics.RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
