@@ -30,7 +30,7 @@ urlpatterns = [
     path('api/projects/<int:pk>/manage/', ProjectUpdateDeleteAPI.as_view(), name='api_project_manage'),
 
     # --- JONLI NATIJA ---
-    path('live-view/<int:pk>/', views.live_project_view, name='live_project_view'),
+    path('live-view/<slug:slug>/', views.live_project_view, name='live_project_view'),
 
     # --- ASOSIY SAHIFALAR ---
     path('', views.home_page, name='home'),
@@ -42,7 +42,8 @@ urlpatterns = [
 
     # --- LOYIHA AMALLARI ---
     path('create/', views.create_project, name='create_project'),
-    path('watch/<slug:slug>/', views.project_detail, name='project_detail'),    path('update/<int:pk>/', views.update_project, name='update_project'),
+    path('watch/<slug:slug>/', views.project_detail, name='project_detail'),
+    path('update/<int:pk>/', views.update_project, name='update_project'),
     path('delete/<int:pk>/', views.delete_project, name='delete_project'),
 
     # --- INTERAKTIV ---

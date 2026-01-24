@@ -797,12 +797,6 @@ class ProjectUpdateDeleteAPI(generics.RetrieveUpdateDestroyAPIView):
         return Project.objects.filter(author=self.request.user)
 
 
-import json
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.models import User
-from .utils import verify_telegram_token, send_telegram_message
-
 
 @csrf_exempt  # Telegram CSRF token yubormaydi, shuning uchun o'chiramiz
 def telegram_webhook(request):

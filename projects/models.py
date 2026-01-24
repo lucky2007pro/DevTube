@@ -146,13 +146,30 @@ class Contact(models.Model):
 # ==========================================
 
 class Transaction(models.Model):
-    STATUS_CHOICES = [('processing', 'Jarayonda'), ('completed', 'Muvaffaqiyatli'), ('canceled', 'Bekor qilingan')]
+    # Statuslar uchun konstantalar (Views da ishlatish uchun qulay)
+    PROCESSING = 'processing'
+    COMPLETED = 'completed'
+    CANCELED = 'canceled'
+
+    STATUS_CHOICES = [
+        (PROCESSING, 'Jarayonda'),
+        (COMPLETED, 'Muvaffaqiyatli'),
+        (CANCELED, 'Bekor qilingan')
+    ]
+
     merchant_trans_id = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='processing')
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=PROCESSING
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Tranzaksiya {self.id}: {self.amount} - {self.status}"
 
 class Withdrawal(models.Model):
     STATUS_CHOICES = [('pending', 'Kutilmoqda'), ('approved', 'To\'lab berildi'), ('rejected', 'Rad etildi')]
