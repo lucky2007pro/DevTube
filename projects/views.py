@@ -1,4 +1,10 @@
+import json
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
+from .utils import verify_telegram_token, send_telegram_message
 import os
+from .utils import generate_telegram_link # Import qilishni unutmang
 import requests
 import threading
 from decimal import Decimal
@@ -24,13 +30,10 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import ProjectSerializer, RegisterSerializer, ProfileSerializer
-
-# MODELLAR
 from .models import (
     Project, ProjectImage, Sync, Profile, CommunityMessage,
     Contact, Transaction, Deposit, Withdrawal
 )
-# FORMALAR
 from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 
 
@@ -571,14 +574,17 @@ def profile(request, username=None):
     is_synced = False
     if request.user.is_authenticated and not is_owner:
         is_synced = Sync.objects.filter(follower=request.user.profile, following=target_user.profile).exists()
-
+    telegram_link = None
+    if is_owner:  # Faqat o'z egasiga ko'rinadi
+        telegram_link = generate_telegram_link(request.user)
     return render(request, 'profile.html', {
         'target_user': target_user,
         'u_form': u_form,
         'p_form': p_form,
         'projects': user_projects,
         'is_owner': is_owner,
-        'is_synced': is_synced
+        'is_synced': is_synced,
+        'telegram_link': telegram_link,
     })
 
 
@@ -742,3 +748,54 @@ class ProjectUpdateDeleteAPI(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Project.objects.filter(author=self.request.user)
+
+
+import json
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
+from .utils import verify_telegram_token, send_telegram_message
+
+
+@csrf_exempt  # Telegram CSRF token yubormaydi, shuning uchun o'chiramiz
+def telegram_webhook(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+
+            # Agar xabar bo'lsa
+            if 'message' in data:
+                chat_id = data['message']['chat']['id']
+                text = data['message'].get('text', '')
+
+                # Agar /start buyrug'i bo'lsa
+                if text.startswith('/start'):
+                    parts = text.split()
+
+                    # Agar token ham bo'lsa (/start TOKEN)
+                    if len(parts) > 1:
+                        token = parts[1]
+                        user_id = verify_telegram_token(token)
+
+                        if user_id:
+                            try:
+                                user = User.objects.get(id=user_id)
+                                # Telegram ID ni profilga saqlaymiz
+                                user.profile.telegram_id = chat_id
+                                user.profile.save()
+
+                                send_telegram_message(chat_id,
+                                                      f"✅ <b>Muvaffaqiyatli ulandi!</b>\nAssalomu alaykum, {user.username}!\nEndi bildirishnomalar shu yerga keladi.")
+                            except User.DoesNotExist:
+                                send_telegram_message(chat_id, "❌ Foydalanuvchi topilmadi.")
+                        else:
+                            send_telegram_message(chat_id,
+                                                  "⚠️ Havola eskirgan yoki noto'g'ri. Saytdan qayta urinib ko'ring.")
+                    else:
+                        send_telegram_message(chat_id, "Bot ishlashi uchun saytdagi havola orqali kiring.")
+
+        except Exception as e:
+            print(f"Webhook xatosi: {e}")
+
+        return HttpResponse('OK')
+    return HttpResponse('Not a POST request')

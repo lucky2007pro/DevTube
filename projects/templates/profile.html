@@ -13,7 +13,7 @@
         padding: 40px;
         margin-bottom: 30px;
         display: flex;
-        align-items: flex-start; /* TEPADAN TEKISLASH */
+        align-items: flex-start;
         gap: 30px;
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     }
@@ -55,10 +55,39 @@
         box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
         display: inline-flex; align-items: center; gap: 8px;
         text-decoration: none;
+        cursor: pointer;
     }
     .btn-neon-action:hover {
         transform: translateY(-2px);
         box-shadow: 0 0 25px rgba(99, 102, 241, 0.7);
+    }
+
+    /* --- TELEGRAM TUGMASI (NEON STYLE) --- */
+    .btn-neon-telegram {
+        background: rgba(0, 136, 204, 0.1);
+        border: 1px solid #0088cc;
+        color: #0088cc !important;
+        padding: 9px 25px;
+        border-radius: 50px;
+        font-weight: 700;
+        transition: 0.3s;
+        text-decoration: none;
+        display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-neon-telegram:hover {
+        background: #0088cc;
+        color: white !important;
+        box-shadow: 0 0 20px rgba(0, 136, 204, 0.6);
+        transform: translateY(-2px);
+    }
+    .btn-neon-telegram.connected {
+        border-color: #10b981;
+        color: #10b981 !important;
+        background: rgba(16, 185, 129, 0.1);
+        cursor: default;
+    }
+    .btn-neon-telegram.connected:hover {
+        transform: none; box-shadow: none;
     }
 
     /* --- SYNC TUGMASI --- */
@@ -172,14 +201,25 @@
                     {{ target_user.profile.bio|default:"Ushbu foydalanuvchi hali o'zi haqida ma'lumot kiritmagan." }}
                 </p>
 
-                <div class="d-flex gap-3 mt-4 profile-actions">
+                <div class="d-flex flex-wrap gap-3 mt-4 profile-actions">
                     {% if request.user == target_user %}
                         <button class="btn-neon-action" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                            <i class="fas fa-user-edit me-2"></i> Profilni tahrirlash
+                            <i class="fas fa-user-edit"></i> Tahrirlash
                         </button>
+
+                        {% if target_user.profile.telegram_id %}
+                            <button class="btn-neon-telegram connected" disabled>
+                                <i class="fas fa-check-circle"></i> Telegram Ulangan
+                            </button>
+                        {% elif telegram_link %}
+                            <a href="{{ telegram_link }}" target="_blank" class="btn-neon-telegram">
+                                <i class="fab fa-telegram-plane"></i> Telegramni Ulash
+                            </a>
+                        {% endif %}
+
                     {% else %}
                         <button class="btn-sync-outline {% if is_synced %}active{% endif %}" id="syncBtn" onclick="handleSync()">
-                            <i class="fas fa-sync-alt me-2"></i> <span id="syncLabel">{% if is_synced %}Synced{% else %}Sync{% endif %}</span>
+                            <i class="fas fa-sync-alt me-2"></i> <span id="syncLabel">{% if is_synced %}Sinxronlashdi{% else %}Sinxronlash{% endif %}</span>
                         </button>
                     {% endif %}
                 </div>
@@ -215,6 +255,10 @@
             <div style="aspect-ratio: 16/9; background: #000; position: relative;">
                 {% if project.image %}
                     <img src="{{ project.image.url }}" style="width:100%; height:100%; object-fit:cover;">
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100 bg-dark text-muted">
+                        <i class="fas fa-image fa-2x"></i>
+                    </div>
                 {% endif %}
                 <div class="position-absolute top-0 end-0 p-2">
                     <span class="badge {% if project.price > 0 %}bg-warning text-dark{% else %}bg-success{% endif %}">
@@ -242,22 +286,23 @@
     {% endfor %}
 </div>
 
-{% if bought_projects and is_owner %}
-    <h4 class="text-white mb-4 ps-2 border-start border-4 border-success mt-5">Sotib Olinganlar</h4>
-    <div class="project-grid">
-        {% for project in bought_projects %}
-            <div class="project-card-neon" style="border-color: rgba(16, 185, 129, 0.3);">
-                <div style="aspect-ratio: 16/9; background: #000;">
-                    {% if project.image %}<img src="{{ project.image.url }}" style="width:100%; height:100%; object-fit:cover;">{% endif %}
+{% if request.user == target_user %} {% if request.user.bought_projects.exists %}
+        <h4 class="text-white mb-4 ps-2 border-start border-4 border-success mt-5">Sotib Olinganlar</h4>
+        <div class="project-grid">
+            {% for project in request.user.bought_projects.all %}
+                <div class="project-card-neon" style="border-color: rgba(16, 185, 129, 0.3);">
+                    <div style="aspect-ratio: 16/9; background: #000;">
+                        {% if project.image %}<img src="{{ project.image.url }}" style="width:100%; height:100%; object-fit:cover;">{% endif %}
+                    </div>
+                    <div class="p-3">
+                        <h5 class="text-white fw-bold mb-1">{{ project.title }}</h5>
+                        <small class="text-success mb-3 d-block"><i class="fas fa-check-circle me-1"></i> Sotib olingan</small>
+                        <a href="{% url 'project_detail' project.pk %}" class="btn btn-sm btn-success w-100 rounded-pill">Darsni ko'rish</a>
+                    </div>
                 </div>
-                <div class="p-3">
-                    <h5 class="text-white fw-bold mb-1">{{ project.title }}</h5>
-                    <small class="text-success mb-3 d-block"><i class="fas fa-check-circle me-1"></i> Sotib olingan</small>
-                    <a href="{% url 'project_detail' project.pk %}" class="btn btn-sm btn-success w-100 rounded-pill">Darsni ko'rish</a>
-                </div>
-            </div>
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endif %}
 
 
@@ -334,12 +379,12 @@
         .then(data => {
             if (data.is_synced) {
                 btn.classList.add('active');
-                label.innerText = 'Synced';
+                label.innerText = 'Sinxronlashdi';
                 icon.classList.add('fa-spin');
                 setTimeout(() => icon.classList.remove('fa-spin'), 800);
             } else {
                 btn.classList.remove('active');
-                label.innerText = 'Sync';
+                label.innerText = 'Sinxronlash';
             }
             document.querySelectorAll('.stat-item b')[1].innerText = data.followers_count;
         });

@@ -3,10 +3,12 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-from projects import views
 from rest_framework.authtoken.views import obtain_auth_token
 
-# API Views Import
+# 1. ASOSIY VIEWS IMPORTI (Shu yetarli)
+from projects import views
+
+# 2. API VIEWS IMPORTI
 from projects.views import (
     ProjectListAPI, ProjectDetailAPI,
     RegisterAPI, ProjectCreateAPI, ProjectUpdateDeleteAPI, ProfileAPI
@@ -17,15 +19,15 @@ import notifications.urls
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # --- FLUTTER API (YANGILANDI) 📱 ---
-    path('api/auth/login/', obtain_auth_token, name='api_token_auth'),  # Login
-    path('api/auth/register/', RegisterAPI.as_view(), name='api_register'),  # Register
-    path('api/profile/', ProfileAPI.as_view(), name='api_profile'),  # Profil
+    # --- FLUTTER API 📱 ---
+    path('api/auth/login/', obtain_auth_token, name='api_token_auth'),
+    path('api/auth/register/', RegisterAPI.as_view(), name='api_register'),
+    path('api/profile/', ProfileAPI.as_view(), name='api_profile'),
 
-    path('api/projects/', ProjectListAPI.as_view(), name='api_project_list'),  # List
-    path('api/projects/create/', ProjectCreateAPI.as_view(), name='api_project_create'),  # Create
-    path('api/projects/<int:pk>/', ProjectDetailAPI.as_view(), name='api_project_detail'),  # Detail
-    path('api/projects/<int:pk>/manage/', ProjectUpdateDeleteAPI.as_view(), name='api_project_manage'),  # Update/Delete
+    path('api/projects/', ProjectListAPI.as_view(), name='api_project_list'),
+    path('api/projects/create/', ProjectCreateAPI.as_view(), name='api_project_create'),
+    path('api/projects/<int:pk>/', ProjectDetailAPI.as_view(), name='api_project_detail'),
+    path('api/projects/<int:pk>/manage/', ProjectUpdateDeleteAPI.as_view(), name='api_project_manage'),
 
     # --- JONLI NATIJA ---
     path('live-view/<int:pk>/', views.live_project_view, name='live_project_view'),
@@ -59,6 +61,10 @@ urlpatterns = [
     path('compiler/', views.online_compiler, name='compiler'),
     path('tools/cpp-test/', views.cpp_test, name='cpp_test'),
     path('chat/', views.community_chat, name='community_chat'),
+
+    # --- TELEGRAM WEBHOOK (TUZATILDI) ---
+    # views.telegram_webhook deb chaqiramiz, chunki tepadagi import shuni bildiradi
+    path('telegram-webhook/', views.telegram_webhook, name='telegram_webhook'),
 
     # --- BOSHQA ---
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
