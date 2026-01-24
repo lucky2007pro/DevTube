@@ -4,31 +4,31 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.core.exceptions import ValidationError  # <--- MUHIM: Xatolik qaytarish uchun
+from django.core.exceptions import ValidationError
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
+from django.utils.text import slugify
 
 
 # ==========================================
-# 0. VALIDATORLAR (SERVER HIMOYA QATLAMI)
+# 0. VALIDATORLAR
 # ==========================================
 
 def validate_file_size(value):
-    """Fayl hajmini cheklash (Max: 50 MB)"""
     filesize = value.size
     limit = 50 * 1024 * 1024  # 50 MB
     if filesize > limit:
         raise ValidationError("Fayl hajmi juda katta! Maksimal hajm: 50 MB")
 
+
 def validate_file_extension(value):
-    """Faqat ruxsat etilgan fayl turlarini tekshirish"""
-    ext = os.path.splitext(value.name)[1]  # Fayl kengaytmasini olamiz
+    ext = os.path.splitext(value.name)[1]
     valid_extensions = [
-        '.zip', '.rar', '.7z', '.tar', '.gz',  # Arxivlar
-        '.py', '.js', '.html', '.css', '.cpp', '.java', '.c', '.cs', '.php', '.sql', '.json', '.xml', '.txt', '.md', # Kodlar
-        '.ipynb', '.dart', '.go', '.rs', '.swift', '.kt' # Qo'shimcha tillar
+        '.zip', '.rar', '.7z', '.tar', '.gz',
+        '.py', '.js', '.html', '.css', '.cpp', '.java', '.c', '.cs', '.php', '.sql', '.json', '.xml', '.txt', '.md',
+        '.ipynb', '.dart', '.go', '.rs', '.swift', '.kt'
     ]
     if not ext.lower() in valid_extensions:
-        raise ValidationError("Ruxsat etilmagan fayl turi! Faqat kod fayllari yoki arxiv (.zip, .rar) yuklash mumkin.")
+        raise ValidationError("Faqat kod fayllari yoki arxiv (.zip, .rar) yuklash mumkin.")
 
 
 # ==========================================
@@ -36,13 +36,19 @@ def validate_file_extension(value):
 # ==========================================
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    is_verified = models.BooleanField(default=False)  # Moviy belgi shaxsga tegishli bo'lishi mantiqiyroq
     avatar = models.ImageField(upload_to='avatars/', default='default.jpg')
     bio = models.TextField(blank=True)
-
-    # Hamyon balansi (Default 0$)
+    slug = models.SlugField(unique=True, blank=True, null=True)
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     telegram_id = models.CharField(max_length=50, blank=True, null=True,
                                    help_text="Bildirishnoma olish uchun Telegram ID")
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.user.username)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.user.username} profili"
 
@@ -61,17 +67,17 @@ class Project(models.Model):
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, blank=True, null=True)  # <--- SIZDA SHU QATOR YO'Q EDI (BUG!)
     description = models.TextField()
     image = models.ImageField(upload_to='project_thumbnails/')
-    youtube_link = models.URLField(max_length=200, help_text="YouTube video ssilkasini qo'ying (Majburiy)")
+    youtube_link = models.URLField(max_length=200, help_text="YouTube video ssilkasini qo'ying")
 
-    # Fayl va Statistika (VALIDATORLAR QO'SHILDI)
     source_code = models.FileField(
         upload_to='project_code/',
         blank=True,
         null=True,
         storage=RawMediaCloudinaryStorage(),
-        validators=[validate_file_size, validate_file_extension]  # <--- HIMOYA YOQILDI
+        validators=[validate_file_size, validate_file_extension]
     )
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='web')
     price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
@@ -84,7 +90,7 @@ class Project(models.Model):
     buyers = models.ManyToManyField(User, related_name='bought_projects', blank=True)
 
     # --- XAVFSIZLIK TIZIMI ---
-    is_scanned = models.BooleanField(default=False)  # Tekshirildimi?
+    is_scanned = models.BooleanField(default=False)
     security_status = models.CharField(
         max_length=20,
         choices=[
@@ -95,15 +101,18 @@ class Project(models.Model):
         ],
         default='pending'
     )
-    ai_analysis = models.TextField(blank=True, null=True)  # Gemini xulosasi
-    virustotal_link = models.URLField(blank=True, null=True)  # VirusTotal hisoboti
-
-    # Bloklash tizimi
+    ai_analysis = models.TextField(blank=True, null=True)
+    virustotal_link = models.URLField(blank=True, null=True)
     reports_count = models.PositiveIntegerField(default=0)
     is_frozen = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
 
     @property
     def get_youtube_id(self):
@@ -111,28 +120,21 @@ class Project(models.Model):
             return None
         regex = r'(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})'
         match = re.search(regex, self.youtube_link)
-        if match:
-            return match.group(1)
-        return None
+        return match.group(1) if match else None
 
     def __str__(self):
         return self.title
 
 
 # ==========================================
-# 3. QO'SHIMCHA RASMLAR
+# 3. YORDAMCHI MODELLAR (Rasmlar, Izohlar, Chat)
 # ==========================================
+
 class ProjectImage(models.Model):
     project = models.ForeignKey(Project, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='project_screenshots/')
 
-    def __str__(self):
-        return f"{self.project.title} uchun rasm"
 
-
-# ==========================================
-# 4. IZOHLAR
-# ==========================================
 class Comment(models.Model):
     project = models.ForeignKey(Project, related_name='comments', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -142,13 +144,7 @@ class Comment(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    def __str__(self):
-        return f"{self.user.username} - {self.project.title}"
 
-
-# ==========================================
-# 5. OBUNALAR (FOLLOWING)
-# ==========================================
 class Sync(models.Model):
     follower = models.ForeignKey(Profile, related_name='following', on_delete=models.CASCADE)
     following = models.ForeignKey(Profile, related_name='followers', on_delete=models.CASCADE)
@@ -156,125 +152,60 @@ class Sync(models.Model):
 
     class Meta:
         unique_together = ('follower', 'following')
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.follower.user.username} -> {self.following.user.username}"
 
 
-# ==========================================
-# 6. CHAT
-# ==========================================
 class CommunityMessage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        ordering = ['created_at']
 
-    def __str__(self):
-        return f"{self.user.username}: {self.body[:20]}"
-
-
-# ==========================================
-# 7. ALOQA (CONTACT)
-# ==========================================
 class Contact(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contacts')
     subject = models.CharField(max_length=200)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.user.username} - {self.subject}"
-
 
 # ==========================================
 # MOLIYAVIY MODELLAR (PUL TIZIMI)
 # ==========================================
 
-# --- 8. TRANZAKSIYALAR ---
 class Transaction(models.Model):
-    PROCESSING = 'processing'
-    COMPLETED = 'completed'
-    CANCELED = 'canceled'
-
-    STATUS_CHOICES = [
-        (PROCESSING, 'Jarayonda'),
-        (COMPLETED, 'Muvaffaqiyatli'),
-        (CANCELED, 'Bekor qilingan'),
-    ]
-
-    click_trans_id = models.CharField(max_length=255, blank=True, null=True)
+    STATUS_CHOICES = [('processing', 'Jarayonda'), ('completed', 'Muvaffaqiyatli'), ('canceled', 'Bekor qilingan')]
     merchant_trans_id = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PROCESSING)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='processing')
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Order {self.merchant_trans_id} - {self.status}"
 
-
-# --- 9. PUL YECHISH (WITHDRAWAL) ---
 class Withdrawal(models.Model):
-    PENDING = 'pending'
-    APPROVED = 'approved'
-    REJECTED = 'rejected'
-
-    STATUS_CHOICES = [
-        (PENDING, 'Kutilmoqda'),
-        (APPROVED, 'To\'lab berildi'),
-        (REJECTED, 'Rad etildi'),
-    ]
-
+    STATUS_CHOICES = [('pending', 'Kutilmoqda'), ('approved', 'To\'lab berildi'), ('rejected', 'Rad etildi')]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    card_number = models.CharField(max_length=16, help_text="Karta raqami (16 ta raqam)")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    card_number = models.CharField(max_length=16)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.user.username} - {self.amount} ({self.status})"
 
-
-# --- 10. DEPOZIT (PUL KIRITISH) ---
 class Deposit(models.Model):
-    PENDING = 'pending'
-    APPROVED = 'approved'
-    REJECTED = 'rejected'
-
-    STATUS_CHOICES = [
-        (PENDING, 'Kutilmoqda'),
-        (APPROVED, 'Tasdiqlandi'),
-        (REJECTED, 'Rad etildi'),
-    ]
-
+    STATUS_CHOICES = [('pending', 'Kutilmoqda'), ('approved', 'Tasdiqlandi'), ('rejected', 'Rad etildi')]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-
-    # Chek rasmi va izoh
     receipt = models.ImageField(upload_to='deposit_receipts/', blank=True, null=True)
-    message = models.CharField(max_length=255, blank=True, null=True)
-
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} - {self.amount}"
 
 
 # ==========================================
-# SIGNALS (AVTOMATIK PROFIL YARATISH)
+# SIGNALS
 # ==========================================
 @receiver(post_save, sender=User)
-def create_profile(sender, instance, created, **kwargs):
+def create_or_save_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_profile(sender, instance, **kwargs):
-    instance.profile.save()
+    else:
+        if hasattr(instance, 'profile'):
+            instance.profile.save()

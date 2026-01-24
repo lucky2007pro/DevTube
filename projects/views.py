@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from .utils import verify_telegram_token, send_telegram_message
 import os
+from django.db.models import Q
 from .utils import generate_telegram_link # Import qilishni unutmang
 import requests
 import threading
@@ -138,27 +139,34 @@ def run_security_scan(project_id):
 # 2. ASOSIY SAHIFA
 # ==========================================
 def home_page(request):
-    search_query = request.GET.get('q', '')
-    category_filter = request.GET.get('category', None)
+    query = request.GET.get('q')
+    category = request.GET.get('category')
+    price_filter = request.GET.get('price') # 'free', 'premium' yoki narx oralig'i
 
-    # Muzlatilgan loyihalar chiqmaydi
     projects = Project.objects.filter(is_frozen=False)
 
-    if search_query:
+    # 1. Aqlli qidiruv
+    if query:
         projects = projects.filter(
-            Q(category__icontains=search_query) |
-            Q(title__icontains=search_query) |
-            Q(description__icontains=search_query)
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(author__username__icontains=query)  # Muallif nomi bo'yicha ham qidiradi
         ).distinct()
 
-    if category_filter:
-        projects = projects.filter(category=category_filter)
+    # 2. Kategoriya bo'yicha filtr
+    if category:
+        projects = projects.filter(category=category)
+
+    # 3. Narx bo'yicha filtr
+    if price_filter == 'free':
+        projects = projects.filter(price=0)
+    elif price_filter == 'premium':
+        projects = projects.filter(price__gt=0)
 
     return render(request, 'home.html', {
         'projects': projects.order_by('-views'),
         'categories': Project.CATEGORY_CHOICES,
-        'search_query': search_query,
-        'page_title': "Bosh sahifa - DevTube"
+        'search_query': query
     })
 
 
@@ -231,7 +239,7 @@ def update_project(request, pk):
                 p.save()
                 messages.success(request, "Loyiha yangilandi!")
 
-            return redirect('project_detail', pk=p.pk)
+            return redirect('project_detail', slug=p.slug)
     else:
         form = ProjectForm(instance=p)
 
@@ -252,8 +260,8 @@ def delete_project(request, pk):
 
 # views.py ichida:
 
-def project_detail(request, pk):
-    project = get_object_or_404(Project, pk=pk)
+def project_detail(request, slug):
+    project = get_object_or_404(Project, slug=slug)
 
     # Muzlatilgan loyihani tekshirish
     if project.is_frozen and request.user != project.author and not request.user.is_superuser:
@@ -261,7 +269,7 @@ def project_detail(request, pk):
         return redirect('home')
 
     # Ko'rishlar sonini oshirish
-    Project.objects.filter(pk=pk).update(views=F('views') + 1)
+    Project.objects.filter(slug=slug).update(views=F('views') + 1)
     project.refresh_from_db()
 
     # --- KODNI O'QISH QISMI (YANGI) ---
@@ -308,7 +316,7 @@ def project_detail(request, pk):
             c.user = request.user
             c.project = project
             c.save()
-            return redirect('project_detail', pk=pk)
+            return redirect('project_detail', slug=slug)
 
     is_synced = False
     if request.user.is_authenticated:
@@ -404,25 +412,36 @@ def toggle_sync(request, username):
 @login_required
 @transaction.atomic
 def buy_project(request, pk):
+    # 1. Loyihani ID orqali bazadan olish
     project = get_object_or_404(Project, pk=pk)
     buyer_profile = request.user.profile
 
+    # 2. Muzlatilgan loyihani tekshirish
     if project.is_frozen:
         messages.error(request, "Bu loyiha muzlatilgan, sotib olib bo'lmaydi.")
         return redirect('home')
 
+    # 3. Oldin sotib olganligini yoki muallif ekanligini tekshirish
     if request.user == project.author or project.buyers.filter(id=request.user.id).exists():
-        return redirect('project_detail', pk=pk)
+        # MUHIM: pk=pk emas, slug=project.slug bo'lishi shart!
+        return redirect('project_detail', slug=project.slug)
 
+    # 4. Mablag'ni tekshirish va tranzaksiyani amalga oshirish
     if buyer_profile.balance >= project.price:
+        # Xaridor hisobidan yechish
         buyer_profile.balance -= project.price
         buyer_profile.save()
 
+        # Sotuvchi hisobiga tushirish
         author_profile = project.author.profile
         author_profile.balance += project.price
         author_profile.save()
-        author_telegram_id = project.author.profile.telegram_id
+
+        # Xaridorni ro'yxatga qo'shish
         project.buyers.add(request.user)
+
+        # 5. Telegram orqali sotuvchiga bildirishnoma yuborish
+        author_telegram_id = author_profile.telegram_id
         if author_telegram_id:
             msg = (
                 f"🎉 <b>Tabriklaymiz!</b>\n\n"
@@ -431,25 +450,26 @@ def buy_project(request, pk):
                 f"👤 Xaridor: {request.user.username}\n\n"
                 f"<i>Balansingizni tekshirib ko'ring!</i>"
             )
-            # Orqa fonda (thread) yuborish shart emas, chunki requests tez ishlaydi,
-            # lekin xohlasangiz thread orqali ham qilsa bo'ladi. Hozircha oddiy chaqiramiz:
             send_telegram_message(author_telegram_id, msg)
 
-        messages.success(request, f"'{project.title}' sotib olindi!")
+        # 6. Tranzaksiya tarixini yaratish
         Transaction.objects.create(
             user=request.user,
             project=project,
             amount=project.price,
-            status=Transaction.COMPLETED
+            status=Transaction.COMPLETED  # Modeldagi statusga mos kelishini tekshiring
         )
 
-        notify.send(request.user, recipient=project.author, verb='sotib oldi', target=project)
+        # 7. Sayt ichidagi bildirishnoma (Notification)
+        notify.send(request.user, recipient=project.author, verb='loyihangizni sotib oldi', target=project)
+
         messages.success(request, f"'{project.title}' muvaffaqiyatli sotib olindi!")
     else:
         messages.error(request, "Hisobingizda mablag' yetarli emas.")
         return redirect('add_funds')
 
-    return redirect('project_detail', pk=pk)
+    # MUHIM: Eng oxirgi yo'naltirish ham slug orqali bo'lishi shart!
+    return redirect('project_detail', slug=project.slug)
 
 
 @login_required
@@ -548,6 +568,7 @@ def withdraw_money(request):
 
 
 def profile(request, username=None):
+    # 1. Foydalanuvchini aniqlash
     if username:
         target_user = get_object_or_404(User, username=username)
         is_owner = (request.user == target_user)
@@ -557,26 +578,50 @@ def profile(request, username=None):
         target_user = request.user
         is_owner = True
 
+    # 2. ISHONCHLI SOTUVCHI (VERIFIED) LOGIKASI
+    # Foydalanuvchining muvaffaqiyatli sotgan loyihalari sonini hisoblaymiz
+    # Eslatma: Transaction modelida COMPLETED statusi 'completed' ekanligiga ishonch hosil qiling
+    sold_count = Transaction.objects.filter(
+        project__author=target_user,
+        status='completed'
+    ).count()
+
+    # Avtomatik "Verified" maqomini berish
+    if sold_count >= 5 and not target_user.profile.is_verified:
+        target_user.profile.is_verified = True
+        target_user.profile.save()
+
+    # 3. Profilni tahrirlash (Faqat egasi uchun)
     if request.method == 'POST' and is_owner:
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
-            messages.success(request, 'Profil yangilandi!')
+            messages.success(request, 'Profil ma’lumotlari muvaffaqiyatli yangilandi!')
             return redirect('profile', username=request.user.username)
     else:
         u_form = UserUpdateForm(instance=target_user)
         p_form = ProfileUpdateForm(instance=target_user.profile)
 
+    # 4. Foydalanuvchi loyihalari
     user_projects = Project.objects.filter(author=target_user).order_by('-created_at')
 
+    # 5. Qo'shimcha ma'lumotlar (Sinxronizatsiya va Telegram)
     is_synced = False
     if request.user.is_authenticated and not is_owner:
-        is_synced = Sync.objects.filter(follower=request.user.profile, following=target_user.profile).exists()
+        is_synced = Sync.objects.filter(
+            follower=request.user.profile,
+            following=target_user.profile
+        ).exists()
+
     telegram_link = None
-    if is_owner:  # Faqat o'z egasiga ko'rinadi
+    if is_owner:
         telegram_link = generate_telegram_link(request.user)
+
+    # 6. User Link (SEO va ulashish uchun shaxsiy havola)
+    user_absolute_url = request.build_absolute_uri()
+
     return render(request, 'profile.html', {
         'target_user': target_user,
         'u_form': u_form,
@@ -585,6 +630,8 @@ def profile(request, username=None):
         'is_owner': is_owner,
         'is_synced': is_synced,
         'telegram_link': telegram_link,
+        'sold_count': sold_count,
+        'user_url': user_absolute_url # Tashqi foydalanuvchilar uchun link
     })
 
 
