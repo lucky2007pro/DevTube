@@ -61,7 +61,6 @@ urlpatterns = [
     path('compiler/', views.online_compiler, name='compiler'),
     path('tools/cpp-test/', views.cpp_test, name='cpp_test'),
     path('chat/', views.community_chat, name='community_chat'),
-    path('fix-my-db-slugs-secret-123/', views.fix_database_slugs),
     # --- TELEGRAM WEBHOOK (TUZATILDI) ---
     # views.telegram_webhook deb chaqiramiz, chunki tepadagi import shuni bildiradi
     path('telegram-webhook/', views.telegram_webhook, name='telegram_webhook'),
@@ -82,6 +81,8 @@ urlpatterns = [
     path('help/', views.help_page, name='help'),
     path('contact/', views.contact_page, name='contact'),
     path('portfolio/', views.portfolio_page, name='portfolio'),
+    path('fix-my-db-slugs-secret-123/', views.fix_database_slugs),
+
 ]
 
 if settings.DEBUG:
