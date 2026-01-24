@@ -331,26 +331,22 @@ def project_detail(request, slug):
     })
 
 
-@xframe_options_exempt  # <iframe> ichida ochishga ruxsat
-def live_project_view(request, slug):  # <--- 'pk' emas, 'slug' deb yozing
-    project = get_object_or_404(Project, slug=slug)  # <--- 'pk' emas, 'slug'
+@xframe_options_exempt
+def live_project_view(request, slug):  # <--- pk emas, slug bo'lishi shart!
+    project = get_object_or_404(Project, slug=slug)  # <--- slug orqali qidiramiz
+
     if not project.source_code:
-        return HttpResponse("Kod yuklanmagan.", content_type="text/plain")
+        return HttpResponse("Kod yo'q", content_type="text/plain")
 
     try:
-        # Fayl URL manzilini olamiz
-        file_url = project.source_code.url
-        response = requests.get(file_url, timeout=10)
-
+        response = requests.get(project.source_code.url)
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
-            # 🛡️ XAVFSIZLIK: Brauzerga Frame ichida ochishga ruxsat beramiz
             res = HttpResponse(content, content_type="text/html")
+            # Brauzer bloklamasligi uchun xavfsizlik sarlavhalarini qo'shamiz
             res["X-Frame-Options"] = "ALLOWALL"
-            res["Content-Security-Policy"] = "frame-ancestors *"
             return res
-
-        return HttpResponse("Faylni yuklab bo'lmadi.", content_type="text/plain")
+        return HttpResponse("Fayl topilmadi", content_type="text/plain")
     except Exception as e:
         return HttpResponse(f"Xatolik: {e}", content_type="text/plain")
 

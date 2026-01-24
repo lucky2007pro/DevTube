@@ -208,7 +208,7 @@
             </div>
             <div class="visual-preview">
                 {% if live_preview %}
-                    <iframe src="{% url 'live_project_view' project.pk %}" class="preview-content" sandbox="allow-scripts allow-modals allow-forms allow-same-origin" loading="lazy"></iframe>
+                    <iframe src="{% url 'live_project_view' project.slug %}" class="preview-content" sandbox="allow-scripts allow-modals allow-forms allow-same-origin" loading="lazy"></iframe>
                 {% else %}
                     {% if project.image %}
                         <img src="{{ project.image.url }}" class="preview-image" alt="{{ project.title }}">
