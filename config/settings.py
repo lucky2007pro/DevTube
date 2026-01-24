@@ -111,7 +111,7 @@ USE_I18N = True
 USE_TZ = True
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+X_FRAME_OPTIONS = 'ALLOWALL'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
