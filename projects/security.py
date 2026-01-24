@@ -24,7 +24,7 @@ def scan_with_gemini(code_content):
         return "Gemini API Key topilmadi!"
 
     try:
-        model = genai.GenerativeModel('gemini-pro-latest')
+        model = genai.GenerativeModel('gemini-flash-latest')
         prompt = f"""
         Sen kiberxavfsizlik ekspertisan. Quyidagi kodni tekshir.
         Agar kodda virus, parol o'g'irlash, fayllarni o'chirish yoki zararli amallar bo'lsa "DANGER" deb boshla.
