@@ -180,11 +180,12 @@ def create_project(request):
                 for img in request.FILES.getlist('more_images'):
                     ProjectImage.objects.create(project=p, image=img)
 
-                # 3. XAVFSIZLIK: SCANNI FONDA ISHGA TUSHIRISH
+                # 3. XAVFSIZLIK: SCANNI TRANZAKSIYA TUGAGACH ISHGA TUSHIRISH (TUZATILDI)
                 if p.source_code:
-                    thread = threading.Thread(target=run_security_scan, args=(p.id,))
-                    thread.daemon = True  # Server o'chsa thread ham o'chadi
-                    thread.start()
+                    # Lambda funksiya orqali commit bo'lgandan keyin threadni ishga tushiramiz
+                    transaction.on_commit(
+                        lambda: threading.Thread(target=run_security_scan, args=(p.id,), daemon=True).start()
+                    )
                     messages.success(request, f"'{p.title}' yuklandi! Xavfsizlik tekshiruvi orqa fonda boshlandi... 🛡️")
                 else:
                     messages.success(request, f"'{p.title}' muvaffaqiyatli yuklandi!")
@@ -200,6 +201,7 @@ def create_project(request):
 
 
 @login_required
+@transaction.atomic  # Bu yerga ham atomic qo'shish tavsiya etiladi
 def update_project(request, pk):
     p = get_object_or_404(Project, pk=pk)
     if request.user != p.author:
@@ -215,11 +217,12 @@ def update_project(request, pk):
             if 'source_code' in request.FILES:
                 p.is_scanned = False
                 p.security_status = 'pending'
-                p.save()  # Avval saqlab olamiz
+                p.save()
 
-                thread = threading.Thread(target=run_security_scan, args=(p.id,))
-                thread.daemon = True
-                thread.start()
+                # TUZATILDI: on_commit ishlatildi
+                transaction.on_commit(
+                    lambda: threading.Thread(target=run_security_scan, args=(p.id,), daemon=True).start()
+                )
                 messages.info(request, "Yangi kod qayta tekshirilmoqda...")
             else:
                 p.save()
@@ -230,7 +233,6 @@ def update_project(request, pk):
         form = ProjectForm(instance=p)
 
     return render(request, 'update_project.html', {'form': form, 'project': p})
-
 
 @login_required
 def delete_project(request, pk):
@@ -681,6 +683,8 @@ class ProjectCreateAPI(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
+    # TUZATILDI: Tranzaksiya bilan ishlash uchun method override qilindi
+    @transaction.atomic
     def perform_create(self, serializer):
         project = serializer.save(author=self.request.user)
         images = self.request.FILES.getlist('more_images')
@@ -688,10 +692,10 @@ class ProjectCreateAPI(generics.CreateAPIView):
             ProjectImage.objects.create(project=project, image=img)
 
         if project.source_code:
-            thread = threading.Thread(target=run_security_scan, args=(project.id,))
-            thread.daemon = True
-            thread.start()
-
+            # TUZATILDI: on_commit ishlatildi
+            transaction.on_commit(
+                lambda: threading.Thread(target=run_security_scan, args=(project.id,), daemon=True).start()
+            )
 
 class ProjectDetailAPI(generics.RetrieveAPIView):
     queryset = Project.objects.all()
