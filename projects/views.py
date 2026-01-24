@@ -144,30 +144,49 @@ def home_page(request):
 # 3. LOYIHA AMALLARI (WEB)
 # ==========================================
 @login_required
+@login_required
+@transaction.atomic  # <--- MUHIM: Agar rasm yuklashda xato bo'lsa, loyihani ham saqlamaydi (Baza toza turadi)
 def create_project(request):
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES)
+
         if form.is_valid():
-            p = form.save(commit=False)
-            p.author = request.user
-            p.save()
+            try:
+                # 1. Loyihani saqlash
+                p = form.save(commit=False)
+                p.author = request.user
 
-            # Qo'shimcha rasmlarni saqlash
-            for img in request.FILES.getlist('more_images'):
-                ProjectImage.objects.create(project=p, image=img)
+                # Standart qiymatlarni aniqlashtirish
+                p.is_scanned = False
+                p.security_status = 'pending'
+                p.save()
 
-            # --- XAVFSIZLIK: SCANNI FONDA ISHGA TUSHIRISH ---
-            # Sayt qotib qolmasligi uchun Thread ishlatamiz
-            if p.source_code:
-                thread = threading.Thread(target=run_security_scan, args=(p.id,))
-                thread.start()
-                messages.success(request, f"'{p.title}' yuklandi! Xavfsizlik tekshiruvi boshlandi... 🛡️")
-            else:
-                messages.success(request, f"'{p.title}' muvaffaqiyatli yuklandi!")
+                # 2. Qo'shimcha rasmlarni saqlash
+                more_images = request.FILES.getlist('more_images')
+                for img in more_images:
+                    ProjectImage.objects.create(project=p, image=img)
 
-            return redirect('home')
+                # 3. XAVFSIZLIK: SCANNI FONDA ISHGA TUSHIRISH
+                # Agar kod fayli yuklangan bo'lsa, Thread ishga tushadi
+                if p.source_code:
+                    # Daemon=True qilib qo'yamiz (xavfsizroq)
+                    thread = threading.Thread(target=run_security_scan, args=(p.id,))
+                    thread.daemon = True
+                    thread.start()
+
+                    messages.success(request, f"'{p.title}' yuklandi! Xavfsizlik tekshiruvi orqa fonda boshlandi... 🛡️")
+                else:
+                    messages.success(request, f"'{p.title}' muvaffaqiyatli yuklandi (Kod fayli yo'q).")
+
+                return redirect('home')
+
+            except Exception as e:
+                messages.error(request, f"Yuklashda xatolik yuz berdi: {e}")
+        else:
+            messages.error(request, "Formada xatolik bor. Iltimos, tekshirib qaytadan urinib ko'ring.")
     else:
         form = ProjectForm()
+
     return render(request, 'create_project.html', {'form': form})
 
 
