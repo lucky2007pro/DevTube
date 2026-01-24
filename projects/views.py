@@ -1,41 +1,37 @@
 import json
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.models import User
-from .utils import verify_telegram_token, send_telegram_message
-import os
-from django.db.models import Q
-from .utils import generate_telegram_link # Import qilishni unutmang
-import requests
 import threading
 from decimal import Decimal
-from django.conf import settings
+
+import requests
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import Q, F
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.clickjacking import xframe_options_exempt
-from django.contrib import messages
-from django.db.models import Q, F
-from django.contrib.auth.models import User
 from django.template.loader import render_to_string
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.decorators.csrf import csrf_exempt
 from notifications.signals import notify
-from .utils import send_telegram_message
-# --- XAVFSIZLIK TIZIMI IMPORTLARI ---
-from .security import scan_with_gemini, scan_with_virustotal
-
 # --- FLUTTER API IMPORTLARI ---
 from rest_framework import generics, permissions, status
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.parsers import MultiPartParser, FormParser
-from .serializers import ProjectSerializer, RegisterSerializer, ProfileSerializer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 from .models import (
-    Project, ProjectImage, Sync, Profile, CommunityMessage,
+    Project, ProjectImage, Sync, CommunityMessage,
     Contact, Transaction, Deposit, Withdrawal
 )
-from .forms import ProjectForm, CommentForm, UserRegisterForm, UserUpdateForm, ProfileUpdateForm
+# --- XAVFSIZLIK TIZIMI IMPORTLARI ---
+from .security import scan_with_gemini, scan_with_virustotal
+from .serializers import ProjectSerializer, RegisterSerializer, ProfileSerializer
+from .utils import generate_telegram_link  # Import qilishni unutmang
+from .utils import send_telegram_message
+from .utils import verify_telegram_token
 
 
 # ==========================================
@@ -840,26 +836,3 @@ def telegram_webhook(request):
 
         return HttpResponse('OK')
     return HttpResponse('Not a POST request')
-
-
-# projects/views.py faylining eng oxiriga qo'shing
-import random
-import string
-from django.http import HttpResponse
-from .models import Project
-
-
-def fix_database_slugs(request):
-    # Faqat admin kirishi uchun xavfsizlik
-    if not request.user.is_superuser:
-        return HttpResponse("Iltimos, avval admin panel orqali saytga kiring!")
-
-    projects = Project.objects.all()
-    count = 0
-    for p in projects:
-        # Tasodifiy 11 talik ID yaratish
-        p.slug = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(11))
-        p.save()
-        count += 1
-
-    return HttpResponse(f"G'alaba! {count} ta loyiha Render bazasida yangilandi.")

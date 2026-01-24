@@ -81,7 +81,6 @@ urlpatterns = [
     path('help/', views.help_page, name='help'),
     path('contact/', views.contact_page, name='contact'),
     path('portfolio/', views.portfolio_page, name='portfolio'),
-    path('fix-my-db-slugs-secret-123/', views.fix_database_slugs),
 ]
 
 if settings.DEBUG:
