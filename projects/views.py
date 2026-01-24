@@ -60,8 +60,8 @@ def get_code_snippet(project):
 # --- XAVFSIZLIK TEKSHIRUVI (ORQA FONDA) ---
 def run_security_scan(project_id):
     """
-    Bu funksiya alohida oqimda (Thread) ishlaydi.
-    Sayt qotib qolmasligi uchun faylni Cloudinarydan olib tekshiradi.
+    Bu funksiya orqa fonda ishlaydi.
+    Agar xavf aniqlansa, loyihani AVTOMATIK MUZLATADI (yashiradi).
     """
     try:
         project = Project.objects.get(id=project_id)
@@ -72,10 +72,10 @@ def run_security_scan(project_id):
         file_url = project.source_code.url
         file_name = project.source_code.name
 
-        # 1. Kodni o'qib olish (Gemini uchun)
+        # 1. Gemini Tekshiruvi
         ai_result = "Tahlil qilinmadi"
         try:
-            # Faylni internetdan o'qib olamiz
+            # Faylni internetdan o'qib olamiz (timeout 10 soniya)
             response = requests.get(file_url, timeout=10)
             if response.status_code == 200:
                 code_content = response.content.decode('utf-8', errors='ignore')
@@ -91,11 +91,19 @@ def run_security_scan(project_id):
         project.virustotal_link = vt_link
         project.is_scanned = True
 
-        # Statusni aniqlash
-        if "DANGER" in str(ai_result):
+        # --- MUHIM O'ZGARISH: AVTO-BLOKLASH ---
+        # Agar Gemini "DANGER" desa YOKI VirusTotaldan yomon xabar kelsa
+        if "DANGER" in str(ai_result) or (vt_status and "malicious" in str(vt_status)):
             project.security_status = 'danger'
+            project.is_frozen = True  # <--- ZARARLI FAYLNI YASHIRAMIZ!
+            print(f"DIQQAT! Loyiha {project_id} virus sababli bloklandi!")
+
         elif "SAFE" in str(ai_result):
             project.security_status = 'safe'
+            # Agar oldin bloklangan bo'lsa va qayta tekshiruvda toza chiqsa, ochamiz
+            if project.is_frozen and project.reports_count < 10:
+                project.is_frozen = False
+
         else:
             project.security_status = 'warning'
 
