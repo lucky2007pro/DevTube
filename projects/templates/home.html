@@ -204,7 +204,12 @@
                             </div>
 
                             <a href="{% url 'profile_by_username' project.author.username %}" class="text-decoration-none d-block">
-                                <span class="text-muted small">{{ project.author.username }}</span>
+                                <span class="text-muted small">
+                                    {{ project.author.username }}
+                                    {% if project.author.profile.is_verified %}
+                                        <i class="fas fa-check-circle text-primary ms-1" style="font-size: 11px;" title="Tasdiqlangan dasturchi"></i>
+                                    {% endif %}
+                                </span>
                             </a>
 
                             <div class="d-flex align-items-center text-muted small gap-2 mt-1">
