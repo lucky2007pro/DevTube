@@ -687,7 +687,15 @@ def profile(request, username=None):
             follower=request.user.profile,
             following=target_user.profile
         ).exists()
+    my_purchases = []
+    my_sales = []
 
+    if is_owner:
+        # Men sotib olganlarim
+        my_purchases = Transaction.objects.filter(user=target_user).order_by('-created_at')
+
+        # Men sotganlarim (Project orqali topamiz)
+        my_sales = Transaction.objects.filter(project__author=target_user).order_by('-created_at')
     telegram_link = None
     if is_owner:
         telegram_link = generate_telegram_link(request.user)
@@ -704,7 +712,9 @@ def profile(request, username=None):
         'is_synced': is_synced,
         'telegram_link': telegram_link,
         'sold_count': sold_count,
-        'user_url': user_absolute_url # Tashqi foydalanuvchilar uchun link
+        'user_url': user_absolute_url, # Tashqi foydalanuvchilar uchun link
+        'my_purchases': my_purchases,
+        'my_sales': my_sales
     })
 
 
