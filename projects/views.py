@@ -987,8 +987,7 @@ def admin_dashboard(request):
 
     # 2. ONLINE FOYDALANUVCHILAR
     time_threshold = timezone.now() - timedelta(minutes=15)
-    online_users = User.objects.filter(last_login__gte=time_threshold).count()
-
+    online_users = User.objects.filter(profile__last_activity__gte=time_threshold).count()
     # 3. TOP XARIDORLAR
     top_spenders = User.objects.annotate(
         total_spent=Sum('transaction__amount', filter=Q(transaction__status='completed'))

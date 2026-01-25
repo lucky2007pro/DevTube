@@ -41,7 +41,7 @@ class Profile(models.Model):
     slug = models.SlugField(unique=True, blank=True, null=True) # User ID: u7H2kLp9
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     telegram_id = models.CharField(max_length=50, blank=True, null=True)
-
+    last_activity = models.DateTimeField(null=True, blank=True)
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_youtube_id(8)
