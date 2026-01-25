@@ -468,67 +468,62 @@ def toggle_sync(request, username):
         })
     return JsonResponse({'error': 'POST required'}, status=400)
 
-
 @login_required
 @transaction.atomic
 def buy_project(request, pk):
-    # 1. Loyihani ID orqali bazadan olish
+    # 1. Loyihani olish
     project = get_object_or_404(Project, pk=pk)
     buyer_profile = request.user.profile
 
-    # 2. Muzlatilgan loyihani tekshirish
+    # 2. Tekshiruvlar
     if project.is_frozen:
         messages.error(request, "Bu loyiha muzlatilgan, sotib olib bo'lmaydi.")
         return redirect('home')
 
-    # 3. Oldin sotib olganligini yoki muallif ekanligini tekshirish
     if request.user == project.author or project.buyers.filter(id=request.user.id).exists():
-        # MUHIM: pk=pk emas, slug=project.slug bo'lishi shart!
         return redirect('project_detail', slug=project.slug)
 
-    # 4. Mablag'ni tekshirish va tranzaksiyani amalga oshirish
+    # 3. Pulni yechish va muzlatish
     if buyer_profile.balance >= project.price:
-        # Xaridor hisobidan yechish
+        # A) Xaridordan pulni yechamiz
         buyer_profile.balance -= project.price
         buyer_profile.save()
 
-        # Sotuvchi hisobiga tushirish
+        # B) Sotuvchining MUZLATILGAN balansiga qo'shamiz
         author_profile = project.author.profile
-        author_profile.balance += project.price
+        author_profile.frozen_balance += project.price  # <--- Asosiy balance emas!
         author_profile.save()
 
-        # Xaridorni ro'yxatga qo'shish
+        # C) Xaridorni qo'shish
         project.buyers.add(request.user)
 
-        # 5. Telegram orqali sotuvchiga bildirishnoma yuborish
-        author_telegram_id = author_profile.telegram_id
-        if author_telegram_id:
-            msg = (
-                f"🎉 <b>Tabriklaymiz!</b>\n\n"
-                f"Sizning <b>{project.title}</b> loyihangiz sotildi!\n"
-                f"💰 Summa: <b>${project.price}</b>\n"
-                f"👤 Xaridor: {request.user.username}\n\n"
-                f"<i>Balansingizni tekshirib ko'ring!</i>"
-            )
-            send_telegram_message(author_telegram_id, msg)
-
-        # 6. Tranzaksiya tarixini yaratish
+        # D) Tranzaksiya yaratish (Status: HOLD)
         Transaction.objects.create(
             user=request.user,
             project=project,
             amount=project.price,
-            status=Transaction.COMPLETED  # Modeldagi statusga mos kelishini tekshiring
+            status=Transaction.HOLD  # <--- Muzlatilgan status
         )
 
-        # 7. Sayt ichidagi bildirishnoma (Notification)
-        notify.send(request.user, recipient=project.author, verb='loyihangizni sotib oldi', target=project)
+        # E) Telegram Xabar (Sotuvchiga)
+        if author_profile.telegram_id:
+            msg = (
+                f"❄️ <b>Yangi savdo (Muzlatilgan)!</b>\n\n"
+                f"Loyiha: <b>{project.title}</b>\n"
+                f"Summa: <b>${project.price}</b> (Hold)\n"
+                f"Xaridor: {request.user.username}\n\n"
+                f"<i>Pul 3 kundan keyin yoki xaridor tasdiqlasa balansga o'tadi.</i>"
+            )
+            send_telegram_message(author_profile.telegram_id, msg)
 
-        messages.success(request, f"'{project.title}' muvaffaqiyatli sotib olindi!")
+        # F) Sayt bildirishnomasi
+        notify.send(request.user, recipient=project.author, verb='sotib oldi (puli muzlatildi)', target=project)
+
+        messages.success(request, f"'{project.title}' sotib olindi! Pul xavfsizlik uchun vaqtincha muzlatildi.")
     else:
         messages.error(request, "Hisobingizda mablag' yetarli emas.")
         return redirect('add_funds')
 
-    # MUHIM: Eng oxirgi yo'naltirish ham slug orqali bo'lishi shart!
     return redirect('project_detail', slug=project.slug)
 
 
@@ -1059,3 +1054,39 @@ def direct_chat(request, username):
         'target_user': target_user,
         'messages': messages
     })
+
+
+# projects/views.py ichiga qo'shing
+
+@login_required
+@transaction.atomic
+def confirm_purchase(request, pk):
+    # 1. Tranzaksiyani topamiz (Faqat xaridor o'zi tasdiqlay oladi va status HOLD bo'lishi kerak)
+    trx = get_object_or_404(Transaction, pk=pk, user=request.user, status=Transaction.HOLD)
+
+    # 2. Statusni o'zgartiramiz
+    trx.status = Transaction.COMPLETED
+    trx.save()
+
+    # 3. Sotuvchining muzlatilgan pulini asosiy balansga o'tkazamiz
+    seller_profile = trx.project.author.profile
+
+    # Xavfsizlik uchun tekshiramiz: Muzlatilgan balansda yetarli pul bormi?
+    if seller_profile.frozen_balance >= trx.amount:
+        seller_profile.frozen_balance -= trx.amount  # Muzlatilgandan olamiz
+        seller_profile.balance += trx.amount  # Asosiyga qo'shamiz
+        seller_profile.save()
+
+        # Sotuvchiga xabar
+        if seller_profile.telegram_id:
+            send_telegram_message(
+                seller_profile.telegram_id,
+                f"✅ <b>Pul yechildi!</b>\n\nXaridor tasdiqladi. <b>${trx.amount}</b> asosiy balansingizga o'tdi."
+            )
+
+        messages.success(request, "Xarid tasdiqlandi! Pul sotuvchiga o'tkazib berildi.")
+    else:
+        # Agar qandaydir xatolik bo'lib, muzlatilgan balans yetmasa
+        messages.error(request, "Tizim xatoligi: Sotuvchi balansida muammo bor. Adminga xabar bering.")
+
+    return redirect('profile')  # Yoki transaction history

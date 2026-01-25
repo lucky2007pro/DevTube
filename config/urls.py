@@ -88,7 +88,7 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('signup/', views.register, name='register'),
-
+    path('confirm-purchase/<int:pk>/', views.confirm_purchase, name='confirm_purchase'),
     path('news/', views.announcements, name='announcements'),
     path('help/', views.help_page, name='help'),
     path('contact/', views.contact_page, name='contact'),

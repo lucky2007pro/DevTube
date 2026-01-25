@@ -9,7 +9,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
+from django.utils import timezone # Tepaga qo'shing
+from datetime import timedelta
 
 # ==========================================
 # 0. YORDAMCHI FUNKSIYALAR (YouTube Style)
@@ -42,6 +43,8 @@ class Profile(models.Model):
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     telegram_id = models.CharField(max_length=50, blank=True, null=True)
     last_activity = models.DateTimeField(null=True, blank=True)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Asosiy (yechib olish mumkin)
+    frozen_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # <--- YANGI (Muzlatilgan)
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_youtube_id(8)
@@ -148,27 +151,41 @@ class Contact(models.Model):
 # ==========================================
 
 class Transaction(models.Model):
-    # Statuslar uchun konstantalar (Views da ishlatish uchun qulay)
+    # Status konstantalari
     PROCESSING = 'processing'
-    COMPLETED = 'completed'
-    CANCELED = 'canceled'
+    HOLD = 'hold'  # <--- YANGI: Muzlatilgan
+    COMPLETED = 'completed'  # Yakunlangan (Pul sotuvchiga o'tgan)
+    CANCELED = 'canceled'  # Bekor qilingan
+    DISPUTED = 'disputed'  # <--- YANGI: Nizo holati
 
     STATUS_CHOICES = [
         (PROCESSING, 'Jarayonda'),
+        (HOLD, 'Muzlatilgan (Hold)'),
         (COMPLETED, 'Muvaffaqiyatli'),
-        (CANCELED, 'Bekor qilingan')
+        (CANCELED, 'Bekor qilingan'),
+        (DISPUTED, 'Nizoli')
     ]
 
-    merchant_trans_id = models.CharField(max_length=255)
+    # Agar Click/Payme bo'lmasa, merchant_trans_id shart emas (blank=True)
+    merchant_trans_id = models.CharField(max_length=255, blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='transactions')
+    project = models.ForeignKey('Project', on_delete=models.SET_NULL, null=True)
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=PROCESSING
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # YANGI: Pul qachon avtomatik yechiladi? (Masalan: 3 kundan keyin)
+    release_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        # Agar status HOLD bo'lsa va vaqt belgilanmagan bo'lsa, 3 kun qo'shamiz
+        if self.status == self.HOLD and not self.release_at:
+            self.release_at = timezone.now() + timedelta(days=3)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Tranzaksiya {self.id}: {self.amount} - {self.status}"
