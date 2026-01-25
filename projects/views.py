@@ -968,16 +968,18 @@ def admin_dashboard(request):
     time_threshold = timezone.now() - timedelta(minutes=15)
     online_users = User.objects.filter(profile__last_activity__gte=time_threshold).count()
 
-    # 3. TOP XARIDORLAR (Bu to'g'ri ishlashi kerak, chunki 'transactions' related_name bor)
+    # 3. TOP XARIDORLAR
+    # 'transactions' - bu Transaction modelidagi user related_name
     top_spenders = User.objects.annotate(
         total_spent=Sum('transactions__amount', filter=Q(transactions__status='completed'))
     ).filter(total_spent__gt=0).order_by('-total_spent')[:10]
 
     # 4. ENG FAOL SOTUVCHILAR (Tuzatildi ✅)
+    # User -> Project ('project') -> Transaction ('transaction_set')
     top_sellers = User.objects.annotate(
         total_sales=Count(
-            'project_set__transaction_set',
-            filter=Q(project_set__transaction_set__status='completed')
+            'project__transaction_set',
+            filter=Q(project__transaction_set__status='completed')
         )
     ).filter(total_sales__gt=0).order_by('-total_sales')[:10]
 
