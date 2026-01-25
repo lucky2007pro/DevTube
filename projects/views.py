@@ -581,18 +581,32 @@ def cpp_test(request):
 def add_funds(request):
     if request.method == 'POST':
         try:
-            amount = Decimal(request.POST.get('amount'))
-            receipt = request.FILES.get('receipt')
+            # 1. Ma'lumotlarni olish
+            amount_val = request.POST.get('amount')
+            receipt_file = request.FILES.get('receipt')
+
+            # 2. Diagnostika (Agar birortasi bo'sh bo'lsa xato beradi)
+            if not amount_val:
+                raise ValueError("Summa kiritilmadi!")
+            if not receipt_file:
+                raise ValueError("Rasm (Chek) serverga yetib kelmadi!")
+
+            # 3. Summani to'g'irlash
+            amount = Decimal(amount_val.replace(',', '.'))
+
+            # 4. Bazaga yozish
             Deposit.objects.create(
                 user=request.user,
                 amount=amount,
-                receipt=receipt,
+                receipt=receipt_file,
                 status=Deposit.PENDING
             )
-            messages.success(request, "Chek yuborildi. Admin tasdiqlashini kuting.")
+            messages.success(request, "Chek muvaffaqiyatli yuborildi!")
             return redirect('profile', username=request.user.username)
-        except:
-            messages.error(request, "Xato ma'lumot kiritildi.")
+
+        except Exception as e:
+            # BU YERDA XATONING ASL SABABINI KO'RSATAMIZ
+            messages.error(request, f"ANIQ XATO: {str(e)}")
 
     return render(request, 'add_funds.html')
 
