@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-white fw-bold">
+                    <i class="fas fa-bell text-warning me-2"></i>Bildirishnomalar
+                </h2>
+                <span class="badge bg-secondary">{{ notifications.count }} ta</span>
+            </div>
+
+            <div class="list-group shadow-lg">
+                {% for note in notifications %}
+                <div class="list-group-item list-group-item-action bg-dark border-secondary text-white d-flex align-items-start p-3 mb-2 rounded border">
+                    <div class="me-3 mt-1">
+                        {% if 'sotib oldi' in note.verb %}
+                            <div class="bg-success rounded-circle p-2 d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-shopping-cart text-white"></i>
+                            </div>
+                        {% elif 'like' in note.verb %}
+                            <div class="bg-danger rounded-circle p-2 d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-heart text-white"></i>
+                            </div>
+                        {% else %}
+                            <div class="bg-primary rounded-circle p-2 d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-info text-white"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1 fw-bold">
+                                {{ note.actor }} 
+                                <span class="text-white-50 fw-normal">{{ note.verb }}</span>
+                            </h6>
+                            <small class="text-muted" style="font-size: 0.8rem;">{{ note.timestamp|timesince }} oldin</small>
+                        </div>
+                        
+                        <p class="mb-1 small text-white-50">
+                            {% if note.target %}
+                                <a href="{{ note.target.get_absolute_url }}" class="text-info text-decoration-none">
+                                    "{{ note.target }}"
+                                </a> loyihasida.
+                            {% else %}
+                                {{ note.description }}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <i class="far fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <p class="text-white-50">Hozircha yangi bildirishnomalar yo'q.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
