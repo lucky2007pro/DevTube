@@ -421,12 +421,10 @@
             <a href="{% url 'announcements' %}" class="nav-item {% if request.resolver_match.url_name == 'announcements' %}active{% endif %}">
                 <i class="fas fa-bullhorn text-danger"></i> E'lonlar
             </a>
-            {% if user.is_superuser %}
-                <div class="sidebar-header px-4">Boshqaruv</div>
-                <a href="{% url 'admin_stats' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_stats' %}active{% endif %}">
-                    <i class="fas fa-chart-pie text-success"></i> Statistika va Reyting
-                </a>
-            {% endif %}
+            <div class="sidebar-header px-4">Statistika</div>
+            <a href="{% url 'admin_stats' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_stats' %}active{% endif %}">
+                <i class="fas fa-chart-pie text-success"></i> Top Reytinglar
+            </a>
         </div>
 
         <div class="theme-switch-container d-flex align-items-center justify-content-between">

@@ -974,31 +974,27 @@ def profile_public(request, username):
     return render(request, 'profile_public.html', context)
 
 
-
 @login_required
 def admin_dashboard(request):
-    # Faqat Superuser (Admin) kira olsin
-    if not request.user.is_superuser:
-        return redirect('home')
+    # DIQQAT: Superuser tekshiruvini olib tashladik, endi hamma kira oladi
 
     # 1. UMUMIY STATISTIKA
     total_users = User.objects.count()
     total_projects = Project.objects.count()
 
-    # Jami saytda aylangan pullar (Sotib olingan loyihalar summasi)
+    # Jami pulni baribir hisoblayveramiz, lekin template-da yashiramiz
     total_revenue = Transaction.objects.filter(status='completed').aggregate(Sum('amount'))['amount__sum'] or 0
 
-    # 2. ONLINE FOYDALANUVCHILAR (Oxirgi 15 daqiqada kirganlar)
+    # 2. ONLINE FOYDALANUVCHILAR
     time_threshold = timezone.now() - timedelta(minutes=15)
     online_users = User.objects.filter(last_login__gte=time_threshold).count()
 
-    # 3. TOP XARIDORLAR (Eng ko'p pul ishlatganlar)
-    # Har bir userning tranzaksiyalarini yig'ib chiqamiz
+    # 3. TOP XARIDORLAR
     top_spenders = User.objects.annotate(
         total_spent=Sum('transaction__amount', filter=Q(transaction__status='completed'))
     ).filter(total_spent__gt=0).order_by('-total_spent')[:10]
 
-    # 4. ENG FAOL SOTUVCHILAR (Loyihalari eng ko'p sotilganlar)
+    # 4. ENG FAOL SOTUVCHILAR
     top_sellers = User.objects.annotate(
         total_sales=Count('project__transaction', filter=Q(project__transaction__status='completed'))
     ).filter(total_sales__gt=0).order_by('-total_sales')[:10]
