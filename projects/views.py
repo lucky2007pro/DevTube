@@ -951,32 +951,6 @@ def fix_database_slugs(request):
 
 # projects/views.py ning eng oxiriga qo'shing:
 
-def profile_public(request, username):
-    # 1. Qidirilayotgan foydalanuvchini topamiz
-    target_user = get_object_or_404(User, username=username)
-
-    # 2. Uning faqat muzlatilmagan (yashirilmagan) loyihalarini olamiz
-    user_projects = Project.objects.filter(author=target_user, is_frozen=False).order_by('-created_at')
-
-    # 3. Sotuvlar soni (Verified statusi uchun mantiq)
-    sold_count = Transaction.objects.filter(project__author=target_user, status='completed').count()
-
-    # 4. Sinxronizatsiya (Follow) holati
-    is_synced = False
-    if request.user.is_authenticated and request.user != target_user:
-        is_synced = Sync.objects.filter(
-            follower=request.user.profile,
-            following=target_user.profile
-        ).exists()
-
-    context = {
-        'profile_user': target_user,  # target_user - bu profil egasi
-        'projects': user_projects,
-        'sold_count': sold_count,
-        'is_synced': is_synced,
-    }
-    return render(request, 'profile_public.html', context)
-
 
 @login_required
 def admin_dashboard(request):
