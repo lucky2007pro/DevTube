@@ -858,3 +858,32 @@ def telegram_webhook(request):
 
         return HttpResponse('OK')
     return HttpResponse('Not a POST request')
+
+
+# projects/views.py faylining eng oxiriga qo'shing
+
+def fix_database_slugs(request):
+    import random
+    import string
+
+    # Faqat admin kirishi uchun xavfsizlik
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("Bu sahifaga faqat admin kira oladi.")
+
+    # Slug'i bo'sh bo'lgan hamma loyihalarni topamiz
+    projects = Project.objects.filter(slug__isnull=True) | Project.objects.filter(slug='')
+    count = 0
+
+    for p in projects:
+        # Tasodifiy 11 talik YouTube-style ID yaratamiz
+        new_slug = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(11))
+
+        # Unikallikni tekshiramiz
+        while Project.objects.filter(slug=new_slug).exists():
+            new_slug = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(11))
+
+        p.slug = new_slug
+        p.save()
+        count += 1
+
+    return HttpResponse(f"Muvaffaqiyatli! {count} ta loyiha linki (slug) bazada tuzatildi.")
