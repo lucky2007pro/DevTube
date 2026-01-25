@@ -581,32 +581,29 @@ def cpp_test(request):
 def add_funds(request):
     if request.method == 'POST':
         try:
-            # 1. Ma'lumotlarni olish
-            amount_val = request.POST.get('amount')
-            receipt_file = request.FILES.get('receipt')
+            # 1. Summani to'g'rilab olish
+            amount_str = request.POST.get('amount', '').replace(',', '.')
+            amount = Decimal(amount_str)
 
-            # 2. Diagnostika (Agar birortasi bo'sh bo'lsa xato beradi)
-            if not amount_val:
-                raise ValueError("Summa kiritilmadi!")
-            if not receipt_file:
-                raise ValueError("Rasm (Chek) serverga yetib kelmadi!")
+            # 2. Fayl borligini tekshirish
+            receipt = request.FILES.get('receipt')
+            if not receipt:
+                messages.error(request, "Chek rasmi yuklanmadi!")
+                return redirect('add_funds')
 
-            # 3. Summani to'g'irlash
-            amount = Decimal(amount_val.replace(',', '.'))
-
-            # 4. Bazaga yozish
+            # 3. Bazaga yozish (TUZATILDI)
             Deposit.objects.create(
                 user=request.user,
                 amount=amount,
-                receipt=receipt_file,
-                status=Deposit.PENDING
+                receipt=receipt,
+                status='pending'  # <--- Deposit.PENDING o'rniga 'pending' yozdik
             )
-            messages.success(request, "Chek muvaffaqiyatli yuborildi!")
+            messages.success(request, "Chek qabul qilindi! Admin tasdiqlashini kuting.")
             return redirect('profile', username=request.user.username)
 
         except Exception as e:
-            # BU YERDA XATONING ASL SABABINI KO'RSATAMIZ
-            messages.error(request, f"ANIQ XATO: {str(e)}")
+            print(f"Xatolik: {e}")
+            messages.error(request, "Xatolik yuz berdi. Iltimos qayta urinib ko'ring.")
 
     return render(request, 'add_funds.html')
 
