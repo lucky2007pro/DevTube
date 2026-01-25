@@ -1,7 +1,7 @@
 import json
 import threading
 from decimal import Decimal
-
+from django.contrib.postgres.search import TrigramSimilarity
 import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -146,9 +146,15 @@ def home_page(request):
 
     # 1. Aqlli qidiruv (Sarlavha va Tavsif ichidan)
     if query:
-        projects = projects.filter(
-            Q(title__icontains=query) | Q(description__icontains=query)
-        ).distinct()
+        # Sarlavha va tavsifdagi o'xshashlikni aniqlaymiz
+        projects = projects.annotate(
+            similarity=TrigramSimilarity('title', query) +
+                       TrigramSimilarity('description', query)
+        ).filter(similarity__gt=0.1).order_by('-similarity')  # 0.1 - sezgirlik darajasi
+    else:
+        # Agar qidiruv bo'lmasa, odatdagidek saralash
+        sort = request.GET.get('sort', '-views')
+        projects = projects.order_by(sort)
 
     # 2. Kategoriya filtri
     if category:

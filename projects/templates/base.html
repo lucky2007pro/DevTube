@@ -310,7 +310,7 @@
         <div class="search-wrapper flex-grow-1 d-none d-md-flex justify-content-center px-2">
             <form id="mainSearchForm" class="d-flex align-items-center w-100" style="max-width: 600px;" action="{% url 'home' %}" method="GET">
                 <div class="input-group search-box-neon">
-                    <input type="text" name="q" id="searchInput" class="form-control text-white border-0 bg-transparent py-2 px-4" placeholder="Loyihalarni qidirish..." autocomplete="off">
+                    <input type="text" name="q" id="searchInput" value="{{ request.GET.q|default:'' }}" class="form-control text-white border-0 bg-transparent py-2 px-4" placeholder="Loyihalarni qidirish..." autocomplete="off">
                     <button class="btn border-0 text-muted px-3" type="submit"><i class="fas fa-search"></i></button>
                 </div>
                 <button type="button" class="btn voice-search-btn rounded-circle ms-3" onclick="startVoiceSearch()" id="voiceBtn">
@@ -376,7 +376,7 @@
                         <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="user-avatar-neon shadow" width="38" height="38">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end mt-3 shadow-lg" style="background: #0f172a; border: 1px solid var(--glass-border);">
-                        <li><a class="dropdown-item py-2 text-light" href="{% url 'profile' %}"><i class="fas fa-user-circle me-2 text-primary"></i> Profil</a></li>
+                        <li><a class="dropdown-item py-2 text-light" href="{% url 'profile_by_username' user.username %}"><i class="fas fa-user-circle me-2 text-primary"></i> Profil</a></li>
                         <li><hr class="dropdown-divider opacity-10"></li>
                         <li>
                             <form method="post" action="{% url 'logout' %}">
