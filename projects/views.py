@@ -5,6 +5,8 @@ from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
 import requests
+from django.db.models import Q, Max
+from .models import PrivateMessage # Importga qo'shing
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -45,6 +47,8 @@ from .utils import verify_telegram_token
 # ==========================================
 # 1. YORDAMCHI FUNKSIYALAR & ORQA FON (THREAD)
 # ==========================================
+
+
 
 def get_code_snippet(project):
     """Manba kodi oynasi uchun qisqa preview"""
@@ -1007,3 +1011,77 @@ def admin_dashboard(request):
         'top_sellers': top_sellers,
     }
     return render(request, 'stats.html', context)
+
+
+# projects/views.py
+
+from django.db.models import Q, Max
+from .models import PrivateMessage  # Importga qo'shing
+
+
+@login_required
+def inbox(request):
+    # Men bilan yozishgan barcha odamlarni topamiz (takrorlanmasin)
+    users = User.objects.filter(
+        Q(sent_messages__receiver=request.user) |
+        Q(received_messages__sender=request.user)
+    ).distinct().exclude(id=request.user.id)
+
+    # Har bir user bilan oxirgi xabarni topish (Sorting uchun)
+    chats = []
+    for user in users:
+        last_msg = PrivateMessage.objects.filter(
+            (Q(sender=request.user) & Q(receiver=user)) |
+            (Q(sender=user) & Q(receiver=request.user))
+        ).last()
+
+        # O'qilmagan xabarlar soni (Men uchun)
+        unread_count = PrivateMessage.objects.filter(sender=user, receiver=request.user, is_read=False).count()
+
+        chats.append({
+            'user': user,
+            'last_msg': last_msg,
+            'unread': unread_count
+        })
+
+    # Eng yangi xabar yozganlarni tepaga chiqaramiz
+    chats.sort(key=lambda x: x['last_msg'].created_at if x['last_msg'] else timezone.now(), reverse=True)
+
+    return render(request, 'inbox.html', {'chats': chats})
+
+
+@login_required
+def direct_chat(request, username):
+    target_user = get_object_or_404(User, username=username)
+
+    # Xabar yuborish (POST)
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        body = request.POST.get('body')
+        if body:
+            msg = PrivateMessage.objects.create(
+                sender=request.user,
+                receiver=target_user,
+                body=body
+            )
+            # Javob qaytaramiz (Frontendga qo'shish uchun)
+            return JsonResponse({
+                'status': 'ok',
+                'sender': request.user.username,
+                'avatar': request.user.profile.avatar.url if request.user.profile.avatar else None,
+                'body': msg.body,
+                'time': 'Hozirgina'
+            })
+
+    # O'qildi deb belgilash (Agar men ochsam)
+    PrivateMessage.objects.filter(sender=target_user, receiver=request.user, is_read=False).update(is_read=True)
+
+    # Yozishmalar tarixi
+    messages = PrivateMessage.objects.filter(
+        (Q(sender=request.user) & Q(receiver=target_user)) |
+        (Q(sender=target_user) & Q(receiver=request.user))
+    )
+
+    return render(request, 'direct_chat.html', {
+        'target_user': target_user,
+        'messages': messages
+    })

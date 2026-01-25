@@ -182,6 +182,11 @@
                             <i class="fas fa-sync-alt me-2"></i> <span id="syncLabel">{% if is_synced %}Sinxronlashdi{% else %}Sinxronlash{% endif %}</span>
                         </button>
                     {% endif %}
+                    {% if not is_owner %}
+                        <a href="{% url 'direct_chat' target_user.username %}" class="btn btn-primary ms-2 d-inline-flex align-items-center gap-2" style="border-radius: 50px; padding: 10px 25px;">
+                            <i class="fas fa-comment-dots"></i> Xabar yozish
+                        </a>
+                    {% endif %}
                 </div>
             </div>
 

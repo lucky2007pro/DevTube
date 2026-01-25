@@ -231,3 +231,19 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.project.title} ({self.rating})"
+
+
+# projects/models.py oxiriga qo'shing
+
+class PrivateMessage(models.Model):
+    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
+    body = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.sender} -> {self.receiver}"
+
+    class Meta:
+        ordering = ['created_at']  # Xabarlar vaqt bo'yicha tartiblanadi

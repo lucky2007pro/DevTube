@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+    
+    <div class="card bg-dark border-secondary mb-3">
+        <div class="card-header border-secondary d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <a href="{% url 'inbox' %}" class="btn btn-sm btn-outline-light me-3"><i class="fas fa-arrow-left"></i></a>
+                {% if target_user.profile.avatar %}
+                    <img src="{{ target_user.profile.avatar.url }}" class="rounded-circle me-2" width="40" height="40">
+                {% else %}
+                    <i class="fas fa-user-circle fs-2 me-2"></i>
+                {% endif %}
+                <div>
+                    <h5 class="mb-0 text-white">{{ target_user.username }}</h5>
+                    <small class="text-success">Online</small>
+                </div>
+            </div>
+            {% if target_user.profile.is_verified %}
+                <span class="badge bg-primary rounded-pill"><i class="fas fa-check"></i> Verified</span>
+            {% endif %}
+        </div>
+
+        <div class="card-body p-4" id="chatBox" style="height: 500px; overflow-y: auto; background: #0f172a;">
+            {% for msg in messages %}
+                <div class="d-flex mb-3 {% if msg.sender == request.user %}justify-content-end{% endif %}">
+                    {% if msg.sender != request.user %}
+                         <div class="me-2">
+                             {% if msg.sender.profile.avatar %}
+                                <img src="{{ msg.sender.profile.avatar.url }}" class="rounded-circle" width="30">
+                             {% endif %}
+                         </div>
+                    {% endif %}
+                    
+                    <div class="p-3 rounded-3 text-white" 
+                         style="max-width: 75%; 
+                                background: {% if msg.sender == request.user %}#6366f1{% else %}#1e293b{% endif %};">
+                        <p class="mb-1">{{ msg.body }}</p>
+                        <small class="text-white-50" style="font-size: 10px;">{{ msg.created_at|date:"H:i" }}</small>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center text-muted mt-5">
+                    <i class="far fa-comments fa-3x mb-3"></i>
+                    <p>Hozircha xabarlar yo'q. Birinchi bo'lib yozing!</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="card-footer border-secondary bg-dark">
+            <form id="chatForm" class="d-flex gap-2">
+                {% csrf_token %}
+                <input type="text" name="body" id="msgInput" class="form-control bg-dark text-white border-secondary" placeholder="Xabar yozing..." required autocomplete="off">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatBox = document.getElementById('chatBox');
+    const chatForm = document.getElementById('chatForm');
+    const msgInput = document.getElementById('msgInput');
+
+    // Pastga tushirish (Avtomatik)
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(chatForm);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                // Xabarni ekranga qo'shamiz
+                const html = `
+                <div class="d-flex mb-3 justify-content-end">
+                    <div class="p-3 rounded-3 text-white" style="max-width: 75%; background: #6366f1;">
+                        <p class="mb-1">${data.body}</p>
+                        <small class="text-white-50" style="font-size: 10px;">${data.time}</small>
+                    </div>
+                </div>`;
+                
+                chatBox.insertAdjacentHTML('beforeend', html);
+                msgInput.value = ''; // Inputni tozalash
+                chatBox.scrollTop = chatBox.scrollHeight; // Pastga tushirish
+                
+                // Agar "Hozircha xabarlar yo'q" yozuvi bo'lsa, uni o'chiramiz
+                const emptyMsg = chatBox.querySelector('.text-center');
+                if(emptyMsg) emptyMsg.remove();
+            }
+        });
+    });
+</script>
+{% endblock %}

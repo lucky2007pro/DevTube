@@ -439,6 +439,7 @@
             <a href="{% url 'profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
                 <i class="fas fa-cog text-secondary"></i> Sozlamalar
             </a>
+            <a href="{% url 'inbox' %}" class="nav-item"><i class="fas fa-envelope text-info"></i> Xabarlar</a>
             <a href="{% url 'help' %}" class="nav-item {% if request.resolver_match.url_name == 'help' %}active{% endif %}">
                 <i class="fas fa-question-circle text-success"></i> Yordam
             </a>

@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from rest_framework.authtoken.views import obtain_auth_token
 
-# 1. ASOSIY VIEWS IMPORTI (Shu yetarli)
+# 1. ASOSIY VIEWS IMPORTI
 from projects import views
 
 # 2. API VIEWS IMPORTI
@@ -31,6 +31,7 @@ urlpatterns = [
 
     # --- JONLI NATIJA ---
     path('live-view/<slug:slug>/', views.live_project_view, name='live_project_view'),
+
     # --- ASOSIY SAHIFALAR ---
     path('', views.home_page, name='home'),
     path('trending/', views.trending, name='trending'),
@@ -44,13 +45,18 @@ urlpatterns = [
     path('watch/<slug:slug>/', views.project_detail, name='project_detail'),
     path('update/<int:pk>/', views.update_project, name='update_project'),
     path('delete/<int:pk>/', views.delete_project, name='delete_project'),
-    path('u/<str:username>/', views.profile_public, name='public_profile'),
+
+    # --- PROFIL (TUZATILDI) ---
+    # Eski 'profile_public' o'rniga 'views.profile' qo'yildi
+    path('u/<str:username>/', views.profile, name='public_profile'),
+
     # --- INTERAKTIV ---
     path('like/<int:pk>/', views.like_project, name='like_project'),
     path('save/<int:pk>/', views.save_project, name='save_project'),
     path('report/<int:pk>/', views.report_project, name='report_project'),
     path('sync/<str:username>/', views.toggle_sync, name='toggle_sync'),
     path('dashboard/stats/', views.admin_dashboard, name='admin_stats'),
+
     # --- MOLIYA ---
     path('buy/<int:pk>/', views.buy_project, name='buy_project'),
     path('wallet/deposit/', views.add_funds, name='add_funds'),
@@ -60,14 +66,21 @@ urlpatterns = [
     path('compiler/', views.online_compiler, name='compiler'),
     path('tools/cpp-test/', views.cpp_test, name='cpp_test'),
     path('chat/', views.community_chat, name='community_chat'),
-    # --- TELEGRAM WEBHOOK (TUZATILDI) ---
-    # views.telegram_webhook deb chaqiramiz, chunki tepadagi import shuni bildiradi
+
+    # --- TELEGRAM WEBHOOK ---
     path('telegram-webhook/', views.telegram_webhook, name='telegram_webhook'),
+
+    # --- SHAXSIY CHAT (DM) ---
+    path('inbox/', views.inbox, name='inbox'),
+    path('direct/<str:username>/', views.direct_chat, name='direct_chat'),
 
     # --- BOSHQA ---
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
     path('notifications/', views.my_notifications, name='my_notifications'),
+
+    # Profilning o'zi (Mening profilim)
     path('profile/', views.profile, name='profile'),
+    # Username orqali (@admin kabi)
     path('@<str:username>/', views.profile, name='profile_by_username'),
 
     # --- AUTH WEB ---

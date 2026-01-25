@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-white fw-bold mb-4"><i class="fas fa-envelope text-primary me-2"></i>Xabarlarim</h2>
+    
+    <div class="list-group shadow-lg">
+        {% for chat in chats %}
+        <a href="{% url 'direct_chat' chat.user.username %}" class="list-group-item list-group-item-action bg-dark border-secondary text-white d-flex align-items-center p-3 mb-2 rounded border">
+            <div class="position-relative me-3">
+                {% if chat.user.profile.avatar %}
+                    <img src="{{ chat.user.profile.avatar.url }}" class="rounded-circle" width="50" height="50" style="object-fit: cover;">
+                {% else %}
+                    <i class="fas fa-user-circle fs-1"></i>
+                {% endif %}
+                
+                {% if chat.unread > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        {{ chat.unread }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between">
+                    <h5 class="mb-1 fw-bold">{{ chat.user.username }} 
+                        {% if chat.user.profile.is_verified %}
+                            <i class="fas fa-check-circle text-primary small"></i>
+                        {% endif %}
+                    </h5>
+                    <small class="text-muted">{{ chat.last_msg.created_at|timesince }} oldin</small>
+                </div>
+                <p class="mb-1 text-white-50 small text-truncate" style="max-width: 500px;">
+                    {% if chat.last_msg.sender == request.user %}
+                        <i class="fas fa-reply text-muted me-1"></i> Siz: 
+                    {% endif %}
+                    {{ chat.last_msg.body }}
+                </p>
+            </div>
+        </a>
+        {% empty %}
+        <div class="text-center py-5">
+            <i class="far fa-paper-plane fa-3x text-muted mb-3"></i>
+            <p class="text-white-50">Sizda hali yozishmalar yo'q.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
