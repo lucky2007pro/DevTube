@@ -134,35 +134,45 @@ def run_security_scan(project_id):
 # ==========================================
 # 2. ASOSIY SAHIFA
 # ==========================================
+# views.py ichidagi home_page funksiyasini yangilang
+
 def home_page(request):
-    query = request.GET.get('q')
-    category = request.GET.get('category')
-    price_filter = request.GET.get('price') # 'free', 'premium' yoki narx oralig'i
+    query = request.GET.get('q', '')
+    category = request.GET.get('category', '')
+    price_filter = request.GET.get('price', '') # 'free', 'premium'
+    sort = request.GET.get('sort', '-views') # 'newest', 'popular'
 
     projects = Project.objects.filter(is_frozen=False)
 
-    # 1. Aqlli qidiruv
+    # 1. Aqlli qidiruv (Sarlavha va Tavsif ichidan)
     if query:
         projects = projects.filter(
-            Q(title__icontains=query) |
-            Q(description__icontains=query) |
-            Q(author__username__icontains=query)  # Muallif nomi bo'yicha ham qidiradi
+            Q(title__icontains=query) | Q(description__icontains=query)
         ).distinct()
 
-    # 2. Kategoriya bo'yicha filtr
+    # 2. Kategoriya filtri
     if category:
         projects = projects.filter(category=category)
 
-    # 3. Narx bo'yicha filtr
+    # 3. Narx filtri
     if price_filter == 'free':
         projects = projects.filter(price=0)
     elif price_filter == 'premium':
         projects = projects.filter(price__gt=0)
 
+    # 4. Saralash
+    if sort == 'newest':
+        projects = projects.order_by('-created_at')
+    else:
+        projects = projects.order_by('-views') # Default: Ommaboplar
+
     return render(request, 'home.html', {
-        'projects': projects.order_by('-views'),
+        'projects': projects,
         'categories': Project.CATEGORY_CHOICES,
-        'search_query': query
+        'search_query': query,
+        'current_category': category,
+        'current_price': price_filter,
+        'current_sort': sort
     })
 
 
@@ -544,26 +554,33 @@ def add_funds(request):
     return render(request, 'add_funds.html')
 
 
+# views.py ichiga qo'shing
+
 @login_required
 def withdraw_money(request):
     if request.method == 'POST':
-        try:
-            amount = Decimal(request.POST.get('amount'))
-            card = request.POST.get('card_number')
+        amount = Decimal(request.POST.get('amount', 0))
+        card_number = request.POST.get('card_number', '')
 
-            if amount > request.user.profile.balance:
-                messages.error(request, "Balansda yetarli mablag' yo'q.")
-            else:
-                Withdrawal.objects.create(
-                    user=request.user,
-                    amount=amount,
-                    card_number=card,
-                    status=Withdrawal.PENDING
-                )
-                messages.success(request, "Pul yechish so'rovi yuborildi.")
-                return redirect('profile', username=request.user.username)
-        except:
-            messages.error(request, "Xato ma'lumot.")
+        if amount < 5:  # Minimal yechish miqdori $5
+            messages.error(request, "Minimal yechish miqdori $5")
+        elif amount > request.user.profile.balance:
+            messages.error(request, "Balansingizda mablag' yetarli emas.")
+        elif len(card_number) < 16:
+            messages.error(request, "Karta raqami noto'g'ri.")
+        else:
+            # So'rov yaratish
+            Withdrawal.objects.create(
+                user=request.user,
+                amount=amount,
+                card_number=card_number
+            )
+            # Balansni vaqtincha muzlatish yoki ayirish
+            request.user.profile.balance -= amount
+            request.user.profile.save()
+
+            messages.success(request, "Pul yechish so'rovi yuborildi. Admin tasdiqlashini kuting.")
+            return redirect('profile')
 
     return render(request, 'withdraw.html')
 
