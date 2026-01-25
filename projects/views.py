@@ -956,7 +956,6 @@ def fix_database_slugs(request):
 
 # projects/views.py ning eng oxiriga qo'shing:
 
-
 @login_required
 def admin_dashboard(request):
     # 1. UMUMIY STATISTIKA
@@ -968,20 +967,31 @@ def admin_dashboard(request):
     time_threshold = timezone.now() - timedelta(minutes=15)
     online_users = User.objects.filter(profile__last_activity__gte=time_threshold).count()
 
-    # 3. TOP XARIDORLAR
-    # 'transactions' - bu Transaction modelidagi user related_name
+    # 3. TOP XARIDORLAR (Bu to'g'ri ishlayapti)
     top_spenders = User.objects.annotate(
         total_spent=Sum('transactions__amount', filter=Q(transactions__status='completed'))
     ).filter(total_spent__gt=0).order_by('-total_spent')[:10]
 
-    # 4. ENG FAOL SOTUVCHILAR (Tuzatildi ✅)
-    # User -> Project ('project') -> Transaction ('transaction_set')
-    top_sellers = User.objects.annotate(
-        total_sales=Count(
-            'project__transaction_set',
-            filter=Q(project__transaction_set__status='completed')
-        )
-    ).filter(total_sales__gt=0).order_by('-total_sales')[:10]
+    # 4. ENG FAOL SOTUVCHILAR (YANGI, ISHONCHLI USUL 🛠)
+    # Biz to'g'ridan-to'g'ri Transaction jadvalidan eng ko'p sotgan mualliflarni sanaymiz.
+
+    # A) "Completed" bo'lgan tranzaksiyalarni olib, muallif (project__author) bo'yicha guruhlaymiz
+    seller_stats = Transaction.objects.filter(status='completed') \
+        .values('project__author') \
+        .annotate(total_sales=Count('id')) \
+        .order_by('-total_sales')[:10]
+
+    # B) Natija ID larda keladi, biz ularni User obyektiga aylantiramiz
+    seller_ids = [s['project__author'] for s in seller_stats]
+    sellers_dict = {u.id: u for u in User.objects.filter(id__in=seller_ids)}
+
+    top_sellers = []
+    for stat in seller_stats:
+        user = sellers_dict.get(stat['project__author'])
+        if user:
+            # Templateda ishlatish uchun 'total_sales' ni qo'lda yozib qo'yamiz
+            user.total_sales = stat['total_sales']
+            top_sellers.append(user)
 
     context = {
         'total_users': total_users,
