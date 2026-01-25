@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-
+    'django.contrib.sitemaps', # <--- SHUNI QO'SHING
     # PROVAYDERLAR
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',

@@ -1,14 +1,15 @@
 import os
-import re
 import random
+import re
 import string
-from django.db import models
+from django.urls import reverse
+from cloudinary_storage.storage import RawMediaCloudinaryStorage
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.core.exceptions import ValidationError
-from cloudinary_storage.storage import RawMediaCloudinaryStorage
-from django.utils.text import slugify
+
 
 # ==========================================
 # 0. YORDAMCHI FUNKSIYALAR (YouTube Style)
@@ -107,7 +108,8 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
-
+    def get_absolute_url(self):
+        return reverse('project_detail', kwargs={'slug': self.slug})
 # ==========================================
 # 3. IJTIMOIY MODELLAR (Rasmlar, Izohlar, Chat)
 # ==========================================
@@ -176,12 +178,12 @@ class Transaction(models.Model):
 
 class Withdrawal(models.Model):
     PENDING = 'pending'
-    COMPLETED = 'completed'
+    APPROVED = 'approved' # Completed o'rniga Approved ishlating
     REJECTED = 'rejected'
 
     STATUS_CHOICES = [
         (PENDING, 'Kutilmoqda'),
-        (COMPLETED, 'Bajarildi'),
+        (APPROVED, 'To\'lab berildi'), # Approved
         (REJECTED, 'Rad etildi'),
     ]
 

@@ -2,6 +2,22 @@
 {% load static %}
 {% load markdown_extras %}
 
+{# --- 1. SEO VA META TAGLAR (HEAD ICHIGA TUSHADI) --- #}
+{% block title %}{{ project.title }} | DevTube{% endblock %}
+
+{% block description %}{{ project.description|truncatewords:20 }}{% endblock %}
+
+{% block og_title %}{{ project.title }} - ${{ project.price }}{% endblock %}
+{% block og_description %}{{ project.description|truncatewords:30 }}{% endblock %}
+
+{% block og_image %}
+    {% if project.image %}
+        {{ request.scheme }}://{{ request.get_host }}{{ project.image.url }}
+    {% else %}
+        {{ request.scheme }}://{{ request.get_host }}{% static 'img/devtube-banner.png' %}
+    {% endif %}
+{% endblock %}
+
 {% block extra_head %}
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
