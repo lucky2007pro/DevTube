@@ -2,13 +2,13 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 from .models import Project
-
 class StaticViewSitemap(Sitemap):
     priority = 0.5
     changefreq = 'daily'
 
     def items(self):
-        return ['home', 'about', 'contact', 'register', 'login']
+        # Faqat sizda ANIQ BOR bo'lgan sahifalar nomini yozing:
+        return ['home', 'trending', 'contact', 'help', 'announcements']
 
     def location(self, item):
         return reverse(item)
