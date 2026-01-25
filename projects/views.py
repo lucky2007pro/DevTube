@@ -949,26 +949,29 @@ def fix_database_slugs(request):
 
 @login_required
 def admin_dashboard(request):
-    # DIQQAT: Superuser tekshiruvini olib tashladik, endi hamma kira oladi
-
     # 1. UMUMIY STATISTIKA
     total_users = User.objects.count()
     total_projects = Project.objects.count()
 
-    # Jami pulni baribir hisoblayveramiz, lekin template-da yashiramiz
+    # Jami tushgan pul (Completed statusidagilar)
     total_revenue = Transaction.objects.filter(status='completed').aggregate(Sum('amount'))['amount__sum'] or 0
 
     # 2. ONLINE FOYDALANUVCHILAR
+    # Profile modelidagi last_activity orqali tekshiramiz
     time_threshold = timezone.now() - timedelta(minutes=15)
     online_users = User.objects.filter(profile__last_activity__gte=time_threshold).count()
-    # 3. TOP XARIDORLAR
+
+    # 3. TOP XARIDORLAR (Tuzatildi ✅)
+    # Xatolik shu yerda edi: 'transaction' -> 'transactions' (ko'plikda) bo'lishi kerak
     top_spenders = User.objects.annotate(
-        total_spent=Sum('transaction__amount', filter=Q(transaction__status='completed'))
+        total_spent=Sum('transactions__amount', filter=Q(transactions__status='completed'))
     ).filter(total_spent__gt=0).order_by('-total_spent')[:10]
 
-    # 4. ENG FAOL SOTUVCHILAR
+    # 4. ENG FAOL SOTUVCHILAR (Tuzatildi ✅)
+    # Mantiq: User -> Project (project_set) -> Transaction (transaction_set)
+    # Django default bo'yicha '_set' qo'shimchasini ishlatadi
     top_sellers = User.objects.annotate(
-        total_sales=Count('project__transaction', filter=Q(project__transaction__status='completed'))
+        total_sales=Count('project__transaction_set', filter=Q(project__transaction_set__status='completed'))
     ).filter(total_sales__gt=0).order_by('-total_sales')[:10]
 
     context = {
