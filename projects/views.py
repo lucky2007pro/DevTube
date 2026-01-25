@@ -1090,3 +1090,62 @@ def confirm_purchase(request, pk):
         messages.error(request, "Tizim xatoligi: Sotuvchi balansida muammo bor. Adminga xabar bering.")
 
     return redirect('profile')  # Yoki transaction history
+
+
+@login_required
+def raise_dispute(request, pk):
+    # Faqat 'HOLD' (Muzlatilgan) statusdagi tranzaksiyaga shikoyat qilish mumkin
+    trx = get_object_or_404(Transaction, pk=pk, user=request.user, status=Transaction.HOLD)
+
+    if request.method == 'POST':
+        # 1. Statusni 'DISPUTED' (Nizoli) ga o'zgartiramiz
+        trx.status = Transaction.DISPUTED
+        trx.save()
+
+        # 2. Adminga xabar beramiz
+        superuser = User.objects.filter(is_superuser=True).first()
+        if superuser:
+            notify.send(request.user, recipient=superuser, verb='Nizo ochdi', target=trx.project)
+
+        messages.warning(request,
+                         "Shikoyat qabul qilindi! Adminlar tez orada vaziyatni o'rganib chiqadi. Pul sotuvchiga o'tkazilmaydi.")
+        return redirect('profile')
+
+    return render(request, 'raise_dispute.html', {'trx': trx})
+
+
+@login_required
+def resolve_dispute(request, pk, decision):
+    # Faqat Admin kira oladi
+    if not request.user.is_superuser:
+        return redirect('home')
+
+    trx = get_object_or_404(Transaction, pk=pk, status=Transaction.DISPUTED)
+    seller_profile = trx.project.author.profile
+    buyer_profile = trx.user.profile
+
+    if decision == 'refund':
+        # XARIDOR HAQ: Pulni qaytarib beramiz
+        if seller_profile.frozen_balance >= trx.amount:
+            seller_profile.frozen_balance -= trx.amount  # Muzlatilgandan olib tashlaymiz
+            seller_profile.save()
+
+            buyer_profile.balance += trx.amount  # Xaridorga qaytaramiz
+            buyer_profile.save()
+
+            trx.status = Transaction.CANCELED  # Bekor qilindi
+            trx.save()
+            messages.success(request, f"Pul ${trx.amount} xaridorga qaytarildi.")
+
+    elif decision == 'release':
+        # SOTUVCHI HAQ: Pulni sotuvchiga beramiz
+        if seller_profile.frozen_balance >= trx.amount:
+            seller_profile.frozen_balance -= trx.amount
+            seller_profile.balance += trx.amount  # Asosiy balansga o'tdi
+            seller_profile.save()
+
+            trx.status = Transaction.COMPLETED
+            trx.save()
+            messages.success(request, f"Nizo yopildi. Pul sotuvchiga berildi.")
+
+    return redirect('admin_stats')  # Yoki admin panel

@@ -82,7 +82,9 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     # Username orqali (@admin kabi)
     path('@<str:username>/', views.profile, name='profile_by_username'),
-
+    # Dispute tizimi
+    path('dispute/open/<int:pk>/', views.raise_dispute, name='raise_dispute'),
+    path('dispute/resolve/<int:pk>/<str:decision>/', views.resolve_dispute, name='resolve_dispute'),
     # --- AUTH WEB ---
     path('accounts/', include('allauth.urls')),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
