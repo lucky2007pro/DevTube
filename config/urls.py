@@ -50,7 +50,7 @@ urlpatterns = [
     path('save/<int:pk>/', views.save_project, name='save_project'),
     path('report/<int:pk>/', views.report_project, name='report_project'),
     path('sync/<str:username>/', views.toggle_sync, name='toggle_sync'),
-
+    path('dashboard/stats/', views.admin_dashboard, name='admin_stats'),
     # --- MOLIYA ---
     path('buy/<int:pk>/', views.buy_project, name='buy_project'),
     path('wallet/deposit/', views.add_funds, name='add_funds'),

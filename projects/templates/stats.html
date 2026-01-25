@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="text-white fw-bold mb-4"><i class="fas fa-chart-line text-primary me-2"></i>Admin Dashboard</h2>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 text-info mb-2"><i class="fas fa-users"></i></div>
+                    <h3 class="text-white fw-bold">{{ total_users }}</h3>
+                    <p class="text-white-50 small">Jami Foydalanuvchilar</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 text-success mb-2"><i class="fas fa-signal"></i></div>
+                    <h3 class="text-white fw-bold">{{ online_users }}</h3>
+                    <p class="text-white-50 small">Hozir Online (15 daq)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 text-warning mb-2"><i class="fas fa-dollar-sign"></i></div>
+                    <h3 class="text-white fw-bold">${{ total_revenue }}</h3>
+                    <p class="text-white-50 small">Jami Savdo</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 text-danger mb-2"><i class="fas fa-code"></i></div>
+                    <h3 class="text-white fw-bold">{{ total_projects }}</h3>
+                    <p class="text-white-50 small">Jami Loyihalar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header border-secondary bg-transparent">
+                    <h5 class="text-white mb-0"><i class="fas fa-crown text-warning me-2"></i>Top 10 Xaridorlar (Investorlar)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Foydalanuvchi</th>
+                                    <th>Ishlatgan Puli</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in top_spenders %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if user.profile.avatar %}
+                                                <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" width="30" height="30">
+                                            {% else %}
+                                                <i class="fas fa-user-circle fs-4 me-2"></i>
+                                            {% endif %}
+                                            <a href="{% url 'public_profile' user.username %}" class="text-decoration-none text-white fw-bold">
+                                                {{ user.username }}
+                                            </a>
+                                        </div>
+                                    </td>
+                                    <td class="text-success fw-bold">${{ user.total_spent }}</td>
+                                    <td>
+                                        {% if user.profile.is_verified %}
+                                            <span class="badge bg-primary">Verified</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">User</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-center text-muted">Ma'lumot yo'q</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header border-secondary bg-transparent">
+                    <h5 class="text-white mb-0"><i class="fas fa-store text-info me-2"></i>Top 10 Sotuvchilar</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Sotuvchi</th>
+                                    <th>Sotuvlar Soni</th>
+                                    <th>Balans</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in top_sellers %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if user.profile.avatar %}
+                                                <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" width="30" height="30">
+                                            {% else %}
+                                                <i class="fas fa-user-circle fs-4 me-2"></i>
+                                            {% endif %}
+                                            <a href="{% url 'public_profile' user.username %}" class="text-decoration-none text-white fw-bold">
+                                                {{ user.username }}
+                                            </a>
+                                        </div>
+                                    </td>
+                                    <td class="text-warning fw-bold">{{ user.total_sales }} ta</td>
+                                    <td class="text-info">${{ user.profile.balance }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-center text-muted">Ma'lumot yo'q</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

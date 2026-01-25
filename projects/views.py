@@ -1,7 +1,9 @@
 import json
 import threading
 from decimal import Decimal
-
+from django.db.models import Sum, Count, Q
+from django.utils import timezone
+from datetime import timedelta
 import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -970,3 +972,43 @@ def profile_public(request, username):
         'is_synced': is_synced,
     }
     return render(request, 'profile_public.html', context)
+
+
+
+@login_required
+def admin_dashboard(request):
+    # Faqat Superuser (Admin) kira olsin
+    if not request.user.is_superuser:
+        return redirect('home')
+
+    # 1. UMUMIY STATISTIKA
+    total_users = User.objects.count()
+    total_projects = Project.objects.count()
+
+    # Jami saytda aylangan pullar (Sotib olingan loyihalar summasi)
+    total_revenue = Transaction.objects.filter(status='completed').aggregate(Sum('amount'))['amount__sum'] or 0
+
+    # 2. ONLINE FOYDALANUVCHILAR (Oxirgi 15 daqiqada kirganlar)
+    time_threshold = timezone.now() - timedelta(minutes=15)
+    online_users = User.objects.filter(last_login__gte=time_threshold).count()
+
+    # 3. TOP XARIDORLAR (Eng ko'p pul ishlatganlar)
+    # Har bir userning tranzaksiyalarini yig'ib chiqamiz
+    top_spenders = User.objects.annotate(
+        total_spent=Sum('transaction__amount', filter=Q(transaction__status='completed'))
+    ).filter(total_spent__gt=0).order_by('-total_spent')[:10]
+
+    # 4. ENG FAOL SOTUVCHILAR (Loyihalari eng ko'p sotilganlar)
+    top_sellers = User.objects.annotate(
+        total_sales=Count('project__transaction', filter=Q(project__transaction__status='completed'))
+    ).filter(total_sales__gt=0).order_by('-total_sales')[:10]
+
+    context = {
+        'total_users': total_users,
+        'total_projects': total_projects,
+        'total_revenue': total_revenue,
+        'online_users': online_users,
+        'top_spenders': top_spenders,
+        'top_sellers': top_sellers,
+    }
+    return render(request, 'stats.html', context)
