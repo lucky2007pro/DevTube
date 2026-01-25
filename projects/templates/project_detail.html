@@ -496,14 +496,36 @@
                     <span class="price-tag free">BEPUL</span>
                 {% endif %}
 
-                {% if has_bought or project.price == 0 %}
-                    <a href="{{ project.source_code.url }}" class="btn-action btn-download" download>
-                        <i class="fas fa-cloud-download-alt"></i> Yuklash
-                    </a>
+                {% if request.user == project.author or has_bought or project.price == 0 %}
+
+                {% if project.source_code %}
+                <a href="{{ project.source_code.url }}"
+                   class="btn btn-success w-100 py-3 mb-3 rounded-4 shadow-lg fw-bold" download>
+                    <i class="fas fa-cloud-download-alt me-2"></i> Yuklash
+                </a>
                 {% else %}
-                    <a href="{% url 'buy_project' project.pk %}" class="btn-action btn-buy" onclick="return confirm('Hisobingizdan ${{ project.price }} yechiladi. Tasdiqlaysizmi?')">
-                        <i class="fas fa-shopping-cart"></i> Xarid Qilish
-                    </a>
+                <button class="btn btn-secondary w-100 py-3 mb-3 rounded-4 shadow-lg fw-bold" disabled>
+                    <i class="fas fa-exclamation-triangle me-2"></i> Kod yuklanmagan
+                </button>
+                {% endif %}
+
+                {% if request.user == project.author %}
+                <a href="{% url 'update_project' project.pk %}"
+                   class="btn btn-warning w-100 py-3 mb-3 rounded-4 shadow-lg fw-bold">
+                    <i class="fas fa-edit me-2"></i> Tahrirlash
+                </a>
+                {% endif %}
+
+                {% else %}
+
+                <form action="{% url 'buy_project' project.pk %}" method="POST"
+                      onsubmit="return confirm('Hisobingizdan ${{ project.price }} yechiladi. Tasdiqlaysizmi?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary w-100 py-3 mb-3 rounded-4 shadow-lg fw-bold">
+                        <i class="fas fa-shopping-cart me-2"></i> Xarid Qilish (${{ project.price }})
+                    </button>
+                </form>
+
                 {% endif %}
 
                 {% if project.get_youtube_id %}
