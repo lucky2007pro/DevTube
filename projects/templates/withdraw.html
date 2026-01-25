@@ -7,54 +7,61 @@
         <div class="col-md-5">
             
             <div class="card border-0 shadow-lg text-white" 
-                 style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;">
-                
+                 style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;">
+
                 <div class="card-body p-5">
-                    
+
                     <div class="text-center mb-4">
-                        <div style="width: 70px; height: 70px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-                            <i class="fas fa-money-bill-wave text-danger fa-2x"></i>
+                        <div style="width: 80px; height: 80px; background: rgba(99, 102, 241, 0.1); border: 2px solid var(--neon-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);">
+                            <i class="fas fa-wallet text-primary fa-2x"></i>
                         </div>
-                        <h3 class="fw-bold mt-3">Pul yechib olish</h3>
-                        <p class="text-muted small">Mablag' kartangizga 24 soat ichida tushadi.</p>
+                        <h3 class="fw-bold mt-3">Mablag' yechish</h3>
+                        <p class="text-muted small">So'rovingiz 24 soat ichida ko'rib chiqiladi.</p>
                     </div>
 
-                    <div class="alert alert-dark border border-secondary d-flex justify-content-between align-items-center mb-4">
-                        <span class="text-muted">Joriy balans:</span>
-                        <span class="h5 fw-bold text-success m-0">${{ user.profile.balance }}</span>
+                    <div class="p-3 mb-4 text-center" style="background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
+                        <span class="text-muted small text-uppercase d-block mb-1 fw-bold" style="letter-spacing: 1px;">Sizning balansingiz</span>
+                        <span class="h2 fw-800 text-white m-0">${{ user.profile.balance }}</span>
                     </div>
 
-                    <form method="post">
+                    <form method="POST" action="{% url 'withdraw_money' %}">
                         {% csrf_token %}
-                        
+
                         <div class="mb-4">
-                            <label class="form-label text-muted small fw-bold">QANCHA YECHMOQCHISIZ? ($)</label>
+                            <label class="form-label text-muted small fw-bold">YECHILADIGAN SUMMA ($)</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-transparent border-secondary text-white">$</span>
-                                <input type="number" name="amount" step="0.01" class="form-control bg-transparent text-white border-secondary" placeholder="Masalan: 10" required>
+                                <span class="input-group-text bg-dark border-secondary text-white" style="border-radius: 12px 0 0 12px;">$</span>
+                                <input type="number" name="amount" step="0.01" min="5" class="form-control bg-dark text-white border-secondary" placeholder="0.00" required style="border-radius: 0 12px 12px 0; padding: 12px;">
                             </div>
-                            <div class="form-text text-white-50" style="font-size: 11px;">Minimal summa: $5.00</div>
+                            <div class="form-text text-info" style="font-size: 11px;">Minimal yechish summasi: $5.00</div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label text-muted small fw-bold">KARTA RAQAMINGIZ (UZCARD/HUMO)</label>
+                            <label class="form-label text-muted small fw-bold">KARTA RAQAMI (8600... / 9860...)</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-transparent border-secondary text-white"><i class="far fa-credit-card"></i></span>
-                                <input type="text" name="card_number" class="form-control bg-transparent text-white border-secondary" placeholder="8600 0000 0000 0000" maxlength="16" minlength="16" required>
+                                <span class="input-group-text bg-dark border-secondary text-white" style="border-radius: 12px 0 0 12px;"><i class="far fa-credit-card"></i></span>
+                                <input type="text" name="card_number" class="form-control bg-dark text-white border-secondary" placeholder="0000 0000 0000 0000" maxlength="16" minlength="16" required style="border-radius: 0 12px 12px 0; padding: 12px; font-family: 'Fira Code', monospace;">
                             </div>
+                            <div class="form-text text-muted" style="font-size: 11px;">Uzcard yoki Humo karta raqamini kiriting.</div>
                         </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-danger py-2 fw-bold" style="border-radius: 50px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">
-                                <i class="fas fa-paper-plane me-2"></i> So'rov yuborish
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-primary py-3 fw-bold border-0"
+                                    style="border-radius: 14px; background: linear-gradient(135deg, #6366f1, #a855f7); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);">
+                                <i class="fas fa-paper-plane me-2"></i> So'rovni yuborish
                             </button>
-                            <a href="{% url 'profile' %}" class="btn btn-outline-secondary py-2 fw-bold" style="border-radius: 50px;">
-                                Bekor qilish
+                            <a href="{% url 'profile' %}" class="btn btn-link text-muted text-decoration-none small">
+                                <i class="fas fa-arrow-left me-1"></i> Bekor qilish va qaytish
                             </a>
                         </div>
-
                     </form>
                 </div>
+            </div>
+
+            <div class="mt-4 text-center opacity-50">
+                <p class="small text-white-50">
+                    <i class="fas fa-shield-alt me-1"></i> Barcha tranzaksiyalar himoyalangan.
+                </p>
             </div>
 
         </div>
