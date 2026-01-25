@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 # ProjectImage ni import qilishni unutmang!
 from .models import Project, Profile, Comment, ProjectImage
-
+from .models import Project, Review
 
 # --- YANGI: BIR NECHTA RASM YUKLASH UCHUN YORDAMCHI KLASSLAR ---
 class MultipleFileInput(forms.ClearableFileInput):
@@ -108,4 +108,18 @@ class ProfileUpdateForm(forms.ModelForm):
         widgets = {
             'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'O\'zingiz haqida...'}),
             'avatar': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'comment']
+        widgets = {
+            'rating': forms.Select(attrs={'class': 'form-select bg-dark text-white border-secondary'}),
+            'comment': forms.Textarea(attrs={
+                'class': 'form-control bg-dark text-white border-secondary',
+                'rows': 3,
+                'placeholder': 'Loyiha haqida fikringiz (ixtiyoriy)...'
+            }),
         }

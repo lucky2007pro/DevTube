@@ -325,7 +325,104 @@
             <div class="project-description mb-5">
                 {{ project.description|markdown|safe }}
             </div>
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="p-4 rounded-4 border border-secondary border-opacity-25"
+                         style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px);">
 
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h3 class="fw-bold text-white m-0">Sharhlar va Reyting</h3>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fs-2 fw-bold text-white">{{ avg_rating }}</span>
+                                <div class="text-warning fs-5">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <span class="text-muted small">({{ reviews.count }} ta ovoz)</span>
+                            </div>
+                        </div>
+
+                        {% if can_review %}
+                        <div class="mb-5 p-3 rounded-3"
+                             style="background: rgba(99, 102, 241, 0.1); border: 1px dashed var(--neon-primary);">
+                            <h5 class="text-white mb-3">Loyihani baholang:</h5>
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="rating-css mb-3">
+                                    <div class="star-icon">
+                                        <input type="radio" name="rating" value="1" id="rating1">
+                                        <label for="rating1" class="fa fa-star"></label>
+                                        <input type="radio" name="rating" value="2" id="rating2">
+                                        <label for="rating2" class="fa fa-star"></label>
+                                        <input type="radio" name="rating" value="3" id="rating3">
+                                        <label for="rating3" class="fa fa-star"></label>
+                                        <input type="radio" name="rating" value="4" id="rating4">
+                                        <label for="rating4" class="fa fa-star"></label>
+                                        <input type="radio" name="rating" value="5" id="rating5" checked>
+                                        <label for="rating5" class="fa fa-star"></label>
+                                    </div>
+                                </div>
+
+                                <textarea name="comment" class="form-control bg-dark text-white border-secondary mb-3"
+                                          rows="3" placeholder="Loyiha haqida fikringiz (ixtiyoriy)..."></textarea>
+
+                                <button type="submit" class="btn btn-primary fw-bold px-4">
+                                    <i class="fas fa-paper-plane me-2"></i> Yuborish
+                                </button>
+                            </form>
+                        </div>
+                        {% elif user_review %}
+                        <div class="alert alert-success d-flex align-items-center gap-2">
+                            <i class="fas fa-check-circle"></i> Siz bu loyihaga allaqachon baho bergansiz.
+                        </div>
+                        {% endif %}
+
+                        <div class="reviews-list">
+                            {% for review in reviews %}
+                            <div class="d-flex gap-3 mb-4 pb-4 border-bottom border-secondary border-opacity-10">
+                                <img src="https://ui-avatars.com/api/?name={{ review.user.username }}&background=random"
+                                     class="rounded-circle" width="40" height="40">
+
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold text-white">{{ review.user.username }}</span>
+                                        <span class="text-muted small" style="font-size: 11px;">{{ review.created_at|timesince }} oldin</span>
+                                    </div>
+
+                                    <div class="text-warning small my-1">
+                                        {% for i in "12345" %}
+                                        {% if forloop.counter <= review.rating %}
+                                        <i class="fas fa-star"></i>
+                                        {% else %}
+                                        <i class="far fa-star opacity-25"></i>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </div>
+
+                                    <p class="text-light opacity-75 m-0 small">{{ review.comment }}</p>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-center text-muted py-3">
+                                <i class="far fa-comment-dots fa-2x mb-2 opacity-25"></i>
+                                <p>Hozircha sharhlar yo'q. Birinchi bo'ling!</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                /* Yulduzcha reyting uchun maxsus CSS */
+                .rating-css div { color: #ffe400; font-size: 20px; font-family: sans-serif; font-weight: 800; text-transform: uppercase; padding: 10px 0; }
+                .rating-css input { display: none; }
+                .rating-css input + label { font-size: 20px; text-shadow: 1px 1px 0 #ffe400; cursor: pointer; }
+                .rating-css input:checked + label ~ label { color: #838383; }
+                .rating-css label:active { transform: scale(0.8); transition: 0.3s ease; }
+                /* Yulduzchalar teskari tartibda bo'lishi kerak CSS input mantiqida */
+                .star-icon { direction: rtl; display: inline-flex; }
+            </style>
             <h5 class="text-white mb-3 fw-bold"><i class="far fa-comments me-2"></i>Izohlar (<span id="comment-count-txt">{{ project.comments.count }}</span>)</h5>
 
             {% if user.is_authenticated %}

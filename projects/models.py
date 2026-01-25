@@ -212,3 +212,20 @@ def create_or_save_profile(sender, instance, created, **kwargs):
     else:
         if hasattr(instance, 'profile'):
             instance.profile.save()
+
+# projects/models.py ning eng pastiga qo'shing
+
+class Review(models.Model):
+    project = models.ForeignKey(Project, related_name='reviews', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # Baho 1 dan 5 gacha bo'ladi
+    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Bir odam bitta loyihaga faqat bir marta sharh yozishi mumkin
+        unique_together = ('project', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.project.title} ({self.rating})"
