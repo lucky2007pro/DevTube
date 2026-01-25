@@ -143,13 +143,30 @@ class DepositAdmin(admin.ModelAdmin):
         return "📄 Chek yo'q"
 
     def approve_deposit(self, request, queryset):
-        for d in queryset.filter(status='pending'):
-            profile = d.user.profile
-            profile.balance += d.amount
-            profile.save()
-            d.status = 'approved'
-            d.save()
-        self.message_user(request, "To'lovlar tasdiqlandi va balansga qo'shildi.", messages.SUCCESS)
+        count = 0
+        for deposit in queryset:
+            # Faqat 'pending' (kutilayotgan) bo'lsa pul qo'shamiz
+            # Agar allaqachon 'approved' bo'lsa, tegmaymiz (xavfsizlik uchun)
+            if deposit.status == 'pending':
+                profile = deposit.user.profile
+
+                # Balansga qo'shish
+                profile.balance += deposit.amount
+                profile.save()
+
+                # Statusni o'zgartirish
+                deposit.status = 'approved'
+                deposit.save()
+
+                count += 1
+
+        if count > 0:
+            self.message_user(request, f"{count} ta to'lov tasdiqlandi va balansga qo'shildi.", messages.SUCCESS)
+        else:
+            self.message_user(request, "Tanlangan to'lovlar allaqachon tasdiqlangan yoki rad etilgan.",
+                                messages.WARNING)
+
+    approve_deposit.short_description = "✅ Tasdiqlash (Balansga qo'shish)"
 
 
 @admin.register(Withdrawal)
