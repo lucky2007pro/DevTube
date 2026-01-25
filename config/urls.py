@@ -77,7 +77,7 @@ urlpatterns = [
     # --- BOSHQA ---
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
     path('notifications/', views.my_notifications, name='my_notifications'),
-
+    path('api/cron/release-funds/', views.auto_release_cron, name='cron_release'),
     # Profilning o'zi (Mening profilim)
     path('profile/', views.profile, name='profile'),
     # Username orqali (@admin kabi)

@@ -1166,3 +1166,20 @@ def resolve_dispute(request, pk, decision):
             messages.success(request, f"Nizo yopildi. Pul sotuvchiga berildi.")
 
     return redirect('admin_stats')  # Yoki admin panel
+
+
+# projects/views.py
+@csrf_exempt  # Tashqi xizmat kirishi uchun
+def auto_release_cron(request):
+    # Xavfsizlik uchun maxsus kalit (Secret Key)
+    # Buni xohlagan murakkab so'zingizga almashtiring
+    CRON_SECRET = "Sizning_Maxfiy_Kalitingiz_123"
+
+    key = request.GET.get('key')
+    if key != CRON_SECRET:
+        return HttpResponseForbidden("Ruxsat berilmagan")
+
+    from django.core import management
+    management.call_command('release_funds')
+
+    return HttpResponse("OK")
