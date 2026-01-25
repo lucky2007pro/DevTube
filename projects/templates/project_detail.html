@@ -12,7 +12,13 @@
 
 {% block og_image %}
     {% if project.image %}
-        {{ request.scheme }}://{{ request.get_host }}{{ project.image.url }}
+        {# Agar rasm Cloudinarydan kelsa (http bilan boshlansa), o'zini qo'yamiz #}
+        {% if project.image.url|slice:":4" == "http" %}
+            {{ project.image.url }}
+        {# Aks holda (lokal rasm bo'lsa), sayt nomini qo'shamiz #}
+        {% else %}
+            {{ request.scheme }}://{{ request.get_host }}{{ project.image.url }}
+        {% endif %}
     {% else %}
         {{ request.scheme }}://{{ request.get_host }}{% static 'img/devtube-banner.png' %}
     {% endif %}
@@ -23,9 +29,18 @@
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:title" content="{{ project.title }} - DevTube">
     <meta property="og:description" content="{{ project.description|truncatewords:20 }}">
+
+    {# --- Rasm URLini aqlli tekshirish --- #}
     {% if project.image %}
-        <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ project.image.url }}">
+        {% if project.image.url|slice:":4" == "http" %}
+            {# Agar Cloudinary link bo'lsa (http bilan boshlansa) o'zini qo'yamiz #}
+            <meta property="og:image" content="{{ project.image.url }}">
+        {% else %}
+            {# Agar lokal rasm bo'lsa, sayt nomini qo'shamiz #}
+            <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ project.image.url }}">
+        {% endif %}
     {% else %}
+        {# Rasm bo'lmasa, standart banner #}
         <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/devtube-banner.png' %}">
     {% endif %}
 {% endblock %}
