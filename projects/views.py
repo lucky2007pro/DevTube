@@ -1,6 +1,7 @@
 import json
 import threading
 from decimal import Decimal
+
 import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -21,14 +22,15 @@ from rest_framework.authtoken.models import Token
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from .forms import (
     ProjectForm, UserRegisterForm, UserUpdateForm,
-    ProfileUpdateForm, ReviewForm, CommentForm  # <--- Barcha formalar bitta joyda
+    ProfileUpdateForm, ReviewForm  # <--- Barcha formalar bitta joyda
 )
 from .models import (
     Project, ProjectImage, Sync, CommunityMessage,
     Contact, Transaction, Deposit, Withdrawal,
-    Review, Comment  # <--- Review va Comment modellari qo'shildi
+    Comment  # <--- Review va Comment modellari qo'shildi
 )
 # --- XAVFSIZLIK TIZIMI IMPORTLARI ---
 from .security import scan_with_gemini, scan_with_virustotal
@@ -324,17 +326,29 @@ def project_detail(request, slug):
     avg_rating = round(avg_rating, 1)
 
     # 5. BAHOLASH MUMKINMI?
+    # 5. BAHOLASH MUMKINMI? (MANTIQ YANGILANDI)
     can_review = False
     user_review = None
 
     if request.user.is_authenticated:
+        # A) Foydalanuvchi loyiha egasi EMASLIGINI tekshiramiz
         if request.user != project.author:
-            has_bought = project.price == 0 or project.buyers.filter(id=request.user.id).exists()
+
+            # B) Oldin baho bermaganligini tekshiramiz
             already_reviewed = project.reviews.filter(user=request.user).exists()
 
-            if has_bought and not already_reviewed:
+            # C) Bepulmi yoki Sotib olganmi?
+            # Narx 0 ga teng yoki umuman belgilanmagan (None) bo'lsa - BEPUL deb hisoblaymiz
+            is_free = (project.price is None) or (project.price == 0)
+
+            # Xaridorlar ro'yxatida bormi?
+            is_buyer = project.buyers.filter(id=request.user.id).exists()
+
+            # XULOSA: Agar (Bepul yoki Sotib olgan) bo'lsa VA (Baho bermagan) bo'lsa
+            if (is_free or is_buyer) and not already_reviewed:
                 can_review = True
 
+            # Agar oldin baho bergan bo'lsa, o'z bahosini chiqarib beramiz
             if already_reviewed:
                 user_review = project.reviews.filter(user=request.user).first()
 
