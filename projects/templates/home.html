@@ -9,11 +9,17 @@
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 16px;
         backdrop-filter: blur(10px);
+        margin-top: 0 !important;
+        padding: 10px !important;
     }
     .form-select, .form-control {
         border-radius: 10px;
         font-size: 14px;
         transition: 0.3s;
+    }
+    .form-select-sm {
+        height: 35px;
+        background-color: #0f172a !important;
     }
     .form-select:focus, .form-control:focus {
         border-color: var(--neon-primary);
@@ -141,38 +147,36 @@
     }
     .dropdown-divider { border-top: 1px solid rgba(255, 255, 255, 0.05); }
 </style>
-<div class="container-fluid px-4 mt-4">
-    <div class="cyber-filter-container p-3 mb-2" style="background: rgba(30, 41, 59, 0.4); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
-        <form method="GET" action="{% url 'home' %}" class="row g-3 align-items-end">
+<div class="container-fluid px-4 mt-2"> <div class="cyber-filter-container p-2 px-3 mb-2" style="background: rgba(30, 41, 59, 0.4); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+        <form method="GET" action="{% url 'home' %}" class="row g-2 align-items-center">
 
-            <div class="col-md-4">
-                <label class="text-muted small mb-1 text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 1px;">Qidirish</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-dark border-secondary text-primary"><i class="fas fa-search"></i></span>
-                    <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control bg-dark border-secondary text-white" placeholder="Loyiha nomi...">
+            <input type="hidden" name="q" value="{{ search_query|default:'' }}">
+            <input type="hidden" name="category" value="{{ request.GET.category|default:'' }}">
+
+            <div class="col-md-5">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 10px; min-width: 80px;">Narx turi:</span>
+                    <select name="price" class="form-select form-select-sm bg-dark border-secondary text-white" style="border-radius: 8px;">
+                        <option value="">Hammasi</option>
+                        <option value="free" {% if current_price == 'free' %}selected{% endif %}>Bepul</option>
+                        <option value="premium" {% if current_price == 'premium' %}selected{% endif %}>Premium</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <label class="text-muted small mb-1 text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 1px;">Narx turi</label>
-                <select name="price" class="form-select bg-dark border-secondary text-white">
-                    <option value="">Hammasi (Narx)</option>
-                    <option value="free" {% if current_price == 'free' %}selected{% endif %}>Bepul</option>
-                    <option value="premium" {% if current_price == 'premium' %}selected{% endif %}>Premium</option>
-                </select>
+            <div class="col-md-5">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 10px; min-width: 80px;">Saralash:</span>
+                    <select name="sort" class="form-select form-select-sm bg-dark border-secondary text-white" style="border-radius: 8px;">
+                        <option value="-views" {% if current_sort == '-views' %}selected{% endif %}>Ommaboplar</option>
+                        <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Yangilari</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="col-md-3">
-                <label class="text-muted small mb-1 text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 1px;">Saralash</label>
-                <select name="sort" class="form-select bg-dark border-secondary text-white">
-                    <option value="-views" {% if current_sort == '-views' %}selected{% endif %}>Ommaboplar</option>
-                    <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Yangilari</option>
-                </select>
-            </div>
-
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100 fw-bold border-0 py-2" style="background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 10px;">
-                    <i class="fas fa-filter me-2"></i> Saralash
+            <div class="col-md-2 text-end">
+                <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold border-0 py-2" style="background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 8px;">
+                    <i class="fas fa-sync-alt me-1"></i> Qo'llash
                 </button>
             </div>
 
