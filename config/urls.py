@@ -5,34 +5,55 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from rest_framework.authtoken.views import obtain_auth_token
 
-# 1. ASOSIY VIEWS IMPORTI (Shu yetarli)
-from projects import views
+# --- 1. SEO IMPORTLAR (MUHIM!) ---
+from django.contrib.sitemaps.views import sitemap
+from django.http import HttpResponse
+# projects.sitemaps faylini yaratgan bo'lsangizgina ishlaydi:
+from projects.sitemaps import StaticViewSitemap, ProjectSitemap
 
-# 2. API VIEWS IMPORTI
+# --- VIEWS IMPORT ---
+from projects import views
 from projects.views import (
     ProjectListAPI, ProjectDetailAPI,
     RegisterAPI, ProjectCreateAPI, ProjectUpdateDeleteAPI, ProfileAPI
 )
-
 import notifications.urls
+
+# --- 2. SEO KONFIGURATSIYA ---
+sitemaps = {
+    'static': StaticViewSitemap,
+    'projects': ProjectSitemap,
+}
+
+def robots_txt(request):
+    lines = [
+        "User-Agent: *",
+        "Disallow: /admin/",
+        "Disallow: /api/",
+        "Allow: /",
+        f"Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml"
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # --- FLUTTER API 📱 ---
+    # --- SEO URLS (SIZDA SHULAR YO'Q EDI) ---
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    path('robots.txt', robots_txt),
+
+    # --- FLUTTER API ---
     path('api/auth/login/', obtain_auth_token, name='api_token_auth'),
     path('api/auth/register/', RegisterAPI.as_view(), name='api_register'),
     path('api/profile/', ProfileAPI.as_view(), name='api_profile'),
-
     path('api/projects/', ProjectListAPI.as_view(), name='api_project_list'),
     path('api/projects/create/', ProjectCreateAPI.as_view(), name='api_project_create'),
     path('api/projects/<int:pk>/', ProjectDetailAPI.as_view(), name='api_project_detail'),
     path('api/projects/<int:pk>/manage/', ProjectUpdateDeleteAPI.as_view(), name='api_project_manage'),
 
-    # --- JONLI NATIJA ---
-    path('live-view/<slug:slug>/', views.live_project_view, name='live_project_view'),
     # --- ASOSIY SAHIFALAR ---
     path('', views.home_page, name='home'),
+    path('live-view/<slug:slug>/', views.live_project_view, name='live_project_view'),
     path('trending/', views.trending, name='trending'),
     path('feed/', views.syncing_projects, name='syncing'),
     path('liked/', views.liked_videos, name='liked_videos'),
@@ -60,8 +81,6 @@ urlpatterns = [
     path('compiler/', views.online_compiler, name='compiler'),
     path('tools/cpp-test/', views.cpp_test, name='cpp_test'),
     path('chat/', views.community_chat, name='community_chat'),
-    # --- TELEGRAM WEBHOOK (TUZATILDI) ---
-    # views.telegram_webhook deb chaqiramiz, chunki tepadagi import shuni bildiradi
     path('telegram-webhook/', views.telegram_webhook, name='telegram_webhook'),
 
     # --- BOSHQA ---
@@ -70,7 +89,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('@<str:username>/', views.profile, name='profile_by_username'),
 
-    # --- AUTH WEB ---
+    # --- AUTH ---
     path('accounts/', include('allauth.urls')),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
