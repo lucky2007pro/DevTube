@@ -142,48 +142,40 @@
     .dropdown-divider { border-top: 1px solid rgba(255, 255, 255, 0.05); }
 </style>
 <div class="container-fluid px-4 mt-4">
-    <div class="cyber-filter-container p-3 mb-2">
+    <div class="cyber-filter-container p-3 mb-2" style="background: rgba(30, 41, 59, 0.4); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
         <form method="GET" action="{% url 'home' %}" class="row g-3 align-items-end">
+
             <div class="col-md-4">
-                <label class="text-muted small mb-1 text-uppercase fw-bold"
-                       style="font-size: 10px; letter-spacing: 1px;">Qidirish</label>
+                <label class="text-muted small mb-1 text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 1px;">Qidirish</label>
                 <div class="input-group">
-                    <span class="input-group-text bg-dark border-secondary text-primary"><i
-                            class="fas fa-search"></i></span>
-                    <input type="text" name="q" value="{{ search_query|default:'' }}"
-                           class="form-control bg-dark border-secondary text-white" placeholder="Loyiha nomi...">
+                    <span class="input-group-text bg-dark border-secondary text-primary"><i class="fas fa-search"></i></span>
+                    <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control bg-dark border-secondary text-white" placeholder="Loyiha nomi...">
                 </div>
             </div>
 
             <div class="col-md-3">
-                <label class="text-muted small mb-1 text-uppercase fw-bold"
-                       style="font-size: 10px; letter-spacing: 1px;">Narx turi</label>
+                <label class="text-muted small mb-1 text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 1px;">Narx turi</label>
                 <select name="price" class="form-select bg-dark border-secondary text-white">
                     <option value="">Hammasi (Narx)</option>
-                    <option value="free" {% if current_price==
-                    'free' %}selected{% endif %}>Bepul</option>
-                    <option value="premium" {% if current_price==
-                    'premium' %}selected{% endif %}>Premium</option>
+                    <option value="free" {% if current_price == 'free' %}selected{% endif %}>Bepul</option>
+                    <option value="premium" {% if current_price == 'premium' %}selected{% endif %}>Premium</option>
                 </select>
             </div>
 
             <div class="col-md-3">
-                <label class="text-muted small mb-1 text-uppercase fw-bold"
-                       style="font-size: 10px; letter-spacing: 1px;">Saralash</label>
+                <label class="text-muted small mb-1 text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 1px;">Saralash</label>
                 <select name="sort" class="form-select bg-dark border-secondary text-white">
-                    <option value="-views" {% if current_sort==
-                    '-views' %}selected{% endif %}>Ommaboplar</option>
-                    <option value="newest" {% if current_sort==
-                    'newest' %}selected{% endif %}>Yangilari</option>
+                    <option value="-views" {% if current_sort == '-views' %}selected{% endif %}>Ommaboplar</option>
+                    <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Yangilari</option>
                 </select>
             </div>
 
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100 fw-bold border-0 py-2"
-                        style="background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 10px;">
+                <button type="submit" class="btn btn-primary w-100 fw-bold border-0 py-2" style="background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 10px;">
                     <i class="fas fa-filter me-2"></i> Saralash
                 </button>
             </div>
+
         </form>
     </div>
 </div>
