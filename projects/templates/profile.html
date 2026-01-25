@@ -21,11 +21,14 @@
         align-items: flex-start;
         gap: 30px;
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
     }
 
     @media (max-width: 992px) {
         .profile-glass-header { flex-direction: column; text-align: center; align-items: center; }
         .profile-actions { justify-content: center; }
+        .wallet-card { width: 100%; }
     }
 
     .profile-avatar-lg {
@@ -101,19 +104,70 @@
 
     /* --- WALLET CARD --- */
     .wallet-card {
-        background: rgba(16, 185, 129, 0.1);
+        background: rgba(16, 185, 129, 0.05);
         border: 1px solid rgba(16, 185, 129, 0.2);
         border-radius: 20px;
-        padding: 20px;
-        min-width: 250px;
+        padding: 25px;
+        min-width: 280px;
         display: flex;
         flex-direction: column;
         gap: 15px;
         backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
-    .wallet-btn { font-size: 13px; font-weight: 600; padding: 8px 0; border-radius: 10px; text-align: center; text-decoration: none; transition: 0.2s; }
-    .wallet-btn-add { background: #10b981; color: #fff; }
-    .wallet-btn-out { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+    .wallet-btn { font-size: 13px; font-weight: 600; padding: 10px 0; border-radius: 12px; text-align: center; text-decoration: none; transition: 0.2s; }
+    .wallet-btn-add { background: #10b981; color: #fff; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); }
+    .wallet-btn-add:hover { background: #059669; transform: translateY(-2px); }
+    .wallet-btn-out { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+    .wallet-btn-out:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+
+    /* --- NEON DATA TABLES (NEW DESIGN) --- */
+    .neon-data-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        overflow: hidden;
+        height: 100%;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: 0.3s;
+    }
+    .neon-data-card:hover {
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 10px 40px rgba(99, 102, 241, 0.1);
+    }
+    .neon-data-header {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 20px 25px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .custom-table {
+        margin: 0;
+        width: 100%;
+        color: #cbd5e1;
+    }
+    .custom-table th {
+        background: rgba(0,0,0,0.2);
+        color: #94a3b8;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        padding: 15px 25px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .custom-table td {
+        padding: 15px 25px;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        font-size: 0.9rem;
+    }
+    .custom-table tr:last-child td { border-bottom: none; }
+    .custom-table tr:hover td { background: rgba(255,255,255,0.02); color: #fff; }
 
     /* --- PROJECT GRID & CARDS --- */
     .project-grid {
@@ -124,8 +178,10 @@
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 20px; overflow: hidden; transition: 0.3s;
+        height: 100%;
+        display: flex; flex-direction: column;
     }
-    .project-card-neon:hover { border-color: var(--neon-primary); transform: translateY(-5px); }
+    .project-card-neon:hover { border-color: var(--neon-primary); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
 
     .btn-neon-edit { color: rgba(255, 255, 255, 0.7); transition: 0.3s; font-size: 1.1rem; }
     .btn-neon-edit:hover { color: var(--neon-primary); text-shadow: 0 0 10px var(--neon-primary); }
@@ -189,129 +245,16 @@
                     {% endif %}
                 </div>
             </div>
-            {% if is_owner %}
-            <div class="row mt-5">
 
-                <div class="col-lg-6 mb-4">
-                    <div class="card bg-dark border-secondary">
-                        <div class="card-header border-secondary fw-bold text-white">
-                            <i class="fas fa-shopping-bag text-primary me-2"></i> Mening Xaridlarim
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-dark table-hover mb-0" style="font-size: 0.9rem;">
-                                    <thead>
-                                    <tr>
-                                        <th>Loyiha</th>
-                                        <th>Holat</th>
-                                        <th class="text-end">Amal</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for trx in my_purchases %}
-                                    <tr>
-                                        <td>
-                                            <a href="{% url 'project_detail' trx.project.slug %}"
-                                               class="text-white text-decoration-none fw-bold">
-                                                {{ trx.project.title|truncatechars:20 }}
-                                            </a>
-                                            <div class="text-muted small">${{ trx.amount }}</div>
-                                        </td>
-                                        <td>
-                                            {% if trx.status == 'hold' %}
-                                            <span class="badge bg-warning text-dark">Muzlatilgan ❄️</span>
-                                            {% elif trx.status == 'completed' %}
-                                            <span class="badge bg-success">Yakunlandi ✅</span>
-                                            {% elif trx.status == 'disputed' %}
-                                            <span class="badge bg-danger">Nizo ⚖️</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="text-end">
-                                            {% if trx.status == 'hold' %}
-                                            <a href="{% url 'confirm_purchase' trx.pk %}"
-                                               class="btn btn-sm btn-success mb-1" title="Qabul qildim">
-                                                <i class="fas fa-check"></i>
-                                            </a>
-                                            <a href="{% url 'raise_dispute' trx.pk %}"
-                                               class="btn btn-sm btn-outline-danger mb-1" title="Muammo bor">
-                                                <i class="fas fa-gavel"></i>
-                                            </a>
-                                            {% elif trx.status == 'completed' %}
-                                            <a href="{{ trx.project.source_code.url }}" class="btn btn-sm btn-primary"
-                                               download>
-                                                <i class="fas fa-download"></i>
-                                            </a>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="3" class="text-center text-muted py-3">Xaridlar yo'q</td>
-                                    </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6 mb-4">
-                    <div class="card bg-dark border-secondary">
-                        <div class="card-header border-secondary fw-bold text-white">
-                            <i class="fas fa-chart-line text-success me-2"></i> Mening Sotuvlarim
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-dark table-hover mb-0" style="font-size: 0.9rem;">
-                                    <thead>
-                                    <tr>
-                                        <th>Loyiha</th>
-                                        <th>Xaridor</th>
-                                        <th class="text-end">Daromad</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for trx in my_sales %}
-                                    <tr>
-                                        <td>{{ trx.project.title|truncatechars:15 }}</td>
-                                        <td>
-                                            <img src="https://ui-avatars.com/api/?name={{ trx.user.username }}"
-                                                 class="rounded-circle me-1" width="20">
-                                            {{ trx.user.username }}
-                                        </td>
-                                        <td class="text-end">
-                                            {% if trx.status == 'hold' %}
-                                            <span class="text-warning fw-bold"><i class="fas fa-clock"></i> ${{ trx.amount }}</span>
-                                            {% elif trx.status == 'completed' %}
-                                            <span class="text-success fw-bold">+${{ trx.amount }}</span>
-                                            {% elif trx.status == 'disputed' %}
-                                            <span class="text-danger fw-bold">Nizo</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="3" class="text-center text-muted py-3">Sotuvlar yo'q</td>
-                                    </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
             {% if request.user == target_user %}
             <div class="wallet-card">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="text-success small fw-bold">MENING HISOBIM</div>
-                    <i class="fas fa-wallet text-success opacity-50"></i>
+                    <div class="text-success small fw-bold" style="letter-spacing: 1px;">MENING HISOBIM</div>
+                    <i class="fas fa-wallet text-success opacity-75 fs-5"></i>
                 </div>
 
                 <div>
-                    <h2 class="text-white fw-bold m-0">${{ target_user.profile.balance }}</h2>
+                    <h2 class="text-white fw-bold m-0" style="font-size: 2.2rem;">${{ target_user.profile.balance }}</h2>
                     <small class="text-white-50" style="font-size: 12px;">Mavjud mablag'</small>
                 </div>
 
@@ -330,16 +273,130 @@
                 {% endif %}
 
                 <div class="d-grid gap-2 mt-4">
-                    <a href="{% url 'add_funds' %}" class="wallet-btn wallet-btn-add"><i
-                            class="fas fa-plus-circle me-1"></i> To'ldirish</a>
-                    <a href="{% url 'withdraw_money' %}" class="wallet-btn wallet-btn-out"><i
-                            class="fas fa-arrow-right me-1"></i> Pul yechish</a>
+                    <a href="{% url 'add_funds' %}" class="wallet-btn wallet-btn-add"><i class="fas fa-plus-circle me-1"></i> To'ldirish</a>
+                    <a href="{% url 'withdraw_money' %}" class="wallet-btn wallet-btn-out"><i class="fas fa-arrow-right me-1"></i> Pul yechish</a>
                 </div>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
+
+{% if is_owner %}
+<div class="row g-4 mb-5">
+    <div class="col-lg-6">
+        <div class="neon-data-card">
+            <div class="neon-data-header">
+                <i class="fas fa-shopping-bag text-primary"></i> Mening Xaridlarim
+            </div>
+            <div class="table-responsive">
+                <table class="table custom-table mb-0">
+                    <thead>
+                    <tr>
+                        <th>Loyiha</th>
+                        <th>Holat</th>
+                        <th class="text-end">Amal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for trx in my_purchases %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'project_detail' trx.project.slug %}"
+                               class="text-white text-decoration-none fw-bold">
+                                {{ trx.project.title|truncatechars:20 }}
+                            </a>
+                            <div class="text-muted small">${{ trx.amount }}</div>
+                        </td>
+                        <td>
+                            {% if trx.status == 'hold' %}
+                            <span class="badge bg-warning text-dark border border-warning">Muzlatilgan ❄️</span>
+                            {% elif trx.status == 'completed' %}
+                            <span class="badge bg-success bg-opacity-75 border border-success">Yakunlandi ✅</span>
+                            {% elif trx.status == 'disputed' %}
+                            <span class="badge bg-danger bg-opacity-75 border border-danger">Nizo ⚖️</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if trx.status == 'hold' %}
+                            <div class="btn-group">
+                                <a href="{% url 'confirm_purchase' trx.pk %}"
+                                   class="btn btn-sm btn-success" title="Qabul qildim"><i class="fas fa-check"></i></a>
+                                <a href="{% url 'raise_dispute' trx.pk %}"
+                                   class="btn btn-sm btn-outline-danger" title="Muammo bor"><i class="fas fa-gavel"></i></a>
+                            </div>
+                            {% elif trx.status == 'completed' %}
+                            <a href="{{ trx.project.source_code.url }}" class="btn btn-sm btn-primary rounded-pill px-3"
+                               download>
+                                <i class="fas fa-download"></i> Yuklash
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            <i class="fas fa-shopping-basket fa-2x mb-2 opacity-50"></i><br>
+                            Xaridlar tarixi bo'sh
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="neon-data-card">
+            <div class="neon-data-header">
+                <i class="fas fa-chart-line text-success"></i> Mening Sotuvlarim
+            </div>
+            <div class="table-responsive">
+                <table class="table custom-table mb-0">
+                    <thead>
+                    <tr>
+                        <th>Loyiha</th>
+                        <th>Xaridor</th>
+                        <th class="text-end">Daromad</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for trx in my_sales %}
+                    <tr>
+                        <td class="fw-bold text-white">{{ trx.project.title|truncatechars:20 }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="https://ui-avatars.com/api/?name={{ trx.user.username }}"
+                                     class="rounded-circle" width="24">
+                                <span class="small">{{ trx.user.username }}</span>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            {% if trx.status == 'hold' %}
+                            <span class="text-warning fw-bold"><i class="fas fa-clock me-1"></i>${{ trx.amount }}</span>
+                            {% elif trx.status == 'completed' %}
+                            <span class="text-success fw-bold"><i class="fas fa-plus me-1"></i>${{ trx.amount }}</span>
+                            {% elif trx.status == 'disputed' %}
+                            <span class="text-danger fw-bold">Nizo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            <i class="fas fa-chart-bar fa-2x mb-2 opacity-50"></i><br>
+                            Sotuvlar tarixi bo'sh
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <h4 class="text-white mb-4 ps-2 border-start border-4 border-primary">Mening Loyihalarim</h4>
 <div class="project-grid mb-5">
@@ -353,10 +410,10 @@
                     </span>
                 </div>
             </div>
-            <div class="p-3">
+            <div class="p-3 d-flex flex-column flex-grow-1">
                 <h5 class="text-white fw-bold mb-1 text-truncate">{{ project.title }}</h5>
                 <small class="text-muted d-block mb-3">{{ project.get_category_display }}</small>
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="mt-auto d-flex justify-content-between align-items-center">
                     <a href="{% url 'project_detail' project.slug %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Ko'rish</a>
                     <div class="d-flex gap-2">
                         {% if request.user == target_user %}
@@ -366,6 +423,10 @@
                     </div>
                 </div>
             </div>
+        </div>
+    {% empty %}
+        <div class="col-12 text-center text-muted py-5">
+            <p>Hozircha yuklangan loyihalar yo'q.</p>
         </div>
     {% endfor %}
 </div>
@@ -381,7 +442,7 @@
                 <div class="p-3">
                     <h5 class="text-white fw-bold mb-1">{{ project.title }}</h5>
                     <small class="text-success mb-3 d-block"><i class="fas fa-check-circle me-1"></i> Sotib olingan</small>
-                    <a href="{% url 'project_detail' project.slug %}" class="btn btn-sm btn-success w-100 rounded-pill">Darsni ko'rish</a>
+                    <a href="{% url 'project_detail' project.slug %}" class="btn btn-sm btn-success w-100 rounded-pill fw-bold">Darsni ko'rish</a>
                 </div>
             </div>
         {% endfor %}
@@ -456,7 +517,9 @@
             } else {
                 btn.classList.remove('active'); label.innerText = 'Sinxronlash';
             }
-            document.querySelectorAll('.stat-item b')[1].innerText = data.followers_count;
+            // Stats yangilash
+            const stats = document.querySelectorAll('.stat-item b');
+            if(stats.length > 1) stats[1].innerText = data.followers_count;
         });
     }
 </script>
