@@ -954,11 +954,9 @@ def fix_database_slugs(request):
     return HttpResponse(f"Muvaffaqiyatli! {count} ta loyiha linki (slug) bazada tuzatildi.")
 
 
-# projects/views.py ning eng oxiriga qo'shing:
-
 @login_required
 def admin_dashboard(request):
-    # 1. UMUMIY STATISTIKA
+    # 1. UMUMIY STATISTIKA (Bu qismlar to'g'ri ishlaydi)
     total_users = User.objects.count()
     total_projects = Project.objects.count()
     total_revenue = Transaction.objects.filter(status='completed').aggregate(Sum('amount'))['amount__sum'] or 0
@@ -967,31 +965,28 @@ def admin_dashboard(request):
     time_threshold = timezone.now() - timedelta(minutes=15)
     online_users = User.objects.filter(profile__last_activity__gte=time_threshold).count()
 
-    # 3. TOP XARIDORLAR (Bu to'g'ri ishlayapti)
+    # 3. TOP XARIDORLAR
     top_spenders = User.objects.annotate(
         total_spent=Sum('transactions__amount', filter=Q(transactions__status='completed'))
     ).filter(total_spent__gt=0).order_by('-total_spent')[:10]
 
-    # 4. ENG FAOL SOTUVCHILAR (YANGI, ISHONCHLI USUL 🛠)
-    # Biz to'g'ridan-to'g'ri Transaction jadvalidan eng ko'p sotgan mualliflarni sanaymiz.
-
-    # A) "Completed" bo'lgan tranzaksiyalarni olib, muallif (project__author) bo'yicha guruhlaymiz
-    seller_stats = Transaction.objects.filter(status='completed') \
+    # 4. ENG FAOL SOTUVCHILAR (XATOSIZ YANGI USUL 🛠️)
+    # Tranzaksiyalar jadvalidan eng ko'p sotgan mualliflarni guruhlab olamiz
+    seller_data = Transaction.objects.filter(status='completed') \
         .values('project__author') \
-        .annotate(total_sales=Count('id')) \
-        .order_by('-total_sales')[:10]
-
-    # B) Natija ID larda keladi, biz ularni User obyektiga aylantiramiz
-    seller_ids = [s['project__author'] for s in seller_stats]
-    sellers_dict = {u.id: u for u in User.objects.filter(id__in=seller_ids)}
+        .annotate(sells_count=Count('id')) \
+        .order_by('-sells_count')[:10]
 
     top_sellers = []
-    for stat in seller_stats:
-        user = sellers_dict.get(stat['project__author'])
-        if user:
-            # Templateda ishlatish uchun 'total_sales' ni qo'lda yozib qo'yamiz
-            user.total_sales = stat['total_sales']
+    for item in seller_data:
+        try:
+            # Har bir ID uchun User obyektini olamiz
+            user = User.objects.get(id=item['project__author'])
+            # HTMLda ko'rinishi uchun total_sales degan "virtual" maydon qo'shamiz
+            user.total_sales = item['sells_count']
             top_sellers.append(user)
+        except User.DoesNotExist:
+            continue
 
     context = {
         'total_users': total_users,
