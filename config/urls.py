@@ -23,7 +23,9 @@ urlpatterns = [
     path('api/auth/login/', obtain_auth_token, name='api_token_auth'),
     path('api/auth/register/', RegisterAPI.as_view(), name='api_register'),
     path('api/profile/', ProfileAPI.as_view(), name='api_profile'),
-
+    path('api/buy/<int:pk>/', views.api_buy_project, name='api_buy_project'),
+    path('api/comment/add/<int:pk>/', views.api_post_comment, name='api_post_comment'),
+    path('api/comments/<int:pk>/', views.api_get_comments, name='api_get_comments'),
     path('api/projects/', ProjectListAPI.as_view(), name='api_project_list'),
     path('api/projects/create/', ProjectCreateAPI.as_view(), name='api_project_create'),
     path('api/projects/<int:pk>/', ProjectDetailAPI.as_view(), name='api_project_detail'),

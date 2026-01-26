@@ -48,3 +48,25 @@ class ProjectSerializer(serializers.ModelSerializer):
         if obj.author.profile.avatar:
             return obj.author.profile.avatar.url
         return ""
+
+
+# --- projects/serializers.py eng pastiga qo'shing ---
+
+from .models import Comment, Transaction
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    avatar = serializers.ImageField(source='user.profile.avatar', read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'username', 'avatar', 'body', 'created_at']
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    project_title = serializers.CharField(source='project.title', read_only=True)
+
+    class Meta:
+        model = Transaction
+        fields = ['id', 'amount', 'status', 'project_title', 'created_at']

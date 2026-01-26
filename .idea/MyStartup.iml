@@ -6,8 +6,9 @@
       <excludeFolder url="file://$MODULE_DIR$/devtube_mobile/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/devtube_mobile/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/devtube_mobile/build" />
+      <excludeFolder url="file://$MODULE_DIR$/.venv1" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.14 (MyStartup)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.14 virtualenv at D:\DevTube\MyStartup\.venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Dart SDK" level="project" />
     <orderEntry type="library" name="Dart Packages" level="project" />

@@ -1183,3 +1183,82 @@ def auto_release_cron(request):
     management.call_command('release_funds')
 
     return HttpResponse("OK")
+
+
+# --- projects/views.py eng pastiga qo'shing ---
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .serializers import CommentSerializer
+
+
+# 1. API orqali SOTIB OLISH
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_buy_project(request, pk):
+    try:
+        project = Project.objects.get(pk=pk)
+        buyer_profile = request.user.profile
+
+        # O'z loyihasini sotib ololmasin
+        if project.author == request.user:
+            return Response({'success': False, 'message': "O'z loyihangizni sotib ololmaysiz"}, status=400)
+
+        # Balans yetarlimi?
+        if buyer_profile.balance >= project.price:
+            # Pulingizni yechamiz
+            buyer_profile.balance -= project.price
+            buyer_profile.save()
+
+            # Sotuvchiga (Muzlatilgan balansga)
+            author_profile = project.author.profile
+            author_profile.frozen_balance += project.price
+            author_profile.save()
+
+            # Xaridorni qo'shamiz
+            project.buyers.add(request.user)
+
+            # Tranzaksiya tarixi
+            Transaction.objects.create(
+                user=request.user,
+                project=project,
+                amount=project.price,
+                status=Transaction.HOLD
+            )
+
+            return Response({'success': True, 'message': "Muvaffaqiyatli sotib olindi!"})
+        else:
+            return Response({'success': False, 'message': "Mablag' yetarli emas"}, status=400)
+
+    except Project.DoesNotExist:
+        return Response({'success': False, 'message': "Loyiha topilmadi"}, status=404)
+
+
+# 2. API orqali IZOH YOZISH
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def api_post_comment(request, pk):
+    try:
+        project = Project.objects.get(pk=pk)
+        body = request.data.get('body')
+
+        if body:
+            comment = Comment.objects.create(project=project, user=request.user, body=body)
+            # Yangi izohni darhol qaytaramiz (ilovada ko'rsatish uchun)
+            return Response({
+                'success': True,
+                'comment': CommentSerializer(comment).data
+            })
+        else:
+            return Response({'success': False, 'message': "Matn yozilmadi"}, status=400)
+    except Project.DoesNotExist:
+        return Response({'success': False, 'message': "Loyiha topilmadi"}, status=404)
+
+
+# 3. API orqali IZOHLARNI OLISH
+@api_view(['GET'])
+def api_get_comments(request, pk):
+    comments = Comment.objects.filter(project_id=pk).order_by('-created_at')
+    serializer = CommentSerializer(comments, many=True)
+    return Response(serializer.data)
