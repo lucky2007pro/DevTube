@@ -45,12 +45,17 @@ urlpatterns = [
     # --- LOYIHA AMALLARI ---
     path('create/', views.create_project, name='create_project'),
     path('watch/<slug:slug>/', views.project_detail, name='project_detail'),
+
+    # 🔥 YANGI QO'SHILGAN QATOR (AI CHAT UCHUN) 🔥
+    path('project/<int:pk>/ask-ai/', views.project_ai_ask, name='project_ai_ask'),
+
     path('update/<int:pk>/', views.update_project, name='update_project'),
     path('delete/<int:pk>/', views.delete_project, name='delete_project'),
 
-    # --- PROFIL (TUZATILDI) ---
-    # Eski 'profile_public' o'rniga 'views.profile' qo'yildi
+    # --- PROFIL ---
     path('u/<str:username>/', views.profile, name='public_profile'),
+    path('profile/', views.profile, name='profile'),
+    path('@<str:username>/', views.profile, name='profile_by_username'),
 
     # --- INTERAKTIV ---
     path('like/<int:pk>/', views.like_project, name='like_project'),
@@ -61,8 +66,14 @@ urlpatterns = [
 
     # --- MOLIYA ---
     path('buy/<int:pk>/', views.buy_project, name='buy_project'),
+    path('confirm-purchase/<int:pk>/', views.confirm_purchase, name='confirm_purchase'),
     path('wallet/deposit/', views.add_funds, name='add_funds'),
     path('wallet/withdraw/', views.withdraw_money, name='withdraw_money'),
+
+    # --- MOLIYA (CRON & DISPUTE) ---
+    path('api/cron/release-funds/', views.auto_release_cron, name='cron_release'),
+    path('dispute/open/<int:pk>/', views.raise_dispute, name='raise_dispute'),
+    path('dispute/resolve/<int:pk>/<str:decision>/', views.resolve_dispute, name='resolve_dispute'),
 
     # --- TOOLS ---
     path('compiler/', views.online_compiler, name='compiler'),
@@ -76,23 +87,17 @@ urlpatterns = [
     path('inbox/', views.inbox, name='inbox'),
     path('direct/<str:username>/', views.direct_chat, name='direct_chat'),
 
-    # --- BOSHQA ---
+    # --- BILDIRISHLAR ---
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
     path('notifications/', views.my_notifications, name='my_notifications'),
-    path('api/cron/release-funds/', views.auto_release_cron, name='cron_release'),
-    # Profilning o'zi (Mening profilim)
-    path('profile/', views.profile, name='profile'),
-    # Username orqali (@admin kabi)
-    path('@<str:username>/', views.profile, name='profile_by_username'),
-    # Dispute tizimi
-    path('dispute/open/<int:pk>/', views.raise_dispute, name='raise_dispute'),
-    path('dispute/resolve/<int:pk>/<str:decision>/', views.resolve_dispute, name='resolve_dispute'),
+
     # --- AUTH WEB ---
     path('accounts/', include('allauth.urls')),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('signup/', views.register, name='register'),
-    path('confirm-purchase/<int:pk>/', views.confirm_purchase, name='confirm_purchase'),
+
+    # --- BOSHQA SAHIFALAR ---
     path('news/', views.announcements, name='announcements'),
     path('help/', views.help_page, name='help'),
     path('contact/', views.contact_page, name='contact'),
