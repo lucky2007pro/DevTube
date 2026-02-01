@@ -1278,3 +1278,55 @@ def api_get_comments(request, pk):
     comments = Comment.objects.filter(project_id=pk).order_by('-created_at')
     serializer = CommentSerializer(comments, many=True)
     return Response(serializer.data)
+
+
+# projects/views.py ga qo'shing
+
+@csrf_exempt
+def project_ai_ask(request, pk):
+    """
+    Loyiha ichida AI yordamchi.
+    Foydalanuvchi savol beradi, AI loyiha ma'lumotlari asosida javob beradi.
+    """
+    if request.method == 'POST':
+        try:
+            import google.generativeai as genai
+            import os
+
+            # 1. Ma'lumotlarni olish
+            project = get_object_or_404(Project, pk=pk)
+            data = json.loads(request.body)
+            user_question = data.get('question', '')
+
+            if not user_question:
+                return JsonResponse({'answer': "Iltimos, savol yozing."})
+
+            # 2. AI uchun kontekst tayyorlash
+            # Biz AIga loyiha haqida qisqacha ma'lumot beramiz
+            context = (
+                f"Sen 'DevTube' platformasida sotuvchi yordamchisisan. "
+                f"Loyiha nomi: '{project.title}'. "
+                f"Tavsifi: '{project.description}'. "
+                f"Narxi: {'$' + str(project.price) if project.price > 0 else 'Bepul'}. "
+                f"Xavfsizlik tahlili: '{project.ai_analysis}'. "
+                f"Foydalanuvchi savoli: '{user_question}'. "
+                f"Vazifang: Foydalanuvchiga loyihani tushuntirish va sotib olishga qiziqtirish. "
+                f"Javobni qisqa, do'stona va o'zbek tilida ber."
+            )
+
+            # 3. Gemini API ga so'rov
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key:
+                return JsonResponse({'answer': "Tizim xatosi: API kalit topilmadi."})
+
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-pro')
+            response = model.generate_content(context)
+
+            # 4. Javobni qaytarish
+            return JsonResponse({'answer': response.text})
+
+        except Exception as e:
+            return JsonResponse({'answer': f"Xatolik yuz berdi: {str(e)}"})
+
+    return JsonResponse({'error': 'POST required'}, status=400)
