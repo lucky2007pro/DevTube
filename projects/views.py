@@ -1320,7 +1320,11 @@ def project_ai_ask(request, pk):
                 return JsonResponse({'answer': "Tizim xatosi: API kalit topilmadi."})
 
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-pro')
+
+            # --- MANA SHU YERNI O'ZGARTIRING ---
+            # Ro'yxatdagi eng zo'r variantni qo'ydik:
+            model = genai.GenerativeModel('gemini-2.5-flash')
+
             response = model.generate_content(context)
 
             # 4. Javobni qaytarish
