@@ -155,14 +155,14 @@
             <span class="sync-username text-muted">Yangi qo'shish</span>
         </a>
 
-        {% for profile in synced_profiles %}
-            <a href="{% url 'profile_by_username' profile.user.username %}" class="sync-card">
+        {% for sync in synced_profiles %}
+            <a href="{% url 'profile_by_username' sync.following.user.username %}" class="sync-card">
                 <div class="sync-avatar-box">
                     <div class="sync-ring"></div>
-                    <img src="{% if profile.avatar %}{{ profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ profile.user.username }}{% endif %}" class="sync-avatar-img">
+                    <img src="{% if sync.following.avatar %}{{ sync.following.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ sync.following.user.username }}{% endif %}" class="sync-avatar-img">
                     <span class="sync-badge" title="Online"></span>
                 </div>
-                <span class="sync-username">{{ profile.user.username }}</span>
+                <span class="sync-username">{{ sync.following.user.username }}</span>
             </a>
         {% empty %}
             <div class="d-flex align-items-center text-muted ms-3">
@@ -170,7 +170,6 @@
             </div>
         {% endfor %}
     </div>
-
     <hr class="border-secondary opacity-25 mb-4">
 
     <h4 class="fw-bold text-white mb-4">
