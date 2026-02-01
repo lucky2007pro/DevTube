@@ -1,64 +1,166 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bildirishnomalar | DevTube{% endblock %}
+
 {% block content %}
+<style>
+    /* Notification Card Style */
+    .notif-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 0.8rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-white fw-bold">
-                    <i class="fas fa-bell text-warning me-2"></i>Bildirishnomalar
-                </h2>
-                <span class="badge bg-secondary">{{ notifications.count }} ta</span>
-            </div>
+    /* Light Mode */
+    body.light-mode .notif-card {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
 
-            <div class="list-group shadow-lg">
-                {% for note in notifications %}
-                <div class="list-group-item list-group-item-action bg-dark border-secondary text-white d-flex align-items-start p-3 mb-2 rounded border">
-                    <div class="me-3 mt-1">
-                        {% if 'sotib oldi' in note.verb %}
-                            <div class="bg-success rounded-circle p-2 d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
-                                <i class="fas fa-shopping-cart text-white"></i>
-                            </div>
-                        {% elif 'like' in note.verb %}
-                            <div class="bg-danger rounded-circle p-2 d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
-                                <i class="fas fa-heart text-white"></i>
-                            </div>
-                        {% else %}
-                            <div class="bg-primary rounded-circle p-2 d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
-                                <i class="fas fa-info text-white"></i>
-                            </div>
-                        {% endif %}
-                    </div>
+    /* Hover Effect */
+    .notif-card:hover {
+        transform: translateX(5px);
+        border-color: var(--neon-primary);
+        background: rgba(255, 255, 255, 0.05);
+    }
 
-                    <div class="flex-grow-1">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1 fw-bold">
-                                {{ note.actor }} 
-                                <span class="text-white-50 fw-normal">{{ note.verb }}</span>
-                            </h6>
-                            <small class="text-muted" style="font-size: 0.8rem;">{{ note.timestamp|timesince }} oldin</small>
-                        </div>
-                        
-                        <p class="mb-1 small text-white-50">
-                            {% if note.target %}
-                                <a href="{{ note.target.get_absolute_url }}" class="text-info text-decoration-none">
-                                    "{{ note.target }}"
-                                </a> loyihasida.
-                            {% else %}
-                                {{ note.description }}
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center py-5">
-                    <i class="far fa-bell-slash fa-3x text-muted mb-3"></i>
-                    <p class="text-white-50">Hozircha yangi bildirishnomalar yo'q.</p>
-                </div>
-                {% endfor %}
-            </div>
+    body.light-mode .notif-card:hover {
+        background: #f8fafc;
+        border-color: var(--neon-primary);
+    }
+
+    /* Icon Box */
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    /* Specific Colors */
+    .icon-success { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+    .icon-danger { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .icon-info { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
+    .icon-warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+
+    /* Unread Indicator */
+    .unread-dot {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 8px;
+        height: 8px;
+        background: var(--neon-secondary);
+        border-radius: 50%;
+        box-shadow: 0 0 10px var(--neon-secondary);
+    }
+
+    /* Typography */
+    .notif-text { color: #e2e8f0; font-size: 0.95rem; }
+    body.light-mode .notif-text { color: #334155; }
+
+    .notif-time { font-size: 0.75rem; color: #94a3b8; }
+
+    .actor-name { font-weight: 700; color: #fff; text-decoration: none; }
+    body.light-mode .actor-name { color: #0f172a; }
+
+    .target-link { color: var(--neon-primary); text-decoration: none; font-weight: 500; transition: 0.2s; }
+    .target-link:hover { color: var(--neon-secondary); text-decoration: underline; }
+</style>
+
+<div class="container py-5" style="max-width: 800px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold m-0 text-white">
+            <i class="fas fa-bell text-warning me-2"></i>Bildirishnomalar
+        </h2>
+        <div class="d-flex align-items-center gap-2">
+            {% if notifications.unread.count > 0 %}
+            <a href="{% url 'notifications:mark_all_as_read' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                <i class="fas fa-check-double me-1"></i> O'qilgan deb belgilash
+            </a>
+            {% endif %}
+            <span class="badge bg-dark border border-secondary text-white px-3 py-2 rounded-pill shadow-sm">
+                Jami: {{ notifications.count }}
+            </span>
         </div>
     </div>
-</div>
 
+    <div class="d-flex flex-column">
+        {% for note in notifications %}
+        <div class="notif-card">
+
+            <div class="icon-box
+                {% if 'sotib' in note.verb or 'buy' in note.verb %}icon-success
+                {% elif 'like' in note.verb or 'yoqdi' in note.verb %}icon-danger
+                {% elif 'comment' in note.verb or 'izoh' in note.verb %}icon-info
+                {% else %}icon-warning{% endif %}">
+
+                {% if 'sotib' in note.verb or 'buy' in note.verb %}
+                    <i class="fas fa-shopping-bag"></i>
+                {% elif 'like' in note.verb or 'yoqdi' in note.verb %}
+                    <i class="fas fa-heart"></i>
+                {% elif 'comment' in note.verb or 'izoh' in note.verb %}
+                    <i class="fas fa-comment-dots"></i>
+                {% else %}
+                    <i class="fas fa-bell"></i>
+                {% endif %}
+            </div>
+
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="notif-text">
+                        <a href="{% if note.actor.username %}{% url 'public_profile' note.actor.username %}{% else %}#{% endif %}" class="actor-name">
+                            {{ note.actor }}
+                        </a>
+                        <span class="opacity-75">{{ note.verb }}</span>
+                    </span>
+                    <small class="notif-time ms-2">{{ note.timestamp|timesince }} oldin</small>
+                </div>
+
+                <p class="mb-0 small opacity-75 text-muted">
+                    {% if note.target %}
+                        <a href="{{ note.target.get_absolute_url }}" class="target-link">
+                            <i class="fas fa-link small me-1"></i> "{{ note.target }}"
+                        </a> loyihasida.
+                    {% else %}
+                        {{ note.description|truncatechars:100 }}
+                    {% endif %}
+                </p>
+            </div>
+
+            {% if note.unread %}
+                <span class="unread-dot" title="O'qilmagan"></span>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="text-center py-5">
+            <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                <i class="far fa-bell-slash fa-3x text-secondary opacity-50"></i>
+            </div>
+            <h5 class="text-white">Yangi xabarlar yo'q</h5>
+            <p class="text-muted small">Barcha bildirishnomalar o'qib chiqilgan.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4 text-center">
+        </div>
+
+</div>
 {% endblock %}

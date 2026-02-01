@@ -1,46 +1,162 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Xabarlarim | DevTube{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <h2 class="text-white fw-bold mb-4"><i class="fas fa-envelope text-primary me-2"></i>Xabarlarim</h2>
-    
-    <div class="list-group shadow-lg">
+<style>
+    /* Inbox uchun maxsus stillar */
+    .inbox-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .inbox-item {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        background: rgba(15, 23, 42, 0.6); /* Glass fon */
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Light Mode */
+    body.light-mode .inbox-item {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Hover effekti */
+    .inbox-item:hover {
+        transform: translateY(-3px) scale(1.01);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--neon-primary);
+        box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3);
+    }
+
+    body.light-mode .inbox-item:hover {
+        background: #f8fafc;
+        border-color: var(--neon-primary);
+    }
+
+    /* Avatar */
+    .avatar-wrapper {
+        position: relative;
+        margin-right: 15px;
+    }
+
+    .inbox-avatar {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid transparent;
+        transition: 0.3s;
+    }
+
+    .inbox-item:hover .inbox-avatar {
+        border-color: var(--neon-secondary);
+    }
+
+    /* Online indicator */
+    .status-dot {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        background: #10b981; /* Yashil */
+        border: 2px solid #0f172a;
+        border-radius: 50%;
+    }
+
+    /* Unread Badge */
+    .unread-badge {
+        background: linear-gradient(135deg, #ef4444, #f43f5e);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: bold;
+        padding: 4px 10px;
+        border-radius: 20px;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    /* Matnlar */
+    .chat-user { font-weight: 700; color: #fff; font-size: 1.05rem; }
+    body.light-mode .chat-user { color: #1e293b; }
+
+    .chat-preview { color: #94a3b8; font-size: 0.9rem; max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .chat-time { font-size: 0.75rem; color: #64748b; white-space: nowrap; }
+</style>
+
+<div class="container py-5" style="max-width: 800px;">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="fw-bold m-0 text-white"><i class="fas fa-envelope-open-text text-primary me-2"></i> Xabarlarim</h2>
+        <span class="badge bg-dark border border-secondary text-muted px-3 py-2 rounded-pill">
+            Jami: {{ chats|length }}
+        </span>
+    </div>
+
+    <div class="inbox-list">
         {% for chat in chats %}
-        <a href="{% url 'direct_chat' chat.user.username %}" class="list-group-item list-group-item-action bg-dark border-secondary text-white d-flex align-items-center p-3 mb-2 rounded border">
-            <div class="position-relative me-3">
-                {% if chat.user.profile.avatar %}
-                    <img src="{{ chat.user.profile.avatar.url }}" class="rounded-circle" width="50" height="50" style="object-fit: cover;">
-                {% else %}
-                    <i class="fas fa-user-circle fs-1"></i>
-                {% endif %}
-                
-                {% if chat.unread > 0 %}
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                        {{ chat.unread }}
-                    </span>
-                {% endif %}
+        <a href="{% url 'direct_chat' chat.user.username %}" class="inbox-item">
+
+            <div class="avatar-wrapper">
+                <img src="{% if chat.user.profile.avatar %}{{ chat.user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ chat.user.username }}{% endif %}" class="inbox-avatar shadow-sm">
+                <span class="status-dot"></span>
             </div>
 
-            <div class="flex-grow-1">
-                <div class="d-flex justify-content-between">
-                    <h5 class="mb-1 fw-bold">{{ chat.user.username }} 
+            <div class="flex-grow-1 overflow-hidden">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <div class="chat-user">
+                        {{ chat.user.username }}
                         {% if chat.user.profile.is_verified %}
-                            <i class="fas fa-check-circle text-primary small"></i>
+                            <i class="fas fa-check-circle text-primary small ms-1" title="Tasdiqlangan"></i>
                         {% endif %}
-                    </h5>
-                    <small class="text-muted">{{ chat.last_msg.created_at|timesince }} oldin</small>
+                    </div>
                 </div>
-                <p class="mb-1 text-white-50 small text-truncate" style="max-width: 500px;">
+
+                <p class="chat-preview m-0">
                     {% if chat.last_msg.sender == request.user %}
-                        <i class="fas fa-reply text-muted me-1"></i> Siz: 
+                        <span class="text-primary me-1"><i class="fas fa-reply"></i> Siz:</span>
                     {% endif %}
-                    {{ chat.last_msg.body }}
+                    <span class="{% if chat.unread > 0 %}text-white fw-bold{% endif %}">
+                        {{ chat.last_msg.body }}
+                    </span>
                 </p>
+            </div>
+
+            <div class="d-flex flex-column align-items-end ms-3 gap-2">
+                <span class="chat-time">{{ chat.last_msg.created_at|date:"H:i" }}</span>
+
+                {% if chat.unread > 0 %}
+                    <span class="unread-badge pulse-animation">
+                        {{ chat.unread }}
+                    </span>
+                {% else %}
+                    <i class="fas fa-chevron-right text-muted opacity-25"></i>
+                {% endif %}
             </div>
         </a>
         {% empty %}
         <div class="text-center py-5">
-            <i class="far fa-paper-plane fa-3x text-muted mb-3"></i>
-            <p class="text-white-50">Sizda hali yozishmalar yo'q.</p>
+            <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                <i class="far fa-paper-plane fa-3x text-secondary opacity-50"></i>
+            </div>
+            <h5 class="text-white">Sizda hali yozishmalar yo'q</h5>
+            <p class="text-muted small">Dasturchilar bilan tanishing va birinchi bo'lib yozing!</p>
+            <a href="{% url 'community_chat' %}" class="btn btn-primary btn-sm rounded-pill px-4 mt-2">
+                Umumiy chatga o'tish
+            </a>
         </div>
         {% endfor %}
     </div>

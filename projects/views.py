@@ -743,11 +743,27 @@ def my_notifications(request):
 
 @login_required
 def syncing_projects(request):
-    following_profiles = request.user.profile.following.all()
-    author_ids = [sync.following.user.id for sync in following_profiles]
+    # 1. Men kuzatayotgan (Sync bo'lgan) barcha bog'lamalarni olamiz
+    # 'select_related' baza bilan ishlashni tezlashtiradi (User va Profile ma'lumotlarini birdan oladi)
+    my_syncs = Sync.objects.filter(follower=request.user.profile).select_related('following__user')
 
-    feed_projects = Project.objects.filter(author__id__in=author_ids).order_by('-created_at')
-    return render(request, 'syncing.html', {'projects': feed_projects})
+    # 2. Shu bog'lamalardan mualliflarning ID larini ajratib olamiz
+    author_profile_ids = [sync.following.id for sync in my_syncs]
+
+    # 3. Shu mualliflarning BARCHA loyihalarini olamiz (Eski va yangi)
+    # is_frozen=False qo'shdik, chunki bloklangan loyihalar chiqmasligi kerak
+    feed_projects = Project.objects.filter(
+        author__profile__id__in=author_profile_ids,
+        is_frozen=False
+    ).order_by('-created_at')
+
+    # 4. Context tayyorlaymiz
+    context = {
+        'synced_profiles': my_syncs,  # <--- MANA SHU QATOR YETISHMAYOTGAN EDI
+        'projects': feed_projects
+    }
+
+    return render(request, 'syncing.html', context)
 
 
 @login_required

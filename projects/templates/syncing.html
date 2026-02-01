@@ -1,150 +1,230 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Mening Sinxronlarim | DevTube{% endblock %}
+
 {% block content %}
 <style>
-    /* --- KANALLAR RO'YXATI (Stories Style) --- */
-    .channels-wrapper {
+    /* --- SYNC CONNECTIONS (STORY STYLE) --- */
+    .sync-wrapper {
         overflow-x: auto;
         white-space: nowrap;
-        padding-bottom: 15px;
-        margin-bottom: 30px;
-        -webkit-overflow-scrolling: touch; /* Telefonda silliq yurishi uchun */
+        padding: 10px 5px 20px 5px;
+        margin-bottom: 2rem;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        gap: 20px;
     }
 
-    .channels-wrapper::-webkit-scrollbar {
-        height: 6px;
-    }
+    .sync-wrapper::-webkit-scrollbar { height: 4px; }
+    .sync-wrapper::-webkit-scrollbar-thumb { background: var(--neon-primary); border-radius: 10px; }
 
-    .channel-circle {
-        display: inline-flex;
+    .sync-card {
+        display: flex;
         flex-direction: column;
         align-items: center;
-        margin-right: 25px;
         text-decoration: none;
+        position: relative;
         transition: 0.3s;
+        min-width: 80px;
     }
 
-    .channel-circle:hover .avatar-ring {
-        transform: scale(1.1);
-        box-shadow: 0 0 20px var(--neon-primary);
-    }
-
-    .avatar-ring {
-        width: 80px; height: 80px;
-        border-radius: 50%;
-        padding: 3px;
-        background: linear-gradient(45deg, var(--neon-primary), var(--neon-secondary));
+    .sync-avatar-box {
+        width: 70px;
+        height: 70px;
+        position: relative;
         margin-bottom: 10px;
-        transition: 0.3s;
     }
 
-    .channel-img {
+    /* Aylanib turuvchi neon halqa (Sinxronizatsiya effekti) */
+    .sync-ring {
+        position: absolute;
+        top: -3px; left: -3px; right: -3px; bottom: -3px;
+        border-radius: 50%;
+        background: conic-gradient(from 0deg, transparent, var(--neon-primary), var(--neon-secondary), transparent);
+        animation: spin 4s linear infinite;
+        z-index: 1;
+    }
+
+    .sync-avatar-img {
         width: 100%; height: 100%;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid #0f172a; /* Orqa fon rangi bilan bir xil */
+        border: 3px solid #0f172a; /* Fon rangi */
+        position: relative;
+        z-index: 2;
     }
 
-    .channel-name {
-        color: #cbd5e1;
-        font-size: 13px;
+    .sync-username {
+        font-size: 0.8rem;
         font-weight: 600;
-        max-width: 90px;
+        color: #e2e8f0;
+        max-width: 80px;
         overflow: hidden;
         text-overflow: ellipsis;
+        text-align: center;
     }
 
-    /* --- LOYIHALAR GRID --- */
+    body.light-mode .sync-username { color: #334155; }
+    body.light-mode .sync-avatar-img { border-color: #f1f5f9; }
+
+    .sync-badge {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: #10b981;
+        border: 2px solid #0f172a;
+        width: 14px; height: 14px;
+        border-radius: 50%;
+        z-index: 3;
+    }
+
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+
+    /* --- FEED GRID (GLASSMORPHISM) --- */
     .feed-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 25px;
     }
 
-    .feed-card {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+    .glass-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
         border-radius: 20px;
         overflow: hidden;
-        transition: 0.3s;
-    }
-    .feed-card:hover {
-        transform: translateY(-5px);
-        border-color: var(--neon-primary);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
     }
 
-    .feed-header {
-        padding: 15px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+    body.light-mode .glass-card {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+
+    .glass-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--neon-primary);
+        box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.3);
+    }
+
+    .card-img-top {
+        height: 180px;
+        width: 100%;
+        object-fit: cover;
+        position: relative;
+    }
+
+    .price-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        color: #fbbf24;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        border: 1px solid rgba(251, 191, 36, 0.3);
     }
 </style>
 
-<div class="container-fluid px-2">
+<div class="container-fluid px-2 pb-5">
 
-    <h5 class="text-white mb-4 fw-bold"><i class="fas fa-users text-primary me-2"></i> Obuna bo'lgan kanallaringiz</h5>
+    <div class="d-flex align-items-center mb-3">
+        <h4 class="fw-bold m-0 text-white">
+            <i class="fas fa-sync-alt text-primary me-2 fa-spin" style="animation-duration: 3s;"></i>
+            Faol Sinxronlar
+        </h4>
+        <span class="badge bg-dark border border-secondary text-muted ms-3 rounded-pill">{{ synced_profiles|length }}</span>
+    </div>
 
-    <div class="channels-wrapper">
-        {% for sync in synced_profiles %}
-            <a href="{% url 'profile_by_username' sync.following.user.username %}" class="channel-circle">
-                <div class="avatar-ring">
-                    <img src="{% if sync.following.avatar %}{{ sync.following.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ sync.following.user.username }}{% endif %}" class="channel-img">
+    <div class="sync-wrapper">
+        <a href="{% url 'trending' %}" class="sync-card">
+            <div class="sync-avatar-box">
+                <div class="sync-avatar-img d-flex align-items-center justify-content-center bg-dark text-white border-secondary" style="border-style: dashed;">
+                    <i class="fas fa-plus fa-lg"></i>
                 </div>
-                <span class="channel-name">{{ sync.following.user.username }}</span>
+            </div>
+            <span class="sync-username text-muted">Yangi qo'shish</span>
+        </a>
+
+        {% for profile in synced_profiles %}
+            <a href="{% url 'profile_by_username' profile.user.username %}" class="sync-card">
+                <div class="sync-avatar-box">
+                    <div class="sync-ring"></div>
+                    <img src="{% if profile.avatar %}{{ profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ profile.user.username }}{% endif %}" class="sync-avatar-img">
+                    <span class="sync-badge" title="Online"></span>
+                </div>
+                <span class="sync-username">{{ profile.user.username }}</span>
             </a>
         {% empty %}
-            <div class="text-muted small ms-2">Hali hech kimga obuna bo'lmagansiz.</div>
+            <div class="d-flex align-items-center text-muted ms-3">
+                <i class="fas fa-unlink me-2"></i> Hali hech kim bilan sinxronlashmagansiz.
+            </div>
         {% endfor %}
     </div>
 
-    <hr class="border-secondary opacity-25 my-4">
+    <hr class="border-secondary opacity-25 mb-4">
 
-    <h5 class="text-white mb-4 fw-bold"><i class="fas fa-rss text-warning me-2"></i> So'nggi yangiliklar</h5>
+    <h4 class="fw-bold text-white mb-4">
+        <i class="fas fa-stream text-info me-2"></i> Sinxron Lenta
+    </h4>
 
     <div class="feed-grid">
         {% for project in projects %}
-            <div class="feed-card">
-                <div class="feed-header">
-                    <img src="{% if project.author.profile.avatar %}{{ project.author.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ project.author.username }}{% endif %}"
-                         style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;">
-                    <div>
-                        <a href="{% url 'profile_by_username' project.author.username %}" class="text-white text-decoration-none fw-bold small d-block">
-                            {{ project.author.username }}
-                        </a>
-                        <span class="text-muted d-block" style="font-size: 11px;">{{ project.created_at|timesince }} oldin</span>
-                    </div>
-                </div>
-
-                <div style="aspect-ratio: 16/9; background: #000; position: relative;">
+            <div class="glass-card">
+                <div class="card-img-top">
                     {% if project.image %}
                         <img src="{{ project.image.url }}" style="width:100%; height:100%; object-fit:cover;">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center h-100 bg-dark text-secondary">
+                            <i class="fas fa-code fa-3x opacity-25"></i>
+                        </div>
                     {% endif %}
-                    <div class="position-absolute top-0 end-0 p-2">
-                        <span class="badge {% if project.price > 0 %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                            {% if project.price > 0 %}${{ project.price }}{% else %}Free{% endif %}
-                        </span>
-                    </div>
+
+                    <span class="price-tag">
+                        {% if project.price > 0 %}${{ project.price }}{% else %}Free{% endif %}
+                    </span>
                 </div>
 
-                <div class="p-3">
-                    <h5 class="text-white fw-bold mb-2">{{ project.title }}</h5>
-                    <p class="text-muted small text-truncate">{{ project.description }}</p>
-
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <a href="{% url 'project_detail' project.pk %}" class="btn btn-sm btn-outline-primary rounded-pill w-100">
-                            <i class="fas fa-play me-1"></i> Ko'rish
+                <div class="p-3 d-flex flex-column flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="{% if project.author.profile.avatar %}{{ project.author.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ project.author.username }}{% endif %}"
+                             class="rounded-circle me-2" width="24" height="24">
+                        <a href="{% url 'profile_by_username' project.author.username %}" class="text-decoration-none small fw-bold text-white-50 hover-white">
+                            {{ project.author.username }}
                         </a>
+                        <span class="text-muted mx-1">•</span>
+                        <small class="text-muted" style="font-size: 0.7rem;">{{ project.created_at|timesince }} oldin</small>
                     </div>
+
+                    <h5 class="fw-bold text-white mb-1 text-truncate">{{ project.title }}</h5>
+                    <p class="text-muted small mb-3 flex-grow-1" style="line-height: 1.4; max-height: 3em; overflow: hidden;">
+                        {{ project.description|truncatewords:15 }}
+                    </p>
+
+                    <a href="{% url 'project_detail' project.pk %}" class="btn btn-sm btn-outline-primary w-100 rounded-pill fw-bold">
+                        <i class="fas fa-eye me-1"></i> Ko'rish
+                    </a>
                 </div>
             </div>
         {% empty %}
-            <div class="col-12 text-center py-5 text-muted">
-                <i class="fas fa-ghost fa-3x mb-3 opacity-50"></i>
-                <p>Hozircha yangiliklar yo'q. Ko'proq dasturchilarga obuna bo'ling!</p>
-                <a href="{% url 'trending' %}" class="btn btn-outline-light btn-sm mt-2">Trenddagilarni ko'rish</a>
+            <div class="col-12 text-center py-5">
+                <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-satellite-dish fa-3x text-secondary opacity-50"></i>
+                </div>
+                <h5 class="text-white">Lenta bo'm-bo'sh</h5>
+                <p class="text-muted">Sinxronlaringiz hali hech qanday kod yuklamagan yoki siz hali hech kimga ulanmagansiz.</p>
+                <a href="{% url 'trending' %}" class="btn btn-primary rounded-pill px-4">
+                    <i class="fas fa-search me-2"></i> Trenddagilarni izlash
+                </a>
             </div>
         {% endfor %}
     </div>
