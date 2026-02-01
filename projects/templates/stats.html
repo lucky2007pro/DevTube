@@ -1,151 +1,326 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Admin Dashboard | DevTube{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <h2 class="text-white fw-bold mb-4"><i class="fas fa-chart-line text-primary me-2"></i>Admin Dashboard</h2>
+<style>
+    /* Dashboard uchun maxsus stillar */
+    .dashboard-header {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .stats-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    /* Light mode uchun moslashtirish */
+    body.light-mode .stats-card {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--neon-primary);
+        box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.3);
+    }
+
+    .stats-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .table-glass {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    body.light-mode .table-glass {
+        background: #ffffff;
+        border-color: #e2e8f0;
+    }
+
+    .table-glass .table {
+        margin-bottom: 0;
+        color: #e2e8f0;
+    }
+
+    body.light-mode .table-glass .table {
+        color: #1e293b;
+    }
+
+    .table-glass th {
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid var(--glass-border);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        padding: 1rem;
+    }
+
+    body.light-mode .table-glass th {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        color: #64748b;
+    }
+
+    .table-glass td {
+        border-bottom: 1px solid var(--glass-border);
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    body.light-mode .table-glass td {
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table-glass tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-glass tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    body.light-mode .table-glass tr:hover td {
+        background: #f1f5f9;
+    }
+
+    /* Ranglar va Gradientlar */
+    .bg-icon-primary { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+    .bg-icon-success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .bg-icon-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .bg-icon-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+    /* Animatsiya */
+    .fade-up {
+        animation: fadeUp 0.5s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    @keyframes fadeUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+</style>
+
+<div class="container-fluid px-lg-4 pb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-5 fade-up">
+        <div>
+            <h2 class="fw-bold mb-1">Admin Dashboard</h2>
+            <p class="text-muted small mb-0">Platforma statistikasi va tahlili</p>
+        </div>
+        <div class="d-none d-md-block">
+            <span class="badge bg-dark border border-secondary text-white px-3 py-2 rounded-pill">
+                <i class="fas fa-clock me-2 text-warning"></i> {{ "now"|date:"d F, Y H:i" }}
+            </span>
+        </div>
+    </div>
 
     <div class="row g-4 mb-5">
-        <div class="col-md-3">
-            <div class="card bg-dark border-secondary shadow-sm h-100">
-                <div class="card-body text-center">
-                    <div class="fs-1 text-info mb-2"><i class="fas fa-users"></i></div>
-                    <h3 class="text-white fw-bold">{{ total_users }}</h3>
-                    <p class="text-white-50 small">Jami Foydalanuvchilar</p>
+        <div class="col-sm-6 col-xl-3 fade-up delay-100">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small fw-bold text-uppercase mb-1">Jami Foydalanuvchilar</p>
+                        <h2 class="fw-bold mb-0">{{ total_users }}</h2>
+                    </div>
+                    <div class="stats-icon-wrapper bg-icon-primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-success small fw-bold"><i class="fas fa-arrow-up"></i> Faol</span>
+                    <span class="text-muted small ms-2">hamjamiyat</span>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3">
-            <div class="card bg-dark border-secondary shadow-sm h-100">
-                <div class="card-body text-center">
-                    <div class="fs-1 text-success mb-2"><i class="fas fa-signal"></i></div>
-                    <h3 class="text-white fw-bold">{{ online_users }}</h3>
-                    <p class="text-white-50 small">Hozir Online (15 daq)</p>
+
+        <div class="col-sm-6 col-xl-3 fade-up delay-100">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small fw-bold text-uppercase mb-1">Hozir Online</p>
+                        <h2 class="fw-bold mb-0">{{ online_users }}</h2>
+                    </div>
+                    <div class="stats-icon-wrapper bg-icon-success">
+                        <i class="fas fa-signal"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-success small fw-bold">Live</span>
+                    <span class="text-muted small ms-2">so'nggi 15 daqiqa</span>
                 </div>
             </div>
         </div>
 
         {% if user.is_superuser %}
-        <div class="col-md-3">
-            <div class="card bg-dark border-secondary shadow-sm h-100">
-                <div class="card-body text-center">
-                    <div class="fs-1 text-warning mb-2"><i class="fas fa-dollar-sign"></i></div>
-                    <h3 class="text-white fw-bold">${{ total_revenue }}</h3>
-                    <p class="text-white-50 small">Jami Savdo (Admin)</p>
+        <div class="col-sm-6 col-xl-3 fade-up delay-200">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small fw-bold text-uppercase mb-1">Jami Savdo</p>
+                        <h2 class="fw-bold mb-0" style="color: #fbbf24;">${{ total_revenue }}</h2>
+                    </div>
+                    <div class="stats-icon-wrapper bg-icon-warning">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-warning small fw-bold">+12%</span>
+                    <span class="text-muted small ms-2">o'tgan oyga nisbatan</span>
                 </div>
             </div>
         </div>
         {% endif %}
 
-        <div class="col-md-3">
-            <div class="card bg-dark border-secondary shadow-sm h-100">
-                <div class="card-body text-center">
-                    <div class="fs-1 text-danger mb-2"><i class="fas fa-code"></i></div>
-                    <h3 class="text-white fw-bold">{{ total_projects }}</h3>
-                    <p class="text-white-50 small">Jami Loyihalar</p>
+        <div class="col-sm-6 col-xl-3 fade-up delay-200">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small fw-bold text-uppercase mb-1">Jami Loyihalar</p>
+                        <h2 class="fw-bold mb-0">{{ total_projects }}</h2>
+                    </div>
+                    <div class="stats-icon-wrapper bg-icon-danger">
+                        <i class="fas fa-code"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-info small fw-bold">DevTube</span>
+                    <span class="text-muted small ms-2">kod bazasi</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 fade-up delay-300">
         <div class="col-lg-6">
-            <div class="card bg-dark border-secondary h-100">
-                <div class="card-header border-secondary bg-transparent">
-                    <h5 class="text-white mb-0"><i class="fas fa-crown text-warning me-2"></i>Top 10 Xaridorlar (Investorlar)</h5>
+            <div class="table-glass h-100">
+                <div class="p-3 border-bottom border-secondary border-opacity-10 d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold fs-6"><i class="fas fa-crown text-warning me-2"></i>Top Investorlar</h5>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill" style="font-size: 0.7rem;">Barchasi</button>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Foydalanuvchi</th>
-                                    <th>Ishlatgan Puli</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in top_spenders %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            {% if user.profile.avatar %}
-                                                <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" width="30" height="30">
-                                            {% else %}
-                                                <i class="fas fa-user-circle fs-4 me-2"></i>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Foydalanuvchi</th>
+                                <th>Investitsiya</th>
+                                <th>Status</th>
+                                <th>Sana</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in top_spenders %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="position-relative me-3">
+                                            <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="rounded-circle border border-2 border-dark" width="40" height="40" style="object-fit: cover;">
+                                            {% if forloop.counter <= 3 %}
+                                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark border border-dark" style="font-size: 8px;">
+                                                    {{ forloop.counter }}
+                                                </span>
                                             {% endif %}
-                                            <a href="{% url 'public_profile' user.username %}" class="text-decoration-none text-white fw-bold">
-                                                {{ user.username }}
-                                            </a>
                                         </div>
-                                    </td>
-                                    <td class="text-success fw-bold">${{ user.total_spent }}</td>
-                                    <td>
-                                        {% if user.profile.is_verified %}
-                                            <span class="badge bg-primary">Verified</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">User</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="4" class="text-center text-muted">Ma'lumot yo'q</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                        <div>
+                                            <a href="{% url 'public_profile' user.username %}" class="text-decoration-none fw-bold d-block text-reset">{{ user.username }}</a>
+                                            <small class="text-muted">{{ user.email|truncatechars:15 }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fw-bold text-success">+${{ user.total_spent }}</td>
+                                <td>
+                                    {% if user.profile.is_verified %}
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill">Verified</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill">User</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">{{ user.date_joined|date:"d.m.Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center py-4 text-muted">Ma'lumotlar yo'q</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-6">
-            <div class="card bg-dark border-secondary h-100">
-                <div class="card-header border-secondary bg-transparent">
-                    <h5 class="text-white mb-0"><i class="fas fa-store text-info me-2"></i>Top 10 Sotuvchilar</h5>
+            <div class="table-glass h-100">
+                <div class="p-3 border-bottom border-secondary border-opacity-10 d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold fs-6"><i class="fas fa-store text-info me-2"></i>Top Mualliflar</h5>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill" style="font-size: 0.7rem;">Barchasi</button>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Sotuvchi</th>
-                                    <th>Sotuvlar Soni</th>
-                                    <th>Balans</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in top_sellers %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            {% if user.profile.avatar %}
-                                                <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" width="30" height="30">
-                                            {% else %}
-                                                <i class="fas fa-user-circle fs-4 me-2"></i>
-                                            {% endif %}
-                                            <a href="{% url 'public_profile' user.username %}" class="text-decoration-none text-white fw-bold">
-                                                {{ user.username }}
-                                            </a>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Muallif</th>
+                                <th>Sotuvlar</th>
+                                <th>Balans</th>
+                                <th>Reyting</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in top_sellers %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username }}{% endif %}" class="rounded-circle me-3" width="40" height="40" style="object-fit: cover;">
+                                        <div>
+                                            <a href="{% url 'public_profile' user.username %}" class="text-decoration-none fw-bold d-block text-reset">{{ user.username }}</a>
+                                            <small class="text-muted">Pro Seller</small>
                                         </div>
-                                    </td>
-                                    <td class="text-warning fw-bold">{{ user.total_sales }} ta</td>
-                                    <td class="text-info">${{ user.profile.balance }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="4" class="text-center text-muted">Ma'lumot yo'q</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-bold text-white">{{ user.total_sales }}</span>
+                                        <div class="progress flex-grow-1" style="height: 4px; width: 50px; background: rgba(255,255,255,0.1);">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: 75%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="fw-bold" style="color: #a855f7;">${{ user.profile.balance }}</td>
+                                <td><i class="fas fa-star text-warning small"></i> 5.0</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center py-4 text-muted">Ma'lumotlar yo'q</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
 {% endblock %}
