@@ -1,8 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-# ProjectImage ni import qilishni unutmang!
-from .models import Project, Profile, Comment, ProjectImage
-from .models import Project, Review
+from .models import Project, Profile, Comment, ProjectImage, Review
 
 # --- YANGI: BIR NECHTA RASM YUKLASH UCHUN YORDAMCHI KLASSLAR ---
 class MultipleFileInput(forms.ClearableFileInput):

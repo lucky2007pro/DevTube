@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Project, Profile
+from .models import Project, Profile, Comment, Transaction
 
 
 # User Registratsiya uchun
@@ -48,11 +48,6 @@ class ProjectSerializer(serializers.ModelSerializer):
         if obj.author.profile.avatar:
             return obj.author.profile.avatar.url
         return ""
-
-
-# --- projects/serializers.py eng pastiga qo'shing ---
-
-from .models import Comment, Transaction
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -1,20 +1,16 @@
 import json
 import threading
 from decimal import Decimal
-from django.db.models import Sum, Count, Q
-from django.utils import timezone
 from datetime import timedelta
 import requests
-from django.db.models import Q, Max
-from .models import PrivateMessage # Importga qo'shing
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db import transaction
-from django.db.models import Avg
-from django.db.models import F
+from django.db.models import Avg, F, Sum, Count, Q, Max
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -34,7 +30,7 @@ from .forms import (
 from .models import (
     Project, ProjectImage, Sync, CommunityMessage,
     Contact, Transaction, Deposit, Withdrawal,
-    Comment  # <--- Review va Comment modellari qo'shildi
+    Comment, PrivateMessage, Review
 )
 # --- XAVFSIZLIK TIZIMI IMPORTLARI ---
 from .security import scan_with_gemini, scan_with_virustotal
@@ -1013,12 +1009,6 @@ def admin_dashboard(request):
         'top_sellers': top_sellers,
     }
     return render(request, 'stats.html', context)
-
-
-# projects/views.py
-
-from django.db.models import Q, Max
-from .models import PrivateMessage  # Importga qo'shing
 
 
 @login_required

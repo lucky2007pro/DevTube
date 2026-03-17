@@ -43,8 +43,7 @@ class Profile(models.Model):
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     telegram_id = models.CharField(max_length=50, blank=True, null=True)
     last_activity = models.DateTimeField(null=True, blank=True)
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Asosiy (yechib olish mumkin)
-    frozen_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # <--- YANGI (Muzlatilgan)
+    frozen_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Muzlatilgan
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_youtube_id(8)
