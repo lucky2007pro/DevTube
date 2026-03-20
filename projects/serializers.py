@@ -37,29 +37,21 @@ class ProfileSerializer(serializers.ModelSerializer):
         return None
 
 # Loyihalar uchun
+# Loyihalar uchun
 class ProjectSerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(source='author.username', read_only=True)
     author_avatar = serializers.SerializerMethodField()
-    image = serializers.SerializerMethodField()  # <--- Shu qatorni o'zgartirdik
 
     class Meta:
         model = Project
+        # source_code ni ham qo'shdik (Flutterdan kod yuklash uchun)
         fields = [
-            'id', 'slug', 'title', 'description', 'image', 'price',
+            'id', 'slug', 'title', 'description', 'image', 'source_code', 'price',
             'author_name', 'author_avatar', 'category',
             'youtube_link', 'views', 'security_status', 'is_scanned', 'created_at'
         ]
-
-    def get_image(self, obj):
-        request = self.context.get('request')
-        try:
-            # Rasm bor-yo'qligini xavfsiz tekshiramiz
-            if obj.image and hasattr(obj.image, 'url'):
-                url = obj.image.url
-                return request.build_absolute_uri(url) if request else url
-        except ValueError:
-            pass  # Agar rasm fayli topilmasa, qulamasdan pastga o'tib ketadi
-        return None
+        # source_code faqat yuklash uchun ishlaydi, ro'yxatda ko'rinmaydi
+        extra_kwargs = {'source_code': {'write_only': True}}
 
     def get_author_avatar(self, obj):
         request = self.context.get('request')
@@ -70,6 +62,27 @@ class ProjectSerializer(serializers.ModelSerializer):
         except ValueError:
             pass
         return None
+
+    # FLUTTER UCHUN ENG XAVFSIZ RASM QAYTARUVCHI FUNKSIYA (TO'G'IRLANDI)
+    def to_representation(self, instance):
+        # Avval standart ma'lumotlarni olamiz
+        data = super().to_representation(instance)
+
+        # Keyin 'image' qismini tekshirib, xavfsiz holatga keltiramiz
+        try:
+            if instance.image and hasattr(instance.image, 'url'):
+                url = instance.image.url
+                request = self.context.get('request')
+                # Agar havola to'liq bo'lmasa (http bilan boshlanmasa), to'liq qilamiz
+                if request and not url.startswith('http'):
+                    url = request.build_absolute_uri(url)
+                data['image'] = url
+            else:
+                data['image'] = None
+        except ValueError:
+            data['image'] = None  # Rasm xato bo'lsa, qulamasdan None qaytaradi
+
+        return data
 
 
 # Izohlar uchun
