@@ -19,85 +19,72 @@ import notifications.urls
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # --- FLUTTER API 📱 ---
+    # ==========================================
+    # --- FLUTTER API YO'LLARI 📱 ---
+    # ==========================================
     path('api/auth/login/', obtain_auth_token, name='api_token_auth'),
     path('api/auth/register/', RegisterAPI.as_view(), name='api_register'),
     path('api/profile/', ProfileAPI.as_view(), name='api_profile'),
-    path('api/buy/<int:pk>/', views.api_buy_project, name='api_buy_project'),
-    path('api/comment/add/<int:pk>/', views.api_post_comment, name='api_post_comment'),
-    path('api/comments/<int:pk>/', views.api_get_comments, name='api_get_comments'),
+
     path('api/projects/', ProjectListAPI.as_view(), name='api_project_list'),
     path('api/projects/create/', ProjectCreateAPI.as_view(), name='api_project_create'),
     path('api/projects/<int:pk>/', ProjectDetailAPI.as_view(), name='api_project_detail'),
     path('api/projects/<int:pk>/manage/', ProjectUpdateDeleteAPI.as_view(), name='api_project_manage'),
 
-    # --- JONLI NATIJA ---
-    path('live-view/<slug:slug>/', views.live_project_view, name='live_project_view'),
+    path('api/buy/<int:pk>/', views.api_buy_project, name='api_buy_project'),
+    path('api/comment/add/<int:pk>/', views.api_post_comment, name='api_post_comment'),
+    path('api/comments/<int:pk>/', views.api_get_comments, name='api_get_comments'),
 
-    # --- ASOSIY SAHIFALAR ---
+    # ==========================================
+    # --- WEB SAHIFALAR ---
+    # ==========================================
     path('', views.home_page, name='home'),
+    path('live-view/<slug:slug>/', views.live_project_view, name='live_project_view'),
     path('trending/', views.trending, name='trending'),
     path('feed/', views.syncing_projects, name='syncing'),
     path('liked/', views.liked_videos, name='liked_videos'),
     path('saved/', views.saved_projects, name='saved_projects'),
     path('my-videos/', views.my_videos, name='my_videos'),
 
-    # --- LOYIHA AMALLARI ---
     path('create/', views.create_project, name='create_project'),
     path('watch/<slug:slug>/', views.project_detail, name='project_detail'),
-
-    # 🔥 YANGI QO'SHILGAN QATOR (AI CHAT UCHUN) 🔥
     path('project/<int:pk>/ask-ai/', views.project_ai_ask, name='project_ai_ask'),
-
     path('update/<int:pk>/', views.update_project, name='update_project'),
     path('delete/<int:pk>/', views.delete_project, name='delete_project'),
 
-    # --- PROFIL ---
     path('u/<str:username>/', views.profile, name='public_profile'),
     path('profile/', views.profile, name='profile'),
-    path('@<str:username>/', views.profile, name='profile_by_username'),
 
-    # --- INTERAKTIV ---
     path('like/<int:pk>/', views.like_project, name='like_project'),
     path('save/<int:pk>/', views.save_project, name='save_project'),
     path('report/<int:pk>/', views.report_project, name='report_project'),
     path('sync/<str:username>/', views.toggle_sync, name='toggle_sync'),
     path('dashboard/stats/', views.admin_dashboard, name='admin_stats'),
 
-    # --- MOLIYA ---
     path('buy/<int:pk>/', views.buy_project, name='buy_project'),
     path('confirm-purchase/<int:pk>/', views.confirm_purchase, name='confirm_purchase'),
     path('wallet/deposit/', views.add_funds, name='add_funds'),
     path('wallet/withdraw/', views.withdraw_money, name='withdraw_money'),
 
-    # --- MOLIYA (CRON & DISPUTE) ---
     path('api/cron/release-funds/', views.auto_release_cron, name='cron_release'),
     path('dispute/open/<int:pk>/', views.raise_dispute, name='raise_dispute'),
     path('dispute/resolve/<int:pk>/<str:decision>/', views.resolve_dispute, name='resolve_dispute'),
 
-    # --- TOOLS ---
     path('compiler/', views.online_compiler, name='compiler'),
     path('tools/cpp-test/', views.cpp_test, name='cpp_test'),
     path('chat/', views.community_chat, name='community_chat'),
-
-    # --- TELEGRAM WEBHOOK ---
     path('telegram-webhook/', views.telegram_webhook, name='telegram_webhook'),
 
-    # --- SHAXSIY CHAT (DM) ---
     path('inbox/', views.inbox, name='inbox'),
     path('direct/<str:username>/', views.direct_chat, name='direct_chat'),
-
-    # --- BILDIRISHLAR ---
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
     path('notifications/', views.my_notifications, name='my_notifications'),
 
-    # --- AUTH WEB ---
     path('accounts/', include('allauth.urls')),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('signup/', views.register, name='register'),
 
-    # --- BOSHQA SAHIFALAR ---
     path('news/', views.announcements, name='announcements'),
     path('help/', views.help_page, name='help'),
     path('contact/', views.contact_page, name='contact'),

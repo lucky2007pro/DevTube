@@ -2,7 +2,6 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Project, Profile, Comment, Transaction
 
-
 # User Registratsiya uchun
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,16 +17,24 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
-
 # User Profil uchun
 class ProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True)
+    avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['username', 'email', 'avatar', 'bio', 'balance']
+        # Yangi maydonlar (frozen_balance, is_verified) qo'shildi
+        fields = ['username', 'email', 'avatar_url', 'bio', 'balance', 'frozen_balance', 'is_verified', 'telegram_id']
 
+    # Flutter uchun to'liq rasm havolasini yasab beruvchi funksiiya
+    def get_avatar_url(self, obj):
+        request = self.context.get('request')
+        if obj.avatar and hasattr(obj.avatar, 'url'):
+            url = obj.avatar.url
+            return request.build_absolute_uri(url) if request else url
+        return None
 
 # Loyihalar uchun
 class ProjectSerializer(serializers.ModelSerializer):
@@ -36,29 +43,39 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
+        # Flutterga kerak bo'ladigan barcha maydonlar kiritildi
         fields = [
-            'id', 'title', 'description', 'image', 'price',
+            'id', 'slug', 'title', 'description', 'image', 'price',
             'author_name', 'author_avatar', 'category',
-            'youtube_link', 'views', 'created_at'
+            'youtube_link', 'views', 'security_status', 'is_scanned', 'created_at'
         ]
-        # source_code ni faqat yuklashda ishlatamiz, ko'rishda shart emas
-        extra_kwargs = {'source_code': {'write_only': True}}
 
     def get_author_avatar(self, obj):
-        if obj.author.profile.avatar:
-            return obj.author.profile.avatar.url
-        return ""
+        request = self.context.get('request')
+        # Xatolik bo'lmasligi uchun xavfsiz tekshiruv (hasattr)
+        if hasattr(obj.author, 'profile') and obj.author.profile.avatar:
+            url = obj.author.profile.avatar.url
+            return request.build_absolute_uri(url) if request else url
+        return None
 
 
+# Izohlar uchun
 class CommentSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
-    avatar = serializers.ImageField(source='user.profile.avatar', read_only=True)
+    avatar = serializers.SerializerMethodField()  # Xavfsiz usulga o'tkazildi
 
     class Meta:
         model = Comment
         fields = ['id', 'username', 'avatar', 'body', 'created_at']
 
+    def get_avatar(self, obj):
+        request = self.context.get('request')
+        if hasattr(obj.user, 'profile') and obj.user.profile.avatar:
+            url = obj.user.profile.avatar.url
+            return request.build_absolute_uri(url) if request else url
+        return None
 
+# Tranzaksiyalar uchun
 class TransactionSerializer(serializers.ModelSerializer):
     project_title = serializers.CharField(source='project.title', read_only=True)
 
