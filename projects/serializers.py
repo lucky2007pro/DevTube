@@ -40,22 +40,35 @@ class ProfileSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(source='author.username', read_only=True)
     author_avatar = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()  # <--- Shu qatorni o'zgartirdik
 
     class Meta:
         model = Project
-        # Flutterga kerak bo'ladigan barcha maydonlar kiritildi
         fields = [
             'id', 'slug', 'title', 'description', 'image', 'price',
             'author_name', 'author_avatar', 'category',
             'youtube_link', 'views', 'security_status', 'is_scanned', 'created_at'
         ]
 
+    def get_image(self, obj):
+        request = self.context.get('request')
+        try:
+            # Rasm bor-yo'qligini xavfsiz tekshiramiz
+            if obj.image and hasattr(obj.image, 'url'):
+                url = obj.image.url
+                return request.build_absolute_uri(url) if request else url
+        except ValueError:
+            pass  # Agar rasm fayli topilmasa, qulamasdan pastga o'tib ketadi
+        return None
+
     def get_author_avatar(self, obj):
         request = self.context.get('request')
-        # Xatolik bo'lmasligi uchun xavfsiz tekshiruv (hasattr)
-        if hasattr(obj.author, 'profile') and obj.author.profile.avatar:
-            url = obj.author.profile.avatar.url
-            return request.build_absolute_uri(url) if request else url
+        try:
+            if hasattr(obj.author, 'profile') and obj.author.profile.avatar:
+                url = obj.author.profile.avatar.url
+                return request.build_absolute_uri(url) if request else url
+        except ValueError:
+            pass
         return None
 
 
