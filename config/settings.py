@@ -4,28 +4,22 @@ import dj_database_url
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+from dotenv import load_dotenv
 
-# ==============================================
-# 1. ASOSIY SOZLAMALAR
-# ==============================================
+# .env faylini o'qish
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Xavfsizlik kaliti
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-changeme')
+# 1. XAVFSIZLIK SOZLAMALARI (Tuzatildi)
+SECRET_KEY = os.environ.get('SECRET_KEY')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# Debug rejimi
-DEBUG = True
-
-# Hamma IP lardan kirishga ruxsat
-ALLOWED_HOSTS = ['*']
-
-# ==============================================
-# 2. INSTALLED APPS
-# ==============================================
+# Production uchun faqat o'z domeningizni yozing!
+ALLOWED_HOSTS = ['*'] if DEBUG else ['sizning-saytingiz.onrender.com', 'localhost']
 
 INSTALLED_APPS = [
-    'jazzmin',  # Admin panel dizayni
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -35,11 +29,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',
 
-    # CLOUDINARY
     'cloudinary_storage',
     'cloudinary',
 
-    # 3RD PARTY
     'notifications',
     'rest_framework',
     'rest_framework.authtoken',
@@ -50,7 +42,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',
 
-    # LOCAL APPS
     'projects',
 ]
 
@@ -87,12 +78,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# ==============================================
-# 3. MA'LUMOTLAR BAZASI (VAQTINCHALIK SOZLAMALAR)
-# ==============================================
-
-# Admin yaratish uchun Supabasega to'g'ridan-to'g'ri ulanamiz.
-# DIQQAT: Ish bitgach, bu yerni eski holatiga qaytaring!
+# 2. MA'LUMOTLAR BAZASI
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{os.path.join(BASE_DIR, "db.sqlite3")}',
@@ -100,29 +86,22 @@ DATABASES = {
     )
 }
 
-# ==============================================
-# 4. CLOUDINARY (RASMLAR UCHUN)
-# ==============================================
-
-# 1. Fayllarni saqlash joyi
+# 3. CLOUDINARY (Xavfsiz holatga keltirildi)
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# 2. Django kutubxonasi uchun sozlamalar
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'duy6grluh',
-    'API_KEY': '929832358921299',
-    'API_SECRET': 'u377zJ4qzYPM9uqKIM37bwspwv0'
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET')
 }
 
-# 3. SDK Konfiguratsiyasi
 cloudinary.config(
-    cloud_name = 'duy6grluh',
-    api_key = '929832358921299',
-    api_secret = 'u377zJ4qzYPM9uqKIM37bwspwv0',
+    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key = os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret = os.environ.get('CLOUDINARY_API_SECRET'),
     secure = True
 )
 
-# Static va Media fayllar manzili
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
@@ -130,10 +109,6 @@ WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# ==============================================
-# 5. API (REST FRAMEWORK)
-# ==============================================
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -145,27 +120,21 @@ REST_FRAMEWORK = {
     ],
 }
 
-# CORS
-CORS_ALLOW_ALL_ORIGINS = True
-
-# ==============================================
-# 6. QOLGAN SOZLAMALAR
-# ==============================================
+# CORS va Xavfsizlik cheklovlari
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 LANGUAGE_CODE = 'uz-uz'
 TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
 USE_TZ = True
-CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com', 'http://*.192.168.*.*']
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-X_FRAME_OPTIONS = 'ALLOWALL'
 
-# Auth Redirects
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
 
-# AllAuth settings
 SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_LOGIN_ON_GET = True
@@ -174,7 +143,6 @@ SOCIALACCOUNT_PROVIDERS = {
     'github': {'SCOPE': ['user', 'read:user', 'user:email']},
 }
 
-# Jazzmin Admin Panel
 JAZZMIN_SETTINGS = {
     "site_title": "DevTube Admin",
     "site_header": "DevTube",
@@ -184,13 +152,7 @@ JAZZMIN_SETTINGS = {
     "search_model": "auth.User",
     "show_sidebar": True,
     "navigation_expanded": True,
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "projects.Project": "fas fa-video",
-    },
 }
-
 JAZZMIN_UI_TWEAKS = {
     "theme": "darkly",
 }

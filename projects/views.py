@@ -1,4 +1,5 @@
 import json
+from django.db import close_old_connections
 import threading
 from decimal import Decimal
 from datetime import timedelta
@@ -30,7 +31,7 @@ from .forms import (
 from .models import (
     Project, ProjectImage, Sync, CommunityMessage,
     Contact, Transaction, Deposit, Withdrawal,
-    Comment, PrivateMessage, Review
+    Comment, PrivateMessage, Review, Profile  # <--- Shu yerga Profile qo'shildi
 )
 # --- XAVFSIZLIK TIZIMI IMPORTLARI ---
 from .security import scan_with_gemini, scan_with_virustotal
@@ -64,27 +65,17 @@ def get_code_snippet(project):
 
 
 def run_security_scan(project_id):
-    """
-    Bu funksiya orqa fonda ishlaydi.
-    1. Faylni Cloudinarydan o'qiydi.
-    2. Gemini va VirusTotaldan o'tkazadi.
-    3. Agar xavf aniqlansa, loyihani AVTOMATIK MUZLATADI.
-    4. Agar xato chiqsa, sayt qotib qolmasligi uchun statusni yangilaydi.
-    """
     try:
         project = Project.objects.get(id=project_id)
         if not project.source_code:
             return
 
-        # Cloudinary URL
         file_url = project.source_code.url
         file_name = project.source_code.name
-        print(f"DEBUG: Scan boshlandi ID: {project_id}, URL: {file_url}")
 
         # --- 1. GEMINI TEKSHIRUVI ---
         ai_result = "Tahlil qilinmadi"
         try:
-            # Faylni internetdan o'qib olamiz (timeout 20 soniya - katta fayllar uchun)
             response = requests.get(file_url, timeout=20)
             if response.status_code == 200:
                 try:
@@ -103,40 +94,39 @@ def run_security_scan(project_id):
         # --- 3. NATIJALARNI SAQLASH ---
         project.ai_analysis = ai_result
         project.virustotal_link = vt_link
-        project.is_scanned = True  # Loading to'xtaydi
+        project.is_scanned = True
 
-        # --- 4. HUKM CHIQARISH (AVTO-BLOKLASH) ---
+        # --- 4. HUKM CHIQARISH ---
         is_dangerous_ai = "DANGER" in str(ai_result)
         is_dangerous_vt = vt_status and "malicious" in str(vt_status).lower()
 
         if is_dangerous_ai or is_dangerous_vt:
             project.security_status = 'danger'
-            project.is_frozen = True  # <--- ZARARLI FAYLNI YASHIRAMIZ!
-            print(f"DIQQAT! Loyiha {project_id} xavfli deb topildi va bloklandi!")
-
+            project.is_frozen = True
         elif "SAFE" in str(ai_result):
             project.security_status = 'safe'
-            # Agar oldin avtomatik bloklangan bo'lsa va endi toza chiqsa, ochamiz
             if project.is_frozen and project.reports_count < 10:
                 project.is_frozen = False
-
         else:
             project.security_status = 'warning'
 
         project.save()
-        print(f"Loyiha {project_id} tekshiruvi yakunlandi: {project.security_status}")
 
     except Exception as e:
-        # AGAR XATO CHIQSA HAM FOYDALANUVCHINI KUTTIRMASLIK KERAK
         print(f"CRITICAL SCAN ERROR: {e}")
         try:
             p = Project.objects.get(id=project_id)
             p.is_scanned = True
             p.security_status = 'warning'
-            p.ai_analysis = f"Tizim xatoligi yuz berdi: {str(e)}. Iltimos, keyinroq qayta urinib ko'ring."
+            p.ai_analysis = f"Tizim xatoligi yuz berdi: {str(e)}."
             p.save()
         except:
             pass
+
+    finally:
+        # MUHIM: Orqa fon (Thread) tugagach, DB ulanishini majburiy yopamiz!
+        # Aks holda sayt xotirasi to'lib, qotib qoladi.
+        close_old_connections()
 
 
 # ==========================================
@@ -466,12 +456,15 @@ def toggle_sync(request, username):
 
 @login_required
 @transaction.atomic
+# Faylning tepasiga buni qo'shishni unutmang agar yo'q bo'lsa:
+# from django.db import transaction
 def buy_project(request, pk):
-    # 1. Loyihani olish
     project = get_object_or_404(Project, pk=pk)
-    buyer_profile = request.user.profile
 
-    # 2. Tekshiruvlar
+    # MUHIM: Foydalanuvchi profilini "qulflab" (lock qilib) olamiz!
+    # Bu orqali "Double-spend" xatosining oldi olinadi
+    buyer_profile = Profile.objects.select_for_update().get(user=request.user)
+
     if project.is_frozen:
         messages.error(request, "Bu loyiha muzlatilgan, sotib olib bo'lmaydi.")
         return redirect('home')
@@ -479,29 +472,25 @@ def buy_project(request, pk):
     if request.user == project.author or project.buyers.filter(id=request.user.id).exists():
         return redirect('project_detail', slug=project.slug)
 
-    # 3. Pulni yechish va muzlatish
+    # Balansni tekshirish va ayirish
     if buyer_profile.balance >= project.price:
-        # A) Xaridordan pulni yechamiz
         buyer_profile.balance -= project.price
         buyer_profile.save()
 
-        # B) Sotuvchining MUZLATILGAN balansiga qo'shamiz
-        author_profile = project.author.profile
-        author_profile.frozen_balance += project.price  # <--- Asosiy balance emas!
+        # Sotuvchini ham qulflab olamiz
+        author_profile = Profile.objects.select_for_update().get(user=project.author)
+        author_profile.frozen_balance += project.price
         author_profile.save()
 
-        # C) Xaridorni qo'shish
         project.buyers.add(request.user)
 
-        # D) Tranzaksiya yaratish (Status: HOLD)
         Transaction.objects.create(
             user=request.user,
             project=project,
             amount=project.price,
-            status=Transaction.HOLD  # <--- Muzlatilgan status
+            status=Transaction.HOLD
         )
 
-        # E) Telegram Xabar (Sotuvchiga)
         if author_profile.telegram_id:
             msg = (
                 f"❄️ <b>Yangi savdo (Muzlatilgan)!</b>\n\n"
@@ -512,9 +501,7 @@ def buy_project(request, pk):
             )
             send_telegram_message(author_profile.telegram_id, msg)
 
-        # F) Sayt bildirishnomasi
         notify.send(request.user, recipient=project.author, verb='sotib oldi (puli muzlatildi)', target=project)
-
         messages.success(request, f"'{project.title}' sotib olindi! Pul xavfsizlik uchun vaqtincha muzlatildi.")
     else:
         messages.error(request, "Hisobingizda mablag' yetarli emas.")
@@ -608,14 +595,19 @@ def add_funds(request):
 # views.py ichiga qo'shing
 
 @login_required
+@login_required
+@transaction.atomic
 def withdraw_money(request):
     if request.method == 'POST':
         amount = Decimal(request.POST.get('amount', 0))
         card_number = request.POST.get('card_number', '')
 
+        # MUHIM: Foydalanuvchi profilini qulflab (lock) olamiz
+        user_profile = Profile.objects.select_for_update().get(user=request.user)
+
         if amount < 5:  # Minimal yechish miqdori $5
             messages.error(request, "Minimal yechish miqdori $5")
-        elif amount > request.user.profile.balance:
+        elif amount > user_profile.balance:
             messages.error(request, "Balansingizda mablag' yetarli emas.")
         elif len(card_number) < 16:
             messages.error(request, "Karta raqami noto'g'ri.")
@@ -626,9 +618,9 @@ def withdraw_money(request):
                 amount=amount,
                 card_number=card_number
             )
-            # Balansni vaqtincha muzlatish yoki ayirish
-            request.user.profile.balance -= amount
-            request.user.profile.save()
+            # Balansni xavfsiz tarzda ayirish
+            user_profile.balance -= amount
+            user_profile.save()
 
             messages.success(request, "Pul yechish so'rovi yuborildi. Admin tasdiqlashini kuting.")
             return redirect('profile')
@@ -968,7 +960,7 @@ def fix_database_slugs(request):
 
 @login_required
 def admin_dashboard(request):
-    # 1. UMUMIY STATISTIKA (Bu qismlar to'g'ri ishlaydi)
+    # 1. UMUMIY STATISTIKA
     total_users = User.objects.count()
     total_projects = Project.objects.count()
     total_revenue = Transaction.objects.filter(status='completed').aggregate(Sum('amount'))['amount__sum'] or 0
@@ -982,23 +974,22 @@ def admin_dashboard(request):
         total_spent=Sum('transactions__amount', filter=Q(transactions__status='completed'))
     ).filter(total_spent__gt=0).order_by('-total_spent')[:10]
 
-    # 4. ENG FAOL SOTUVCHILAR (XATOSIZ YANGI USUL 🛠️)
-    # Tranzaksiyalar jadvalidan eng ko'p sotgan mualliflarni guruhlab olamiz
+    # 4. ENG FAOL SOTUVCHILAR (N+1 XATOSI TO'G'IRLANDI ⚡️)
     seller_data = Transaction.objects.filter(status='completed') \
         .values('project__author') \
         .annotate(sells_count=Count('id')) \
         .order_by('-sells_count')[:10]
 
+    # Barcha kerakli mualliflarni BITTADA bazadan olamiz (Tezlik uchun)
+    author_ids = [item['project__author'] for item in seller_data if item['project__author']]
+    users_dict = {user.id: user for user in User.objects.filter(id__in=author_ids)}
+
     top_sellers = []
     for item in seller_data:
-        try:
-            # Har bir ID uchun User obyektini olamiz
-            user = User.objects.get(id=item['project__author'])
-            # HTMLda ko'rinishi uchun total_sales degan "virtual" maydon qo'shamiz
+        user = users_dict.get(item['project__author'])
+        if user:
             user.total_sales = item['sells_count']
             top_sellers.append(user)
-        except User.DoesNotExist:
-            continue
 
     context = {
         'total_users': total_users,
@@ -1202,10 +1193,13 @@ from .serializers import CommentSerializer
 # 1. API orqali SOTIB OLISH
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def api_buy_project(request, pk):
     try:
         project = Project.objects.get(pk=pk)
-        buyer_profile = request.user.profile
+
+        # Xaridorni qulflab olamiz
+        buyer_profile = Profile.objects.select_for_update().get(user=request.user)
 
         # O'z loyihasini sotib ololmasin
         if project.author == request.user:
@@ -1217,8 +1211,8 @@ def api_buy_project(request, pk):
             buyer_profile.balance -= project.price
             buyer_profile.save()
 
-            # Sotuvchiga (Muzlatilgan balansga)
-            author_profile = project.author.profile
+            # Sotuvchini (Muzlatilgan balansini) qulflab olamiz va qo'shamiz
+            author_profile = Profile.objects.select_for_update().get(user=project.author)
             author_profile.frozen_balance += project.price
             author_profile.save()
 

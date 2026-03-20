@@ -6,11 +6,12 @@ from django.urls import reverse
 from cloudinary_storage.storage import RawMediaCloudinaryStorage
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, IntegrityError  # <--- IntegrityError qo'shildi
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.utils import timezone # Tepaga qo'shing
+from django.utils import timezone
 from datetime import timedelta
+
 
 # ==========================================
 # 0. YORDAMCHI FUNKSIYALAR (YouTube Style)
@@ -21,15 +22,19 @@ def generate_youtube_id(length=11):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
+
 def validate_file_size(value):
     if value.size > 50 * 1024 * 1024:
         raise ValidationError("Fayl hajmi juda katta! Maksimal hajm: 50 MB")
 
+
 def validate_file_extension(value):
     ext = os.path.splitext(value.name)[1].lower()
-    valid_extensions = ['.zip', '.rar', '.7z', '.tar', '.gz', '.py', '.js', '.html', '.css', '.cpp', '.java', '.dart', '.go', '.php']
+    valid_extensions = ['.zip', '.rar', '.7z', '.tar', '.gz', '.py', '.js', '.html', '.css', '.cpp', '.java', '.dart',
+                        '.go', '.php']
     if ext not in valid_extensions:
         raise ValidationError("Faqat kod fayllari yoki arxiv yuklash mumkin.")
+
 
 # ==========================================
 # 1. PROFILE (Foydalanuvchi + Hamyon)
@@ -39,18 +44,28 @@ class Profile(models.Model):
     is_verified = models.BooleanField(default=False)
     avatar = models.ImageField(upload_to='avatars/', default='default.jpg')
     bio = models.TextField(blank=True)
-    slug = models.SlugField(unique=True, blank=True, null=True) # User ID: u7H2kLp9
+    slug = models.SlugField(unique=True, blank=True, null=True)  # User ID: u7H2kLp9
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     telegram_id = models.CharField(max_length=50, blank=True, null=True)
     last_activity = models.DateTimeField(null=True, blank=True)
     frozen_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Muzlatilgan
+
+    # --- TO'G'IRLANDI: Xavfsiz Slug generatori ---
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_youtube_id(8)
-        super().save(*args, **kwargs)
+            while True:
+                try:
+                    super().save(*args, **kwargs)
+                    break  # Muvaffaqiyatli saqlandi, tsikldan chiqamiz
+                except IntegrityError:
+                    self.slug = generate_youtube_id(8)  # Agar band bo'lsa, qayta yaratib urinadi
+        else:
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.username} profili"
+
 
 # ==========================================
 # 2. PROJECT (Asosiy Model)
@@ -63,7 +78,7 @@ class Project(models.Model):
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True, blank=True, null=True) # Project ID: jNQXAC9IVRw
+    slug = models.SlugField(unique=True, blank=True, null=True)  # Project ID: jNQXAC9IVRw
     description = models.TextField()
     image = models.ImageField(upload_to='project_thumbnails/')
     youtube_link = models.URLField(max_length=200)
@@ -93,13 +108,18 @@ class Project(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    # --- TO'G'IRLANDI: Xavfsiz Slug generatori ---
     def save(self, *args, **kwargs):
         if not self.slug:
-            new_slug = generate_youtube_id(11)
-            while Project.objects.filter(slug=new_slug).exists():
-                new_slug = generate_youtube_id(11)
-            self.slug = new_slug
-        super().save(*args, **kwargs)
+            self.slug = generate_youtube_id(11)
+            while True:
+                try:
+                    super().save(*args, **kwargs)
+                    break
+                except IntegrityError:
+                    self.slug = generate_youtube_id(11)
+        else:
+            super().save(*args, **kwargs)
 
     @property
     def get_youtube_id(self):
@@ -110,8 +130,11 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+
     def get_absolute_url(self):
         return reverse('project_detail', kwargs={'slug': self.slug})
+
+
 # ==========================================
 # 3. IJTIMOIY MODELLAR (Rasmlar, Izohlar, Chat)
 # ==========================================
@@ -120,11 +143,13 @@ class ProjectImage(models.Model):
     project = models.ForeignKey(Project, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='project_screenshots/')
 
+
 class Comment(models.Model):
     project = models.ForeignKey(Project, related_name='comments', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
 
 class Sync(models.Model):
     follower = models.ForeignKey(Profile, related_name='following', on_delete=models.CASCADE)
@@ -134,10 +159,12 @@ class Sync(models.Model):
     class Meta:
         unique_together = ('follower', 'following')
 
+
 class CommunityMessage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
 
 class Contact(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contacts')
@@ -145,17 +172,17 @@ class Contact(models.Model):
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+
 # ==========================================
 # 4. MOLIYAVIY MODELLAR (Pul Tizimi)
 # ==========================================
 
 class Transaction(models.Model):
-    # Status konstantalari
     PROCESSING = 'processing'
-    HOLD = 'hold'  # <--- YANGI: Muzlatilgan
-    COMPLETED = 'completed'  # Yakunlangan (Pul sotuvchiga o'tgan)
-    CANCELED = 'canceled'  # Bekor qilingan
-    DISPUTED = 'disputed'  # <--- YANGI: Nizo holati
+    HOLD = 'hold'  # Muzlatilgan
+    COMPLETED = 'completed'
+    CANCELED = 'canceled'
+    DISPUTED = 'disputed'
 
     STATUS_CHOICES = [
         (PROCESSING, 'Jarayonda'),
@@ -165,23 +192,15 @@ class Transaction(models.Model):
         (DISPUTED, 'Nizoli')
     ]
 
-    # Agar Click/Payme bo'lmasa, merchant_trans_id shart emas (blank=True)
     merchant_trans_id = models.CharField(max_length=255, blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='transactions')
     project = models.ForeignKey('Project', on_delete=models.SET_NULL, null=True)
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default=PROCESSING
-    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PROCESSING)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    # YANGI: Pul qachon avtomatik yechiladi? (Masalan: 3 kundan keyin)
     release_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        # Agar status HOLD bo'lsa va vaqt belgilanmagan bo'lsa, 3 kun qo'shamiz
         if self.status == self.HOLD and not self.release_at:
             self.release_at = timezone.now() + timedelta(days=3)
         super().save(*args, **kwargs)
@@ -190,27 +209,26 @@ class Transaction(models.Model):
         return f"Tranzaksiya {self.id}: {self.amount} - {self.status}"
 
 
-# models.py ichiga qo'shing
-
 class Withdrawal(models.Model):
     PENDING = 'pending'
-    APPROVED = 'approved' # Completed o'rniga Approved ishlating
+    APPROVED = 'approved'
     REJECTED = 'rejected'
 
     STATUS_CHOICES = [
         (PENDING, 'Kutilmoqda'),
-        (APPROVED, 'To\'lab berildi'), # Approved
+        (APPROVED, 'To\'lab berildi'),
         (REJECTED, 'Rad etildi'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='withdrawals')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    card_number = models.CharField(max_length=20)  # Karta raqami
+    card_number = models.CharField(max_length=20)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.amount} ({self.status})"
+
 
 class Deposit(models.Model):
     STATUS_CHOICES = [('pending', 'Kutilmoqda'), ('approved', 'Tasdiqlandi'), ('rejected', 'Rad etildi')]
@@ -220,8 +238,9 @@ class Deposit(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
+
 # ==========================================
-# 5. SIGNALS
+# 5. SIGNALS VA BOSHQA MODELLAR
 # ==========================================
 @receiver(post_save, sender=User)
 def create_or_save_profile(sender, instance, created, **kwargs):
@@ -231,25 +250,20 @@ def create_or_save_profile(sender, instance, created, **kwargs):
         if hasattr(instance, 'profile'):
             instance.profile.save()
 
-# projects/models.py ning eng pastiga qo'shing
 
 class Review(models.Model):
     project = models.ForeignKey(Project, related_name='reviews', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    # Baho 1 dan 5 gacha bo'ladi
     rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # Bir odam bitta loyihaga faqat bir marta sharh yozishi mumkin
         unique_together = ('project', 'user')
 
     def __str__(self):
         return f"{self.user.username} - {self.project.title} ({self.rating})"
 
-
-# projects/models.py oxiriga qo'shing
 
 class PrivateMessage(models.Model):
     sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
@@ -262,4 +276,4 @@ class PrivateMessage(models.Model):
         return f"{self.sender} -> {self.receiver}"
 
     class Meta:
-        ordering = ['created_at']  # Xabarlar vaqt bo'yicha tartiblanadi
+        ordering = ['created_at']
