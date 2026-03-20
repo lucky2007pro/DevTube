@@ -423,9 +423,7 @@
                             <h3 class="fw-bold text-white m-0">Sharhlar va Reyting</h3>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="fs-2 fw-bold text-white">{{ avg_rating }}</span>
-                                <div class="text-warning fs-5">
-                                    <i class="fas fa-star"></i>
-                                </div>
+                                <span class="text-muted fs-4">/10</span>
                                 <span class="text-muted small">({{ reviews.count }} ta ovoz)</span>
                             </div>
                         </div>
@@ -433,22 +431,30 @@
                         {% if can_review %}
                         <div class="mb-5 p-3 rounded-3"
                              style="background: rgba(99, 102, 241, 0.1); border: 1px dashed var(--neon-primary);">
-                            <h5 class="text-white mb-3">Loyihani baholang:</h5>
+                            <h5 class="text-white mb-3">Bu loyihaga 10 dan nechchi berasan?</h5>
                             <form method="post">
                                 {% csrf_token %}
-                                <div class="rating-css mb-3">
-                                    <div class="star-icon">
-                                        <input type="radio" name="rating" value="1" id="rating1">
-                                        <label for="rating1" class="fa fa-star"></label>
-                                        <input type="radio" name="rating" value="2" id="rating2">
-                                        <label for="rating2" class="fa fa-star"></label>
-                                        <input type="radio" name="rating" value="3" id="rating3">
-                                        <label for="rating3" class="fa fa-star"></label>
-                                        <input type="radio" name="rating" value="4" id="rating4">
-                                        <label for="rating4" class="fa fa-star"></label>
-                                        <input type="radio" name="rating" value="5" id="rating5" checked>
-                                        <label for="rating5" class="fa fa-star"></label>
-                                    </div>
+                                <div class="rating-10 mb-3">
+                                    <input type="radio" name="rating" value="1" id="rating1">
+                                    <label for="rating1">1</label>
+                                    <input type="radio" name="rating" value="2" id="rating2">
+                                    <label for="rating2">2</label>
+                                    <input type="radio" name="rating" value="3" id="rating3">
+                                    <label for="rating3">3</label>
+                                    <input type="radio" name="rating" value="4" id="rating4">
+                                    <label for="rating4">4</label>
+                                    <input type="radio" name="rating" value="5" id="rating5">
+                                    <label for="rating5">5</label>
+                                    <input type="radio" name="rating" value="6" id="rating6">
+                                    <label for="rating6">6</label>
+                                    <input type="radio" name="rating" value="7" id="rating7">
+                                    <label for="rating7">7</label>
+                                    <input type="radio" name="rating" value="8" id="rating8">
+                                    <label for="rating8">8</label>
+                                    <input type="radio" name="rating" value="9" id="rating9">
+                                    <label for="rating9">9</label>
+                                    <input type="radio" name="rating" value="10" id="rating10">
+                                    <label for="rating10">10</label>
                                 </div>
 
                                 <textarea name="comment" class="form-control bg-dark text-white border-secondary mb-3"
@@ -477,14 +483,11 @@
                                         <span class="text-muted small" style="font-size: 11px;">{{ review.created_at|timesince }} oldin</span>
                                     </div>
 
-                                    <div class="text-warning small my-1">
-                                        {% for i in "12345" %}
-                                        {% if forloop.counter <= review.rating %}
-                                        <i class="fas fa-star"></i>
-                                        {% else %}
-                                        <i class="far fa-star opacity-25"></i>
-                                        {% endif %}
-                                        {% endfor %}
+                                    <div class="my-1">
+                                        <span class="badge rounded-pill px-3 py-1 fw-bold fs-6"
+                                              style="background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.5); color: #a5b4fc;">
+                                            {{ review.rating }}/10
+                                        </span>
                                     </div>
 
                                     <p class="text-light opacity-75 m-0 small">{{ review.comment }}</p>
@@ -503,12 +506,17 @@
             </div>
 
             <style>
-                .rating-css div { color: #ffe400; font-size: 20px; font-family: sans-serif; font-weight: 800; text-transform: uppercase; padding: 10px 0; }
-                .rating-css input { display: none; }
-                .rating-css input + label { font-size: 20px; text-shadow: 1px 1px 0 #ffe400; cursor: pointer; }
-                .rating-css input:checked + label ~ label { color: #838383; }
-                .rating-css label:active { transform: scale(0.8); transition: 0.3s ease; }
-                .star-icon { direction: rtl; display: inline-flex; }
+                .rating-10 { display: flex; flex-wrap: wrap; gap: 8px; }
+                .rating-10 input { display: none; }
+                .rating-10 label {
+                    display: inline-flex; align-items: center; justify-content: center;
+                    width: 42px; height: 42px; border-radius: 50%;
+                    border: 2px solid rgba(99,102,241,0.4);
+                    color: #94a3b8; font-weight: 700; font-size: 15px;
+                    cursor: pointer; transition: all 0.2s ease;
+                }
+                .rating-10 label:hover { border-color: #818cf8; color: #fff; background: rgba(99,102,241,0.3); }
+                .rating-10 input:checked + label { background: #6366f1; border-color: #6366f1; color: #fff; box-shadow: 0 0 10px rgba(99,102,241,0.6); }
             </style>
 
             <h5 class="text-white mb-3 fw-bold mt-5"><i class="far fa-comments me-2"></i>Izohlar (<span id="comment-count-txt">{{ project.comments.count }}</span>)</h5>
