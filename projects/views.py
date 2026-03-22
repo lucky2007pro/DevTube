@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.postgres.search import TrigramSimilarity
-from django.db import transaction
+from django.db import transaction, connection
 from django.db.models import Avg, F, Sum, Count, Q, Max
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponse
 from django.utils import timezone
@@ -134,25 +134,44 @@ def run_security_scan(project_id):
 # ==========================================
 # views.py ichidagi home_page funksiyasini yangilang
 
+
+def _search_projects(query, base_queryset=None):
+    """Qidiruvni PostgreSQL va SQLite uchun mos ishlatadi."""
+    queryset = base_queryset if base_queryset is not None else Project.objects.filter(is_frozen=False)
+    clean_query = (query or '').strip()
+
+    if not clean_query:
+        return queryset
+
+    if connection.vendor == 'postgresql':
+        return queryset.annotate(
+            similarity=TrigramSimilarity('title', clean_query) +
+                       TrigramSimilarity('description', clean_query)
+        ).filter(similarity__gt=0.1).order_by('-similarity', '-views')
+
+    words = [w for w in clean_query.split() if w]
+    lookup = (
+        Q(title__icontains=clean_query) |
+        Q(description__icontains=clean_query) |
+        Q(author__username__icontains=clean_query)
+    )
+
+    for word in words:
+        lookup |= Q(title__icontains=word) | Q(description__icontains=word)
+
+    return queryset.filter(lookup).distinct()
+
 def home_page(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').strip()
     category = request.GET.get('category', '')
     price_filter = request.GET.get('price', '') # 'free', 'premium'
-    sort = request.GET.get('sort', '-views') # 'newest', 'popular'
+    sort = request.GET.get('sort', '-views') # 'newest', '-views'
 
     projects = Project.objects.filter(is_frozen=False)
 
-    # 1. Aqlli qidiruv (Sarlavha va Tavsif ichidan)
+    # 1. Qidiruv (DB turiga qarab)
     if query:
-        # Sarlavha va tavsifdagi o'xshashlikni aniqlaymiz
-        projects = projects.annotate(
-            similarity=TrigramSimilarity('title', query) +
-                       TrigramSimilarity('description', query)
-        ).filter(similarity__gt=0.1).order_by('-similarity')  # 0.1 - sezgirlik darajasi
-    else:
-        # Agar qidiruv bo'lmasa, odatdagidek saralash
-        sort = request.GET.get('sort', '-views')
-        projects = projects.order_by(sort)
+        projects = _search_projects(query, projects)
 
     # 2. Kategoriya filtri
     if category:
@@ -167,8 +186,9 @@ def home_page(request):
     # 4. Saralash
     if sort == 'newest':
         projects = projects.order_by('-created_at')
-    else:
-        projects = projects.order_by('-views') # Default: Ommaboplar
+    elif not (query and connection.vendor == 'postgresql'):
+        # PostgreSQL qidiruvda relevance (similarity) ni saqlab qolamiz
+        projects = projects.order_by('-views')
 
     return render(request, 'home.html', {
         'projects': projects,
@@ -177,6 +197,26 @@ def home_page(request):
         'current_category': category,
         'current_price': price_filter,
         'current_sort': sort
+    })
+
+
+def global_search(request):
+    query = request.GET.get('q', '').strip()
+    projects = _search_projects(query)
+    users = User.objects.none()
+
+    if query:
+        users = User.objects.filter(
+            Q(username__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query)
+        ).select_related('profile')[:8]
+        projects = projects[:30]
+
+    return render(request, 'search_results.html', {
+        'search_query': query,
+        'projects': projects,
+        'users': users,
     })
 
 
@@ -595,7 +635,6 @@ def add_funds(request):
 # views.py ichiga qo'shing
 
 @login_required
-@login_required
 @transaction.atomic
 def withdraw_money(request):
     if request.method == 'POST':
@@ -806,6 +845,12 @@ def contact_page(request):
         messages.success(request, "Xabaringiz yuborildi.")
         return redirect('contact')
     return render(request, 'contact.html')
+
+
+def robots_txt(request):
+    sitemap_url = request.build_absolute_uri('/sitemap.xml')
+    content = f"User-agent: *\nAllow: /\n\nSitemap: {sitemap_url}\n"
+    return HttpResponse(content, content_type='text/plain')
 
 
 # ==========================================

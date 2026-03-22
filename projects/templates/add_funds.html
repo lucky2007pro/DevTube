@@ -58,8 +58,6 @@
         border-color: #ddd !important;
     }
     body.light-mode .cyber-input::placeholder { color: #888; }
-    body.light-mode .text-white-50 { color: #666 !important; }
-    body.light-mode .text-info { color: #0dcaf0 !important; }
 
     /* --- CUSTOM FILE UPLOAD (Eng muhim qismi) --- */
     .file-upload-wrapper {
@@ -128,12 +126,12 @@
                     {% csrf_token %}
 
                     <div class="mb-4">
-                        <label class="form-label text-white small fw-bold ms-1">Summa ($)</label>
+                        <label for="deposit-amount" class="form-label text-white small fw-bold ms-1">Summa ($)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-transparent border-end-0 border-secondary text-white" style="border-color: var(--glass-border) !important;">
                                 <i class="fas fa-dollar-sign text-success"></i>
                             </span>
-                            <input type="number" name="amount" class="form-control cyber-input border-start-0 ps-0" placeholder="Masalan: 50" required>
+                            <input id="deposit-amount" type="number" name="amount" class="form-control cyber-input border-start-0 ps-0" placeholder="Masalan: 50" required>
                         </div>
                     </div>
 
@@ -150,8 +148,8 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label text-white small fw-bold ms-1">Izoh (ixtiyoriy)</label>
-                        <input type="text" name="message" class="form-control cyber-input" placeholder="Vaqt va to'lov tizimi (Click/Payme)">
+                        <label for="deposit-message" class="form-label text-white small fw-bold ms-1">Izoh (ixtiyoriy)</label>
+                        <input id="deposit-message" type="text" name="message" class="form-control cyber-input" placeholder="Vaqt va to'lov tizimi (Click/Payme)">
                     </div>
 
                     <button type="submit" class="btn w-100 fw-bold py-3 text-white shadow-lg"

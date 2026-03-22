@@ -9,6 +9,8 @@
 
 {% block og_title %}{{ project.title }} - ${{ project.price }}{% endblock %}
 {% block og_description %}{{ project.description|truncatewords:30 }}{% endblock %}
+{% block twitter_title %}{{ project.title }} - DevTube{% endblock %}
+{% block twitter_description %}{{ project.description|truncatewords:20 }}{% endblock %}
 
 {% block og_image %}
     {% if project.image %}
@@ -23,21 +25,6 @@
 {% endblock %}
 
 {% block extra_head %}
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ request.build_absolute_uri }}">
-    <meta property="og:title" content="{{ project.title }} - DevTube">
-    <meta property="og:description" content="{{ project.description|truncatewords:20 }}">
-
-    {# --- Rasm URLini aqlli tekshirish --- #}
-    {% if project.image %}
-        {% if project.image.url|slice:":4" == "http" %}
-            <meta property="og:image" content="{{ project.image.url }}">
-        {% else %}
-            <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ project.image.url }}">
-        {% endif %}
-    {% else %}
-        <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/devtube-banner.png' %}">
-    {% endif %}
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
 {% endblock %}

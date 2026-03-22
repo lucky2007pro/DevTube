@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.contrib.sitemaps.views import sitemap
 from rest_framework.authtoken.views import obtain_auth_token
 
 # 1. ASOSIY VIEWS IMPORTI
@@ -15,6 +16,12 @@ from projects.views import (
 )
 
 import notifications.urls
+from projects.sitemaps import StaticViewSitemap, ProjectSitemap
+
+sitemaps = {
+    'static': StaticViewSitemap,
+    'projects': ProjectSitemap,
+}
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -39,6 +46,7 @@ urlpatterns = [
     # --- WEB SAHIFALAR ---
     # ==========================================
     path('', views.home_page, name='home'),
+    path('search/', views.global_search, name='global_search'),
     path('live-view/<slug:slug>/', views.live_project_view, name='live_project_view'),
     path('trending/', views.trending, name='trending'),
     path('feed/', views.syncing_projects, name='syncing'),
@@ -53,6 +61,7 @@ urlpatterns = [
     path('delete/<int:pk>/', views.delete_project, name='delete_project'),
 
     path('u/<str:username>/', views.profile, name='public_profile'),
+    path('u/<str:username>/', views.profile, name='profile_by_username'),
     path('profile/', views.profile, name='profile'),
 
     path('like/<int:pk>/', views.like_project, name='like_project'),
@@ -89,6 +98,8 @@ urlpatterns = [
     path('help/', views.help_page, name='help'),
     path('contact/', views.contact_page, name='contact'),
     path('portfolio/', views.portfolio_page, name='portfolio'),
+    path('robots.txt', views.robots_txt, name='robots_txt'),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 ]
 
 if settings.DEBUG:

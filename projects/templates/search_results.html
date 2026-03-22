@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Qidiruv: {{ search_query|default:'Natijalar' }} | DevTube{% endblock %}
+{% block description %}"{{ search_query }}" bo'yicha DevTube dagi loyihalar va foydalanuvchilar qidiruv natijalari.{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+        <h4 class="mb-0 text-white">Qidiruv natijalari</h4>
+        {% if search_query %}
+            <span class="badge bg-primary">"{{ search_query }}"</span>
+        {% endif %}
+    </div>
+
+    {% if not search_query %}
+        <div class="alert alert-info">Qidiruv uchun kalit so'z kiriting.</div>
+    {% else %}
+        <div class="mb-4">
+            <h6 class="text-white-50 mb-3">Foydalanuvchilar</h6>
+            {% if users %}
+                <div class="row g-3">
+                    {% for found_user in users %}
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <a href="{% url 'profile_by_username' found_user.username %}" class="text-decoration-none">
+                                <div class="card h-100 bg-dark border-secondary text-white">
+                                    <div class="card-body d-flex align-items-center gap-3">
+                                        <img src="{% if found_user.profile.avatar %}{{ found_user.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ found_user.username }}{% endif %}" width="42" height="42" class="rounded-circle" alt="{{ found_user.username }}">
+                                        <div>
+                                            <div class="fw-bold">{{ found_user.username }}</div>
+                                            <small class="text-muted">Profilni ko'rish</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">Foydalanuvchi topilmadi.</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <h6 class="text-white-50 mb-3">Loyihalar</h6>
+            {% if projects %}
+                <div class="row g-3">
+                    {% for project in projects %}
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card h-100 bg-dark border-secondary text-white">
+                                {% if project.image %}
+                                    <img src="{{ project.image.url }}" class="card-img-top" alt="{{ project.title }}" style="height: 180px; object-fit: cover;">
+                                {% endif %}
+                                <div class="card-body d-flex flex-column">
+                                    <h6 class="card-title">{{ project.title }}</h6>
+                                    <p class="card-text text-muted small">{{ project.description|truncatewords:18 }}</p>
+                                    <a href="{% url 'project_detail' project.slug %}" class="btn btn-sm btn-primary mt-auto">Ko'rish</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">Loyiha topilmadi.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
