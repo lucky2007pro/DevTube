@@ -6,21 +6,20 @@ import cloudinary.uploader
 import cloudinary.api
 from dotenv import load_dotenv
 
-# .env faylini o'qish
+# 1. .env faylini o'qish (Faqat lokalda ishlaydi, Render o'zining env o'zgaruvchilarini ishlatadi)
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 1. XAVFSIZLIK SOZLAMALARI (Tuzatildi)
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-key')
+# 2. XAVFSIZLIK SOZLAMALARI
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-change-me')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# Production uchun faqat o'z domeningizni yozing!
-ALLOWED_HOSTS = ['*'] if DEBUG else ['sizning-saytingiz.onrender.com', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'jazzmin',
-    'cloudinary_storage', # staticfiles dan oldin bo'lishi shart
+    'cloudinary_storage',
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -30,9 +29,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.sitemaps',
     'django.contrib.sites',
-
     'cloudinary',
-
     'notifications',
     'rest_framework',
     'rest_framework.authtoken',
@@ -42,7 +39,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',
-
     'projects',
 ]
 
@@ -80,7 +76,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# 2. MA'LUMOTLAR BAZASI
+# 3. MA'LUMOTLAR BAZASI
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{os.path.join(BASE_DIR, "db.sqlite3")}',
@@ -88,18 +84,21 @@ DATABASES = {
     )
 }
 
-# 3. CLOUDINARY (Xavfsiz holatga keltirildi)
-# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
+# 4. FAYLLARNI SAQLASH (STORAGES)
+# ✅ FIX: CompressedManifestStaticFilesStorage -> CompressedStaticFilesStorage
+# CompressedManifestStaticFilesStorage barcha fayllarni (shu jumladan .map fayllarni)
+# manifest'da tekshiradi va yo'q bo'lsa xato beradi.
+# CompressedStaticFilesStorage esa faqat siqadi, manifest tekshirmaydi.
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",  # ✅ Tuzatildi
     },
 }
 
+# Cloudinary konfiguratsiyasi
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
@@ -107,20 +106,21 @@ CLOUDINARY_STORAGE = {
 }
 
 cloudinary.config(
-    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    api_key = os.environ.get('CLOUDINARY_API_KEY'),
-    api_secret = os.environ.get('CLOUDINARY_API_SECRET'),
-    secure = True
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+    secure=True
 )
 
+# 5. STATIK VA MEDIA FAYLLAR
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Qolgan sozlamalar
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
@@ -131,8 +131,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-# CORS va Xavfsizlik cheklovlari
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_ALL_ORIGINS = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 LANGUAGE_CODE = 'uz-uz'
@@ -149,21 +148,10 @@ LOGIN_URL = 'login'
 SITE_ID = 1
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_LOGIN_ON_GET = True
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {'SCOPE': ['profile', 'email'], 'AUTH_PARAMS': {'access_type': 'online'}},
-    'github': {'SCOPE': ['user', 'read:user', 'user:email']},
-}
 
 JAZZMIN_SETTINGS = {
     "site_title": "DevTube Admin",
     "site_header": "DevTube",
     "site_brand": "DevTube Boshqaruv",
-    "welcome_sign": "Boshqaruv paneliga xush kelibsiz",
-    "copyright": "DevTube Ltd",
-    "search_model": "auth.User",
-    "show_sidebar": True,
-    "navigation_expanded": True,
-}
-JAZZMIN_UI_TWEAKS = {
     "theme": "darkly",
 }
