@@ -12,22 +12,23 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 1. XAVFSIZLIK SOZLAMALARI (Tuzatildi)
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-key')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # Production uchun faqat o'z domeningizni yozing!
 ALLOWED_HOSTS = ['*'] if DEBUG else ['sizning-saytingiz.onrender.com', 'localhost']
 
 INSTALLED_APPS = [
-    'jazzmin',
+    'jazzmin',  # Jazzmin admin dan oldin bo'lishi kerak
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.postgres',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'django.contrib.sitemaps',
+    'django.contrib.sites',
 
     'cloudinary_storage',
     'cloudinary',
@@ -88,7 +89,16 @@ DATABASES = {
 }
 
 # 3. CLOUDINARY (Xavfsiz holatga keltirildi)
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
