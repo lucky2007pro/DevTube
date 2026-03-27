@@ -19,18 +19,18 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = ['*'] if DEBUG else ['sizning-saytingiz.onrender.com', 'localhost']
 
 INSTALLED_APPS = [
-    'jazzmin',  # Jazzmin admin dan oldin bo'lishi kerak
+    'jazzmin',
+    'cloudinary_storage', # staticfiles dan oldin bo'lishi shart
+    'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     'django.contrib.postgres',
     'django.contrib.sitemaps',
     'django.contrib.sites',
 
-    'cloudinary_storage',
     'cloudinary',
 
     'notifications',
