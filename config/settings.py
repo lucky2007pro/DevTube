@@ -155,3 +155,7 @@ JAZZMIN_SETTINGS = {
     "site_brand": "DevTube Boshqaruv",
     "theme": "darkly",
 }
+
+# Render HTTPS proxy sozlamalari
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
