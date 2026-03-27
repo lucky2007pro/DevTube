@@ -85,16 +85,16 @@ DATABASES = {
 }
 
 # 4. FAYLLARNI SAQLASH (STORAGES)
-# ✅ FIX: CompressedManifestStaticFilesStorage -> CompressedStaticFilesStorage
-# CompressedManifestStaticFilesStorage barcha fayllarni (shu jumladan .map fayllarni)
-# manifest'da tekshiradi va yo'q bo'lsa xato beradi.
-# CompressedStaticFilesStorage esa faqat siqadi, manifest tekshirmaydi.
+# ✅ FIX: StaticFilesStorage ishlatildi — whitenoise middleware o'zi staticni serve qiladi,
+# shuning uchun alohida compressed/manifest storage kerak emas.
+# CompressedManifestStaticFilesStorage va CompressedStaticFilesStorage ikkisi ham
+# yo'q fayllarni (jazzmin/adminlte vendor fayllarini) qidirganda xato beradi.
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",  # ✅ Tuzatildi
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",  # ✅ Tuzatildi
     },
 }
 
