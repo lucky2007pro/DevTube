@@ -43,28 +43,76 @@
         max-width: 1200px;
         margin: 0 auto;
         display: grid;
-        grid-template-columns: 2.8fr 1.2fr; /* Asosiy qism va Yon panel nisbati */
+        grid-template-columns: 2.8fr 1.2fr;
         gap: 30px;
         padding-top: 20px;
         padding-bottom: 50px;
     }
 
-    /* --- RESPONSIVE (MOBILE) --- */
+    .main-column { min-width: 0; }
+    .right-column { min-width: 0; }
+
+    /* --- RESPONSIVE (TABLET) --- */
     @media (max-width: 992px) {
         .project-container {
-            grid-template-columns: 1fr; /* Mobilda bitta ustun */
-            padding-left: 15px;
-            padding-right: 15px;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding-left: 12px;
+            padding-right: 12px;
         }
 
+        /* Mobilda narx kartasi tepaga chiqadi */
+        .main-column { order: 2; }
+        .right-column { order: 1; }
+
         .info-panel {
-            position: static !important; /* Mobilda sticky bo'lmasin */
-            margin-top: 20px;
+            position: static !important;
+            margin-top: 0;
+            margin-bottom: 0;
         }
 
         .visual-preview {
-            height: 300px !important; /* Mobilda rasm balandligini kamaytirish */
+            height: 260px !important;
         }
+
+        /* AI chat widget mobil uchun */
+        .ai-fab {
+            bottom: 20px;
+            right: 15px;
+            width: 52px;
+            height: 52px;
+        }
+        .ai-fab i { font-size: 22px; }
+
+        .ai-chat-window {
+            bottom: 80px;
+            right: 10px;
+            left: 10px;
+            width: auto !important;
+            height: 420px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .project-container {
+            padding-left: 0;
+            padding-right: 0;
+            gap: 15px;
+        }
+
+        .neon-price-card { padding: 20px 15px; }
+        .price-tag { font-size: 28px !important; margin: 10px 0 18px; }
+        .btn-action { padding: 12px; font-size: 14px; }
+
+        .visual-preview { height: 200px !important; }
+
+        .insta-btn i { font-size: 22px; }
+        .insta-actions-bar { gap: 18px; }
+
+        h1.text-white { font-size: 1.4rem !important; }
+
+        /* Rating raqamlar kichikroq bo'lsin */
+        .rating-10 label { width: 36px; height: 36px; font-size: 13px; }
     }
 
     /* --- MARKDOWN STYLES (NEON) --- */
@@ -196,6 +244,7 @@
     .author-card {
         background: var(--glass-bg); padding: 15px; border-radius: 16px;
         border: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px;
+        flex-wrap: wrap;
     }
 
     /* --- COMMENTS --- */

@@ -131,6 +131,15 @@
             border-top: 1px solid #e2e8f0 !important;
         }
 
+        body.light-mode .sidebar-overlay {
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        body.light-mode .mobile-search-bar {
+            background: rgba(255, 255, 255, 0.97);
+            border-color: #e2e8f0;
+        }
+
         /* Matnlar rangi (Sarlavhalar va oddiy matn) */
         body.light-mode h1, body.light-mode h2, body.light-mode h3,
         body.light-mode h4, body.light-mode h5, body.light-mode strong,
@@ -282,6 +291,40 @@
             display: none !important;
         }
 
+        /* --- SIDEBAR OVERLAY (MOBIL) --- */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: var(--nav-height);
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 1039;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            transition: opacity 0.3s;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* --- MOBIL QIDIRUV --- */
+        .mobile-search-bar {
+            position: fixed;
+            top: var(--nav-height);
+            left: 0;
+            right: 0;
+            padding: 10px 15px;
+            background: var(--glass-bg);
+            border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 1050;
+            display: none;
+            animation: slideDown 0.2s ease;
+        }
+        .mobile-search-bar.active { display: block; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
         @media (max-width: 992px) {
             .main-content { margin-left: 0; padding-top: 80px; }
 
@@ -297,6 +340,15 @@
                 transform: translateX(0);
                 box-shadow: 10px 0 30px rgba(0,0,0,0.5);
             }
+
+            /* Navbar ixchamlash */
+            .navbar { padding: 0 0.75rem; }
+            .btn-upload-neon { padding: 7px 14px; }
+            .btn-upload-neon span.d-none { display: none !important; }
+        }
+
+        @media (max-width: 576px) {
+            .main-content { padding: 75px 12px 25px; }
         }
     </style>
 </head>
@@ -326,8 +378,10 @@
             </form>
         </div>
 
-        <div class="d-md-none ms-auto me-2">
-            <button class="btn text-white" type="button"><i class="fas fa-search"></i></button>
+        <div class="d-md-none ms-auto me-1">
+            <button class="btn text-white" type="button" id="mobileSearchToggle" aria-label="Qidiruv">
+                <i class="fas fa-search"></i>
+            </button>
         </div>
 
         <div class="d-flex align-items-center justify-content-end gap-2 px-2">
@@ -397,6 +451,20 @@
             {% endif %}
         </div>
     </nav>
+
+    <!-- Mobil qidiruv paneli -->
+    <div class="mobile-search-bar" id="mobileSearchBar">
+        <form class="d-flex align-items-center w-100" action="{% url 'global_search' %}" method="GET">
+            <div class="input-group search-box-neon flex-grow-1">
+                <label for="mobileSearchInput" class="visually-hidden">Qidiruv</label>
+                <input type="text" name="q" id="mobileSearchInput" value="{{ request.GET.q|default:'' }}" class="form-control text-white border-0 bg-transparent py-2 px-4" placeholder="Loyihalarni qidirish..." autocomplete="off">
+                <button class="btn border-0 text-muted px-3" type="submit"><i class="fas fa-search"></i></button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Sidebar overlay (mobil) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="sidebar" id="sidebar">
         <div class="flex-grow-1 overflow-auto py-2">
@@ -469,22 +537,54 @@
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
         const toggleBtn = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('sidebarOverlay');
+        const mobileSearchToggle = document.getElementById('mobileSearchToggle');
+        const mobileSearchBar = document.getElementById('mobileSearchBar');
+
+        function closeSidebarMobile() {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
 
         toggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-
             if (window.innerWidth <= 992) {
-                sidebar.classList.toggle('active');
+                const isActive = sidebar.classList.toggle('active');
+                overlay.classList.toggle('active', isActive);
+                // Mobil qidiruv ochiq bo'lsa yopish
+                mobileSearchBar.classList.remove('active');
             } else {
                 sidebar.classList.toggle('collapsed');
                 mainContent.classList.toggle('expanded');
             }
         });
 
+        overlay.addEventListener('click', closeSidebarMobile);
+
         document.addEventListener('click', (e) => {
-             if (window.innerWidth <= 992) {
+            if (window.innerWidth <= 992) {
                 if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target) && sidebar.classList.contains('active')) {
-                    sidebar.classList.remove('active');
+                    closeSidebarMobile();
+                }
+            }
+        });
+
+        // Mobil qidiruv
+        if (mobileSearchToggle) {
+            mobileSearchToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isActive = mobileSearchBar.classList.toggle('active');
+                if (isActive) {
+                    mobileSearchBar.querySelector('input').focus();
+                    closeSidebarMobile();
+                }
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (mobileSearchBar && mobileSearchBar.classList.contains('active')) {
+                if (!mobileSearchBar.contains(e.target) && e.target !== mobileSearchToggle) {
+                    mobileSearchBar.classList.remove('active');
                 }
             }
         });
