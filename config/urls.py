@@ -42,6 +42,15 @@ urlpatterns = [
     path('api/comment/add/<int:pk>/', views.api_post_comment, name='api_post_comment'),
     path('api/comments/<int:pk>/', views.api_get_comments, name='api_get_comments'),
 
+    # --- QO'SHIMCHA FLUTTER API YO'LLARI ---
+    path('api/conversations/', include('projects.urls_api_flutter')) if False else path('api/conversations/', __import__('projects.api_flutter_views').api_flutter_views.api_get_conversations),
+    path('api/announcements/', __import__('projects.api_flutter_views').api_flutter_views.api_get_announcements),
+    path('api/notifications/', __import__('projects.api_flutter_views').api_flutter_views.api_get_notifications),
+    path('api/admin-stats/', __import__('projects.api_flutter_views').api_flutter_views.api_admin_stats),
+    path('api/wallet/withdraw/', __import__('projects.api_flutter_views').api_flutter_views.api_wallet_withdraw),
+    path('api/disputes/raise/', __import__('projects.api_flutter_views').api_flutter_views.api_raise_dispute),
+    path('api/sync/<str:username>/', views.toggle_sync, name='api_toggle_sync'),
+
     # ==========================================
     # --- WEB SAHIFALAR ---
     # ==========================================
