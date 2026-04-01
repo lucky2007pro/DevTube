@@ -1,4 +1,6 @@
 import json
+import base64
+import time
 from django.db import close_old_connections
 import threading
 from decimal import Decimal
@@ -573,28 +575,102 @@ def report_project(request, pk):
 # 5. TOOLS & WALLET & PROFIL
 # ==========================================
 def online_compiler(request):
+    # Judge0 CE language IDs
+    JUDGE0_LANG_IDS = {
+        'python':     71,   # Python 3
+        'javascript': 63,   # Node.js
+        'cpp':        54,   # C++ (GCC 9.2.0)
+        'java':       62,   # Java (OpenJDK 13)
+        'go':         60,   # Go
+        'php':        68,   # PHP
+        'csharp':     51,   # C# (Mono)
+        'ruby':       72,   # Ruby
+    }
+
     result = ""
+    code = ""
+    stdin_input = ""
+    current_lang = "python"
+    languages = [
+        ('python', 'Python'),
+        ('javascript', 'Node.js'),
+        ('cpp', 'C++'),
+        ('java', 'Java'),
+        ('go', 'Go'),
+        ('php', 'PHP'),
+        ('csharp', 'C#'),
+        ('ruby', 'Ruby'),
+    ]
+
     if request.method == 'POST':
-        source_code = request.POST.get('code', '')
-        language = request.POST.get('language', 'python')
+        code = request.POST.get('code', '')
+        current_lang = request.POST.get('language', 'python')
+        stdin_input = request.POST.get('input', '')
+
+        lang_id = JUDGE0_LANG_IDS.get(current_lang, 71)
 
         try:
+            # 1. Submission yaratish
             payload = {
-                "language": language,
-                "version": "*",
-                "files": [{"content": source_code}]
+                "source_code": base64.b64encode(code.encode()).decode(),
+                "language_id": lang_id,
+                "stdin": base64.b64encode(stdin_input.encode()).decode() if stdin_input else "",
             }
-            response = requests.post("https://emkc.org/api/v2/piston/execute", json=payload, timeout=10)
-            data = response.json()
-            result = data.get('run', {}).get('stdout', '') or data.get('run', {}).get('stderr', '')
+            sub_resp = requests.post(
+                "https://ce.judge0.com/submissions?base64_encoded=true&wait=false",
+                json=payload,
+                headers={"Content-Type": "application/json"},
+                timeout=10
+            )
+            sub_resp.raise_for_status()
+            token = sub_resp.json().get("token")
+
+            if not token:
+                result = "❌ Xatolik: Token olinmadi."
+            else:
+                # 2. Natijani kutish (polling, max 12 soniya)
+                for _ in range(8):
+                    time.sleep(1.5)
+                    res_resp = requests.get(
+                        f"https://ce.judge0.com/submissions/{token}?base64_encoded=true",
+                        timeout=10
+                    )
+                    res_data = res_resp.json()
+                    status_id = res_data.get("status", {}).get("id", 0)
+                    if status_id >= 3:  # 3 = Accepted, 4+ = xato holatlari
+                        stdout = res_data.get("stdout") or ""
+                        stderr = res_data.get("stderr") or ""
+                        compile_output = res_data.get("compile_output") or ""
+
+                        if stdout:
+                            result = base64.b64decode(stdout).decode("utf-8", errors="replace")
+                        elif compile_output:
+                            result = "🔴 Kompilyatsiya xatosi:\n" + base64.b64decode(compile_output).decode("utf-8", errors="replace")
+                        elif stderr:
+                            result = "🔴 Xato:\n" + base64.b64decode(stderr).decode("utf-8", errors="replace")
+                        else:
+                            result = "✅ Kod bajarildi, lekin chiqish yo'q."
+                        break
+                else:
+                    result = "⏱ Vaqt tugadi: Kod bajarilishi 12 soniyadan ko'p vaqt oldi."
+
+        except requests.exceptions.Timeout:
+            result = "⏱ Xatolik: Server 10 soniyada javob bermadi. Qayta urinib ko'ring."
+        except requests.exceptions.ConnectionError:
+            result = "🌐 Xatolik: Kompilyator serveriga ulanib bo'lmadi. Internet aloqasini tekshiring."
         except Exception as e:
-            result = f"Xatolik yuz berdi: {str(e)}"
+            result = f"❌ Xatolik yuz berdi: {str(e)}"
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'result': result})
 
-    languages = [('python', 'Python'), ('javascript', 'Node.js'), ('cpp', 'C++'), ('java', 'Java')]
-    return render(request, 'compiler.html', {'result': result, 'languages': languages})
+    return render(request, 'compiler.html', {
+        'result': result,
+        'languages': languages,
+        'code': code,
+        'input': stdin_input,
+        'current_lang': current_lang,
+    })
 
 
 def cpp_test(request):
